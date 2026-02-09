@@ -1,0 +1,132 @@
+@import 'tailwindcss';
+
+@layer base {
+  button {
+    cursor: pointer;
+  }
+
+  body {
+    font-family: var(--font-inter), sans-serif;
+  }
+}
+
+.container {
+  max-width: 1280px;
+  /* matches Figma desktop frame */
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Section spacing */
+.section {
+  margin: 34px 0;
+}
+
+/* Category strip */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+}
+
+/* Best selling products */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+/* Promo banners */
+.promo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+/* Shop by category */
+.shop-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+
+/* Marquee Styling */
+
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-20%);
+  }
+
+  /* Scroll exactly half the width */
+}
+
+.marquee-container {
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+}
+
+.marquee-content {
+  display: flex;
+  animation: scroll 10s linear infinite;
+}
+
+/* End of Marquee styling */
+
+
+/* Inactive dots */
+.swiper-pagination-bullet {
+  width: 10px !important;
+  height: 10px !important;
+  background: #c9c9c9 !important;
+  /* light grey */
+  opacity: 1 !important;
+  border-radius: 50%;
+}
+
+/* Active dot – hollow circle */
+.swiper-pagination-bullet-active {
+  background: transparent !important;
+  /* no fill */
+  border: 2px solid #c9c9c9 !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.collection-outline {
+  font-family: "Inter", sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px #2f6b4f;
+}

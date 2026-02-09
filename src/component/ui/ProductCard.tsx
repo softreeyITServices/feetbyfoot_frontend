@@ -1,0 +1,47 @@
+import { CartBasketIcon } from '@/icons/CartBasketIcon';
+import Link from 'next/link';
+import Image from 'next/image'
+
+function ProductCard({ imageSrc, altText, categories, title, originalPrice, discountedPrice }: {
+  imageSrc: string;
+  altText: string;
+  categories: string;
+  title: string;
+  originalPrice: string;
+  discountedPrice: string;
+}) {
+  return (
+    <div className="rounded-xl bg-white border border-gray-200 p-3">
+      <Image
+        src={imageSrc}
+        alt={altText}
+        width={400}
+        height={450}
+        className="w-full object-cover"
+      />
+
+      <div className="p-5">
+        <p className="text-xs text-gray-500 uppercase tracking-wide">
+          {categories}
+        </p>
+
+        <Link  href={`/${categories}/${title}`} className="no-underline hover:underline text-black">
+          <h3 className="font-semibold text-sm mt-2">
+            {title}
+          </h3>
+        </Link>
+
+        <div className="mt-3">
+          <span className="line-through text-gray-400 text-sm">₹{originalPrice}</span>
+          <span className="text-green-600 font-bold text-lg ml-2">₹{discountedPrice}</span>
+        </div>
+
+        <button className="mt-4 w-full bg-black text-white py-2 hover:bg-gray-800 flex items-center justify-evenly gap-2">
+          <CartBasketIcon width={13} height={15} fill='#fff' /> <span> ADD TO BASKET</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export default ProductCard
