@@ -1,16 +1,13 @@
 import Footer from "@/component/common/Footer";
 import Navbar from "@/component/common/navbar";
 import { PlusIcon } from "@/icons/PlusIcon";
-import { StarIcon } from "@/icons/StarIcon";
 import { LoveIcon } from "@/icons/LoveIcon";
-import { ColorIcon } from "@/icons/ColorIcon";
 import { MaterialIcon } from "@/icons/MaterialIcon";
-import { EarthIcon } from "@/icons/EarthIcon";
-import { GiftIcon } from "@/icons/GiftIcon";
 import React from "react";
 
 
 import Image from "next/image";
+import { StarIcon } from "@/icons/StarIcon";
 
 export default function OurStoryPage() {
   return (
@@ -19,7 +16,7 @@ export default function OurStoryPage() {
       <main className="bg-white">
         {/* ================= HERO ================= */}
         <section className="pt-12">
-          <div className="mx-auto max-w-[1129px] px-4 text-center">
+          <div className="mx-auto max-w-282.25 px-4 text-center">
             <div className="w-full flex justify-center">
               {/* <div className="inline-flex items-center justify-center bg-[#FFD600] px-8 h-[66px]"> */}
               <h1 className="inline-block bg-yellow-400 px-40 py-2 text-4xl font-bold">
@@ -151,7 +148,7 @@ export default function OurStoryPage() {
 
         {/* ================= WHY CHOOSE ================= */}
         <section className="py-16">
-          <div className="mx-auto max-w-[1129px] px-4 text-center">
+          <div className="mx-auto max-w-282.25 px-4 text-center">
             <h2 className="text-lg font-semibold text-gray-900 mb-10">
               Why Choose Feet by Foot?
             </h2>
@@ -185,7 +182,7 @@ function MissionItem({ title, subtitle }: { title: string, subtitle: string }) {
         {iconMap[title]}
       </div>
       <p className="text-sm font-medium text-gray-900">{title}</p>
-      <p className="text-xs text-gray-500 leading-snug max-w-[180px]">
+      <p className="text-xs text-gray-500 leading-snug max-w-45">
         {subtitle}
       </p>
     </div>
@@ -216,22 +213,21 @@ function CategoryCard({
 
 function WhyItem({ title, subtitle }: { title: string, subtitle: string }) {
   const iconMap: Record<string, React.ReactNode> = {
-    "Artist Collaborations": <ColorIcon className="h-4 w-4" />,
-    "Premium Materials": <MaterialIcon className="h-4 w-4" />,
-    "Sustainable Practices": <EarthIcon className="h-4 w-4" />,
-    "Perfect Gifting": <GiftIcon className="h-4 w-4" />,
+    "Artist Collaborations": <Image src="/assets/images/color.png" alt="Artist Collab Icon" width={48} height={48} />,
+    "Premium Materials": <Image src="/assets/images/star.png" alt="Artist Collab Icon" width={48} height={48} />,
+    "Sustainable Practices": <Image src="/assets/images/earth.png" alt="Artist Collab Icon" width={48} height={48} />,
+    "Perfect Gifting": <Image src="/assets/images/gift.png" alt="Artist Collab Icon" width={48} height={48} />,
   };
 
   return (
     <div className="flex flex-col items-center text-center gap-3">
-      <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-900">
+      <div className="h-10 w-10 rounded-full flex items-center justify-center text-gray-900">
         {iconMap[title]}
       </div>
       <p className="text-sm font-medium text-gray-800">{title}</p>
-      <p className="text-xs text-gray-500 leading-snug max-w-[180px]">
+      <p className="text-xs text-gray-500 leading-snug max-w-45">
         {subtitle}
       </p>
     </div>
   );
 }
-

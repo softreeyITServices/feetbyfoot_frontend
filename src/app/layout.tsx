@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Poppins, Montserrat } from "next/font/google";
 import "./globals.css";
+import { MainProviders } from "@/domain/application/providers/MainProviders";
+import ReduxProvider from "@/store/ReduxProvider";
 
 export const poppins = Poppins({
   subsets: ["latin"],
@@ -33,7 +35,11 @@ export default function RootLayout({
       <body
         className={`${inter.variable} antialiased`}
       >
-        {children}
+        <MainProviders>
+          <ReduxProvider>
+            {children}
+          </ReduxProvider>
+        </MainProviders>
       </body>
     </html>
   );

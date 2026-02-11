@@ -12,30 +12,81 @@ export default function RegisterForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const [formValues, setFormValues] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+
+  const isFormValid =
+    formValues.name.trim() &&
+    formValues.email.trim() &&
+    formValues.phone.trim();
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const { name, value } = e.target;
+    setFormValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!isFormValid) return;
+
     setLoading(true);
     setError("");
     setSuccess("");
-
-    const formData = new FormData(e.currentTarget);
-    const data = {
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      phone: formData.get("phone") as string,
-      role: "customer",
-    };
+    setFieldErrors({});
 
     try {
-      const response = await authService.register(data);
+      const response = await authService.register({
+        ...formValues,
+        role: "customer",
+      });
+
       setSuccess(response.data?.message || "Registration successful!");
-    } catch (err) {
+      setFormValues({ name: "", email: "", phone: "" });
+    } catch (err: unknown) {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "data" in err
+      ) {
+        const data = (err as { data?: unknown }).data;
+
+        if (
+          typeof data === "object" &&
+          data !== null &&
+          "code" in data &&
+          (data as { code: unknown }).code === "VALIDATION_ERROR" &&
+          "errors" in data
+        ) {
+          const errors = (data as { errors: Record<string, unknown> }).errors;
+          const normalized: Record<string, string> = {};
+
+          Object.entries(errors).forEach(([key, value]) => {
+            if (Array.isArray(value) && typeof value[0] === "string") {
+              normalized[key] = value[0];
+            }
+          });
+
+          setFieldErrors(normalized);
+          return; 
+        }
+      }
+
       if (err instanceof AuthError) {
         setError(err.message);
-      } else {
-        setError("Registration failed. Please try again.");
+        return;
       }
-    } finally {
+
+      setError("Registration failed. Please try again.");
+    }
+    finally {
       setLoading(false);
     }
   }
@@ -47,12 +98,35 @@ export default function RegisterForm() {
       {error && <AutoCloseMessage message={error} type="error" />}
       {success && <AutoCloseMessage message={success} type="success" />}
 
+      <Input
+        name="name"
+        label="Name"
+        required
+        value={formValues.name}
+        onChange={handleChange}
+        error={fieldErrors.name} 
+      />
 
-      <Input name="name" label="Name" required />
-      <Input name="email" label="Email address" required type="email" />
-      <Input name="phone" label="Phone Number" required />
+      <Input
+        name="email"
+        label="Email address"
+        type="email"
+        required
+        value={formValues.email}
+        onChange={handleChange}
+        error={fieldErrors.email} 
+      />
 
-      <Button type="submit" disabled={loading}>
+      <Input
+        name="phone"
+        label="Phone Number"
+        required
+        value={formValues.phone}
+        onChange={handleChange}
+        error={fieldErrors.phone} 
+      />
+
+      <Button type="submit" disabled={!isFormValid || loading}>
         {loading ? "Registering..." : "Register"}
       </Button>
     </form>

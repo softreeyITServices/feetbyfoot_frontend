@@ -1,5 +1,5 @@
-import { DefaultSession, DefaultUser } from "next-auth";
-import { DefaultJWT } from "next-auth/jwt";
+import { DefaultSession } from "next-auth";
+import { JWT as DefaultJWT } from "next-auth/jwt";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
@@ -7,39 +7,46 @@ declare module "next-auth" {
     error?: string;
     user: {
       id: string;
+      role: string;
+      name: string;
       email: string;
-      role?: string | null;
-      tenantId?: string
+      phone: string;
     };
-  }
+  };
+}
 
-  interface User extends DefaultUser {
-    accessToken: string;
-    refreshToken: string;
-    accessTokenExpiresAt: number;
-    refreshTokenExpiresAt: number;
-    deviceFingerprint: string;
-  }
+interface User {
+  id: string;
+  role: string;
+  name: string;
+  email: string;
+  phone: string;
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresAt: number;
+  refreshTokenExpiresAt: number;
+  deviceFingerprint: string;
 }
 
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
-    id?: string;
+    id: string;
+    user: {
+      id: string;
+      role: string;
+      name: string;
+      email: string;
+      phone: string;
+    };
     accessToken: string;
     refreshToken: string;
     accessTokenExpiresAt: number;
     refreshTokenExpiresAt: number;
-    deviceFingerprint: string;
-    isAuthenticated?: boolean;
     refreshCount: number;
+    deviceFingerprint: string;
     createdAt: number;
     lastRefreshedAt?: number;
-    user: {
-      id: string;
-      email: string;
-      role?: string | null;
-      tenantId?: string
-    };
+    isAuthenticated: boolean;
     error?: string;
   }
 }

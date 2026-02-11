@@ -1,61 +1,72 @@
-import { type User } from "next-auth";
-import { JWT } from "next-auth/jwt";
+import { User } from "next-auth";
 
-export interface LoginResponse {
+export type UserProfile = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AuthMeResponse = {
+  data: UserProfile;
+};
+
+export type VerifyOtpResponse = {
+  success: boolean;
+  data: {
+    statusCode: number;
+    message: string;
+    accessToken: string;
+    refreshToken: string;
+  },
+  timeStamp: string;
+
+};
+
+export type RefreshResponse = {
   accessToken: string;
   refreshToken: string;
-  user: {
-    id: string;
-    email: string;
-    role: string;
-    tenantId?: string;
-  };
-}
+};
 
-export interface AuthMeResponse {
-  id: string;
-  email: string;
-  role: string;
-  tenantId: string;
-}
+export type JWTPayload = {
+  exp: number;
+  sub: string;
+  role?: string;
+};
 
 export interface ExtendedUser extends User {
   id: string;
+  role: string;
+  name: string;
   email: string;
-  role: string | null;
-  accessToken: string;
-  refreshToken: string;
-  deviceFingerprint: string;
-  tenantId?: string;
-}
-
-export interface ExtendedJWT extends JWT {
-  id: string;
-  user: {
-    id: string;
-    email: string;
-    role: string | null;
-    tenantId?: string;
-  };
+  phone: string;
   accessToken: string;
   refreshToken: string;
   accessTokenExpiresAt: number;
   refreshTokenExpiresAt: number;
   deviceFingerprint: string;
-  isAuthenticated: boolean;
-  refreshCount: number;
-  createdAt: number;
-  lastRefreshedAt?: number;
-
-  error?: string;
 }
 
-export interface RefreshResponse {
+export type ExtendedJWT = {
+  id: string;
+  user: {
+    id: string;
+    role: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
   accessToken: string;
   refreshToken: string;
-}
-
-export interface JWTPayload {
-  exp: number;
-  iat: number;
-}
+  accessTokenExpiresAt: number;
+  refreshTokenExpiresAt: number;
+  refreshCount: number;
+  deviceFingerprint: string;
+  createdAt: number;
+  lastRefreshedAt?: number;
+  isAuthenticated: boolean;
+  error?: string;
+};

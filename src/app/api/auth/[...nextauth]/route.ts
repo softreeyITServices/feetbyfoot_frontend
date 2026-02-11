@@ -1,18 +1,31 @@
-// src/app/api/auth/[...nextauth]/route.ts
 import NextAuth, { type AuthOptions } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { decodeJwt } from "jose";
+
 import { httpClient } from "@/lib/httpClient";
-import { AuthMeResponse, ExtendedJWT, ExtendedUser, JWTPayload, LoginResponse, RefreshResponse } from "@/domain/shared/types/auth.type";
-import { AUTH } from "@/constants/lang";
-import { decodeJwt } from 'jose';
-import { EX_LOGIN_URL, EX_USER_PROFILE_URL } from "@/constants/apis";
+import {
+  AuthMeResponse,
+  ExtendedJWT,
+  ExtendedUser,
+  JWTPayload,
+  RefreshResponse,
+  VerifyOtpResponse,
+} from "@/domain/shared/types/auth.type";
+import {
+  EX_USER_PROFILE_URL,
+  REFRESH_TOKEN_URL,
+  VERIFY_OTP_URL,
+} from "@/constants/apis";
 
+function getTokenExpiry(token: unknown): number {
+  if (typeof token !== "string") return Date.now() - 1000;
 
-function getTokenExpiry(token: string): number {
-  const decoded = decodeJwt(token) as JWTPayload | null;if (!decoded?.exp) {
-    throw new Error(AUTH.INVALID_TOKEN);
+  try {
+    const decoded = decodeJwt(token) as JWTPayload;
+    return decoded.exp ? decoded.exp * 1000 : Date.now() - 1000;
+  } catch {
+    return Date.now() - 1000;
   }
-  return decoded.exp * 1000;
 }
 
 export const authOptions: AuthOptions = {
@@ -23,184 +36,164 @@ export const authOptions: AuthOptions = {
 
   providers: [
     Credentials({
-      name: "Email Login",
+      name: "OTP Login",
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        identifier: { label: "Email or Phone", type: "text" },
+        type: { label: "Type", type: "text" },
+        otp: { label: "OTP", type: "text" },
       },
 
       async authorize(credentials): Promise<ExtendedUser | null> {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error("Missing email or password");
-        }
-
         try {
-          const data = await httpClient.post<LoginResponse>(
-            EX_LOGIN_URL,
+          if (
+            !credentials?.identifier ||
+            !credentials?.otp ||
+            (credentials.type !== "email" && credentials.type !== "phone")
+          ) {
+            return null;
+          }
+
+          const otpResponse = await httpClient.post<VerifyOtpResponse>(
+            VERIFY_OTP_URL,
             {
-              email: credentials.email,
-              password: credentials.password,
+              identifier: credentials.identifier,
+              type: credentials.type,
+              otp: credentials.otp,
             },
-            { skipAuth: true },
+            { skipAuth: true }
           );
 
-          const accessTokenExpiresAt = getTokenExpiry(data.accessToken);
-          const refreshTokenExpiresAt = getTokenExpiry(data.refreshToken);
+          const { accessToken, refreshToken } = otpResponse.data;
 
-          const { tenantId } = await httpClient.get<AuthMeResponse>(
+          if (!accessToken || !refreshToken) return null;
+
+          const accessTokenExpiresAt = getTokenExpiry(accessToken);
+          const refreshTokenExpiresAt = getTokenExpiry(refreshToken);
+
+          const meResponse = await httpClient.get<AuthMeResponse>(
             EX_USER_PROFILE_URL,
-            {
-              email: credentials.email,
-            },
+            undefined,
             {
               headers: {
-                Authorization: `Bearer ${data.accessToken}`,
+                Authorization: `Bearer ${accessToken}`,
               },
-            },
+              skipAuth: true,
+            }
           );
 
+          const user = meResponse.data;
+
           return {
-            id: data.user.id,
-            email: data.user.email,
-            role: data.user.role ?? null,
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
-            deviceFingerprint: "web",
-            tenantId: tenantId ? tenantId : undefined,
+            id: user.id,
+            role: user.role,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            accessToken,
+            refreshToken,
             accessTokenExpiresAt,
             refreshTokenExpiresAt,
+            deviceFingerprint: "web",
           };
-        } catch (error) {
-          if (error instanceof Error) {
-            throw error;
-          }
-          throw new Error("Invalid email or password");
+        } catch {
+          return null;
         }
       },
+
     }),
   ],
 
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        const extendedUser = user as ExtendedUser;
-
-        const accessTokenExpiresAt = getTokenExpiry(extendedUser.accessToken);
-        const refreshTokenExpiresAt = getTokenExpiry(extendedUser.refreshToken);
+        const u = user as ExtendedUser;
 
         return {
           ...token,
-          id: extendedUser.id,
+          id: u.id,
           user: {
-            id: extendedUser.id,
-            email: extendedUser.email,
-            role: extendedUser.role,
-            tenantId: extendedUser.tenantId,
+            id: u.id,
+            role: u.role,
+            name: u.name,
+            email: u.email,
+            phone: u.phone,
           },
-          accessToken: extendedUser.accessToken,
-          refreshToken: extendedUser.refreshToken,
-          accessTokenExpiresAt,
-          refreshTokenExpiresAt,
-          deviceFingerprint: extendedUser.deviceFingerprint,
-          isAuthenticated: true,
+          accessToken: u.accessToken,
+          refreshToken: u.refreshToken,
+          accessTokenExpiresAt: u.accessTokenExpiresAt,
+          refreshTokenExpiresAt: u.refreshTokenExpiresAt,
           refreshCount: 0,
+          deviceFingerprint: u.deviceFingerprint,
           createdAt: Date.now(),
-        } as ExtendedJWT;
+          isAuthenticated: true,
+          error: undefined,
+        };
       }
 
-      const extendedToken = token as ExtendedJWT;
+      const t = token as ExtendedJWT;
       const now = Date.now();
 
-      if (now >= extendedToken.refreshTokenExpiresAt) {
-        console.error("[AUTH] Refresh token expired");
+      if (!t.isAuthenticated) {
+        return t;
+      }
+
+      if (!t.accessToken || !t.refreshToken) {
+        return { ...t, error: "MissingTokens" };
+      }
+
+      if (now >= t.refreshTokenExpiresAt) {
+        return { ...t, error: "RefreshTokenExpired" };
+      }
+
+      if (now < t.accessTokenExpiresAt - 60_000) {
+        return t;
+      }
+
+      try {
+        const refreshResponse = await httpClient.post<RefreshResponse>(
+          REFRESH_TOKEN_URL,
+          undefined,
+          {
+            params: { refreshToken: t.refreshToken },
+            skipAuth: true,
+          }
+        );
+
         return {
-          ...extendedToken,
-          error: "RefreshTokenExpired",
-        } as ExtendedJWT;
+          ...t,
+          accessToken: refreshResponse.accessToken,
+          refreshToken: refreshResponse.refreshToken,
+          accessTokenExpiresAt: getTokenExpiry(refreshResponse.accessToken),
+          refreshTokenExpiresAt: getTokenExpiry(refreshResponse.refreshToken),
+          refreshCount: t.refreshCount + 1,
+          lastRefreshedAt: Date.now(),
+          error: undefined,
+        };
+      } catch {
+        return { ...t, error: "RefreshAccessTokenError" };
       }
-
-      const shouldRefresh =
-        now >= extendedToken.accessTokenExpiresAt - 60 * 1000;
-
-      if (shouldRefresh) {
-        try {
-          const refreshCount = extendedToken.refreshCount + 1;
-
-          if (refreshCount > 100) {
-            console.error("[AUTH] Refresh limit exceeded");
-            return {
-              ...extendedToken,
-              error: "RefreshLimitExceeded",
-            } as ExtendedJWT;
-          }
-
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                refreshToken: extendedToken.refreshToken,
-                deviceFingerprint: extendedToken.deviceFingerprint,
-              }),
-            },
-          );
-
-          if (!response.ok) {
-            throw new Error("Refresh failed");
-          }
-
-          const data: RefreshResponse = await response.json();
-
-          console.log("[AUTH] Token refreshed successfully");
-
-          const accessTokenExpiresAt = getTokenExpiry(data.accessToken);
-          const refreshTokenExpiresAt = getTokenExpiry(data.refreshToken);
-
-          return {
-            ...extendedToken,
-            accessToken: data.accessToken,
-            refreshToken: data.refreshToken,
-            accessTokenExpiresAt,
-            refreshTokenExpiresAt,
-            refreshCount,
-            lastRefreshedAt: Date.now(),
-            error: undefined,
-          } as ExtendedJWT;
-        } catch (error) {
-          console.error("[AUTH] Token refresh failed:", error);
-          return {
-            ...extendedToken,
-            error: "RefreshAccessTokenError",
-          } as ExtendedJWT;
-        }
-      }
-
-      return extendedToken;
     },
 
-    // session({ session, token }) {
-    //   const extendedToken = token as ExtendedJWT;
+    async session({ session, token }) {
+      const t = token as ExtendedJWT;
 
-    //   if (extendedToken.error) {
-    //     session.error = extendedToken.error;
-    //   }
-
-    //   // ✅ Ensure user object is fully populated with role
-    //   session.user = {
-    //     // id: extendedToken.user.id,
-    //     email: extendedToken.user.email,
-    //     // role: extendedToken.user.role ?? null, // ✅ Explicitly set role
-    //     tenantId: extendedToken.user.tenantId ?? undefined
-    //   };
-    //   session.accessToken = extendedToken.accessToken;
-    //   return session;
-    // },
+      return {
+        ...session,
+        user: {
+          id: t.user.id,
+          role: t.user.role,
+          name: t.user.name,
+          email: t.user.email,
+          phone: t.user.phone,
+        },
+        accessToken: t.accessToken,
+        error: t.error,
+      };
+    },
   },
 
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 };
 
 const handler = NextAuth(authOptions);

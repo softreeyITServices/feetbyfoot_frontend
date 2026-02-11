@@ -1,31 +1,40 @@
 "use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 import { ProfileIcon } from "@/icons/ProfileIcon";
 import { CartIcon } from "@/icons/CartIcon";
 import { SearchIcon } from "@/icons/SearchIcon";
 import CartDrawer from "../ui/CartDrawer";
-import { useState } from "react";
+import { useAppSelector } from "@/store/hooks";
 
 const menuItems = [
   { label: "MENS", href: "/mens" },
   { label: "WOMENS", href: "/womens" },
   { label: "KIDS", href: "/kids" },
   { label: "GIFTS", href: "/gifts", active: true },
-  { label: "OUTLET", href: "/outlet" },
-  { label: "BRAND", href: "/brand" },
+  // { label: "OUTLET", href: "/outlet" },
+  { label: "BRAND", href: "/ourstory" },
   { label: "CONTACT", href: "/contactus" },
 ];
 
 export default function Navbar() {
   const [openCart, setOpenCart] = useState(false);
 
+  // 🔥 Get cart items from Redux
+  const cartItems = useAppSelector(state => state.cart.items);
+
+  // 🔢 Total quantity (NOT items.length)
+  const cartCount = cartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+
   const handleCart = (e: React.MouseEvent) => {
     e.preventDefault();
     setOpenCart(true);
-  }
-
-
+  };
 
   return (
     <>
@@ -43,16 +52,17 @@ export default function Navbar() {
 
           {/* Menu */}
           <nav className="hidden md:flex items-center gap-6">
-            {menuItems.map((item) => (
+            {menuItems.map(item => (
               <Link
                 key={item.label}
                 href={item.href}
                 className={`text-sm font-bold px-3 py-1
-                ${item.active
-                    ? "bg-yellow-400 text-black"
-                    : "text-gray-700 hover:text-black"
+                  ${
+                    item.active
+                      ? "bg-yellow-400 text-black"
+                      : "text-gray-700 hover:text-black"
                   }
-              `}
+                `}
               >
                 {item.label}
               </Link>
@@ -66,10 +76,30 @@ export default function Navbar() {
               <ProfileIcon width={20} height={20} fill="#000" />
             </Link>
 
-            {/* Wishlist / Cart */}
-            <Link href="#" aria-label="Cart" onClick={handleCart}>
+            {/* Cart */}
+            <button
+              aria-label="Cart"
+              onClick={handleCart}
+              className="relative"
+            >
               <CartIcon width={20} height={20} fill="#000" />
-            </Link>
+
+              {/* 🔴 Cart Badge */}
+              {cartCount > 0 && (
+                <span
+                  className="
+                    absolute -top-3 -right-2
+                    bg-black text-white
+                    text-[10px] font-semibold
+                    w-5 h-5
+                    flex items-center justify-center
+                    rounded-full
+                  "
+                >
+                  {cartCount}
+                </span>
+              )}
+            </button>
 
             {/* Search */}
             <button aria-label="Search">
@@ -79,19 +109,10 @@ export default function Navbar() {
         </div>
       </header>
 
+      {/* 🔥 Redux-powered Cart Drawer */}
       <CartDrawer
         isOpen={openCart}
         onClose={() => setOpenCart(false)}
-        items={[
-          {
-            id: 1,
-            name: "Men’s Premium Black Ankle Woolen Socks with Contrast Double Sport Stripe",
-            image: "/assets/images/product-1.png",
-            price: 199,
-            size: "UK 4-7 (US 5.7-5 / EU 37-40)",
-            quantity: 1,
-          },
-        ]}
       />
     </>
   );

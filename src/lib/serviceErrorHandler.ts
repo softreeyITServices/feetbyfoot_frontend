@@ -7,6 +7,7 @@ interface HttpError {
   data?: {
     message?: string;
     code?: string;
+    errors?: Record<string, string[]>; // ✅ ADD THIS
   };
 }
 
@@ -50,6 +51,37 @@ function getAuthErrorCode(status?: number, backendCode?: string): AuthErrorCode 
   }
 }
 
+
+export function handleApiError(error: unknown, context?: string): never {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
+  ) {
+    const err = error as {
+      message: string;
+      status?: number;
+      data?: unknown;
+    };
+
+    const message = context
+      ? `${err.message} (${context})`
+      : err.message;
+
+    throw Object.assign(new Error(message), {
+      status: err.status,
+      data: err.data,
+    });
+  }
+
+  const message =
+    error instanceof Error ? error.message : "Something went wrong";
+
+  throw new Error(context ? `${message} (${context})` : message);
+}
+
+
+
 /**
  * Handles auth-related errors from HTTP calls
  */
@@ -61,6 +93,12 @@ export function handleAuthError(error: unknown, context?: string): never {
 
   // HTTP error from httpClient
   if (isHttpError(error)) {
+    // ✅ If this is a validation error with field-specific errors, just rethrow it as-is
+    // Let the component handle field errors directly
+    if (error.data?.code === "VALIDATION_ERROR" && error.data?.errors) {
+      throw error; // Rethrow the original error object
+    }
+
     const message = error.data?.message || error.message;
     const code = getAuthErrorCode(error.status, error.data?.code);
     

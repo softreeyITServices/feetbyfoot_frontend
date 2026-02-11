@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Container from "../ui/Container";
+import { CallWhatsappIcon } from "@/icons/CallWhatsappIcon";
+import { MailIcon } from "@/icons/MailIcon";
 import { OpenEnvelopeIcon } from "@/icons/OpenEnvelopeIcon";
 import { ChatPhoneIcon } from "@/icons/ChatPhoneIcon";
 
