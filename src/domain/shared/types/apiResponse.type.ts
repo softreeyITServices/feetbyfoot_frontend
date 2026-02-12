@@ -13,9 +13,10 @@ export interface ApiHandlerOptions<T> {
   allowedMethods?: string[];
 }
 
-export interface ApiContext<T = unknown> {
+export interface ApiContext<T = unknown, P = Record<string, string>> {
   data: T;
   req: NextRequest;
+  params?: P;
 }
 
 export interface ErrorResponse {

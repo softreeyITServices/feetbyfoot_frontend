@@ -16,7 +16,7 @@ export function apiHandler<T = unknown>(
   handler: ApiHandler<T>,
   options?: ApiHandlerOptions<T>
 ) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (req: NextRequest, context: { params: Promise<Record<string, string>> }): Promise<NextResponse> => {
     const startTime = Date.now();
     const path = req.nextUrl.pathname;
     const method = req.method;
@@ -33,7 +33,12 @@ export function apiHandler<T = unknown>(
         setTimeout(() => reject(new TimeoutError()), REQUEST_TIMEOUT);
       });
 
-      const handlerPromise = executeHandler(req, handler, options);
+      const resolvedParams =
+        context?.params instanceof Promise
+          ? await context.params
+          : context?.params;
+
+      const handlerPromise = executeHandler(req, handler, options, resolvedParams);
 
       const response = await Promise.race([
         handlerPromise,
@@ -68,7 +73,8 @@ export function apiHandler<T = unknown>(
 async function executeHandler<T>(
   req: NextRequest,
   handler: ApiHandler<T>,
-  options: ApiHandlerOptions<T> | undefined
+  options: ApiHandlerOptions<T> | undefined,
+  params?: Record<string, string>
 ): Promise<NextResponse> {
   let validatedData: T | null = null;
 
@@ -114,6 +120,7 @@ async function executeHandler<T>(
   return handler(req, {
     data: validatedData as T,
     req,
+    params
   });
 }
 

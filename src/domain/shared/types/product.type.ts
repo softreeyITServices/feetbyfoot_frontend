@@ -4,6 +4,7 @@ export interface ProductSize {
   size: string;
   quantity: number;
   isActive: boolean;
+  isInCart?: boolean;
 }
 
 export interface Product {
@@ -18,6 +19,8 @@ export interface Product {
   salePrice: number;
   currency: string;
   imageUrls: string[];
+  categoryId: string;
+  categoryTypeId: string;
   gender: string[];
   tags: string[];
   isActive: boolean;
@@ -25,7 +28,11 @@ export interface Product {
   isFeatured: boolean;
   ratingAverage: number;
   totalRatings: number;
+  isInWishlist: boolean;
+  reviews: ProductReview[];
   createdAt: string;
+  updatedAt: string;
+
 }
 
 /** 🔥 EXACT backend response */
@@ -37,6 +44,19 @@ export interface PublicProductsResponse {
   totalPages: number;
 }
 
-export interface PublicProductsApiResponse{
+export interface PublicProductsApiResponse {
   data: PublicProductsResponse;
 }
+
+
+export type ProductReview = {
+  _id?: string;
+  rating?: number;
+  comment?: string;
+  userId?: string;
+  createdAt?: string;
+};
+
+export type ProductByIdResponse = {
+  data: Product;
+};

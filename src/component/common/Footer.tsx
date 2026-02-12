@@ -40,10 +40,10 @@ export default function Footer() {
         <div className="flex flex-wrap md:flex-nowrap gap-12 w-full md:w-3/5">
 
           {/* ABOUT US */}
-          <div className="min-w-[140px]">
+          <div className="min-w-35">
             <h4 className="font-semibold mb-3 text-gray-900 text-lg">About Us</h4>
             <ul className="space-y-2 text-gray-700">
-              <li><Link href="/worksofart">About Us</Link> </li>
+              <li><Link href="/workofart">About Us</Link> </li>
               <li><Link href="/blogs">Blog</Link></li>
               <li><Link href="/privacypolicy">Privacy Policy</Link></li>
               <li><Link href="/shippingpolicy">Shipping Policy</Link></li>
@@ -65,7 +65,7 @@ export default function Footer() {
           </div>
 
           {/* QUICK LINKS */}
-          <div className="min-w-[140px]">
+          <div className="min-w-35">
             <h4 className="font-semibold mb-3 text-gray-900 text-lg">Quick Links</h4>
             <ul className="space-y-2 text-gray-700">
               <li>Shop</li>
@@ -79,7 +79,7 @@ export default function Footer() {
 
         <div className="flex flex-wrap md:flex-nowrap gap-12 w-full md:w-2/5">
           {/* NEWSLETTER */}
-          <div className="flex-1 min-w-[220px]">
+          <div className="flex-1 min-w-55">
             <h4 className="font-semibold mb-3 text-green-700 text-2xl">
               Sign up for our Newsletter
             </h4>

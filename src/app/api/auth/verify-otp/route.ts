@@ -14,7 +14,6 @@ export const POST = apiHandler(
   async (_, context) => {
     try {
       const body = context.data; // ✅ now populated
-      console.log("Received OTP verification request with body:", body);
 
       const response = await httpClient.post<VerifyOtpResponse>(
         EX_VERIFY_OTP_URL,

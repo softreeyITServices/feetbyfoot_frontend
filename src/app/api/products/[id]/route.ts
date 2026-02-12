@@ -1,41 +1,43 @@
-// src/app/api/products/route.ts
+// src/app/api/products/[id]/route.ts
+
 import {
   apiHandler,
   createSuccessResponse,
   ExternalApiError,
 } from "@/lib/apiHandler";
-import { httpClient } from "@/lib/httpClient";
+import { productService } from "@/domain/application/services/product.service";
 import { isHttpClientError } from "@/lib/httpClientError";
+import { NextRequest } from "next/server";
+import { httpClient } from "@/lib/httpClient";
 import { EX_PRODUCTS_URL } from "@/constants/apis";
 import { PublicProductsApiResponse } from "@/domain/shared/types/product.type";
-import { NextRequest } from "next/server";
 
 export const GET = apiHandler(
-  async (req: NextRequest) => {
+  async (req: NextRequest, context) => {
     try {
-      const { searchParams } = new URL(req.url);
+      const id = context.params?.id;
 
-      const params: Record<string, string> = {};
-      searchParams.forEach((value, key) => {
-        params[key] = value;
-      });
+      if (!id) {
+        throw new Error("Product id is required");
+      }
 
       const response = await httpClient.get<PublicProductsApiResponse>(
-        EX_PRODUCTS_URL + "/public",
-        params,
+        EX_PRODUCTS_URL + "/"+ id,
         { skipAuth: true }
       );
-      return createSuccessResponse(response, 200);
+
+      return createSuccessResponse(response.data, 200);
     } catch (error: unknown) {
       if (isHttpClientError(error)) {
         throw new ExternalApiError(
           error.data?.message ??
           error.message ??
-          "Failed to fetch products",
+          "Failed to fetch product",
           error.status,
           error.data
         );
       }
+
       throw error;
     }
   },
@@ -43,7 +45,3 @@ export const GET = apiHandler(
     allowedMethods: ["GET"],
   }
 );
-
-
-
-

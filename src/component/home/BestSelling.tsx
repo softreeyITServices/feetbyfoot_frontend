@@ -52,6 +52,7 @@ export default function BestSelling() {
           {products.map((product, index) => (
             <ProductCard
               key={index.toString()}
+              id={index.toString()}
               size=""
               imageSrc={product.imageSrc}
               altText={product.altText}

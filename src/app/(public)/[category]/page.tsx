@@ -79,7 +79,7 @@ export default async function CategoryPage({
     total,
     totalPages,
   } = await productService.getPublicProducts({
-    gender: category,
+    gender: category.toUpperCase(),
     page,
     limit: perpage,
   });
@@ -134,6 +134,7 @@ export default async function CategoryPage({
               {products.map((product) => (
                 <ProductCard
                   key={product._id}
+                  id={product._id}
                   size={product.sizes[0]?.size}
                   imageSrc={product.imageUrls[0]}
                   altText={product.name}
