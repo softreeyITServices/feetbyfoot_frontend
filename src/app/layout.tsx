@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Poppins, Montserrat } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { MainProviders } from "@/domain/application/providers/MainProviders";
 import ReduxProvider from "@/store/ReduxProvider";
@@ -9,6 +10,7 @@ export const poppins = Poppins({
   weight: ["300", "400", "500"],
   display: "swap",
 });
+
 export const montserrat = Montserrat({
   subsets: ["latin"],
   weight: ["500", "600"],
@@ -27,14 +29,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body
-        className={`${inter.variable} antialiased`}
-      >
+      <body className={`${inter.variable} antialiased`}>
+        
+        {/* ✅ Razorpay Script (correct way) */}
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="afterInteractive"
+        />
+
         <MainProviders>
           <ReduxProvider>
             {children}

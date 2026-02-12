@@ -9,6 +9,7 @@ import {
   removeFromCart,
   updateQuantity,
 } from "@/store/slices/cart.slice";
+import { startRazorpayCheckout } from "@/lib/payments/razorpay/razorpay.client";
 
 export default function CartBody() {
   const dispatch = useAppDispatch();
@@ -50,6 +51,18 @@ export default function CartBody() {
 
   const handleRemove = (id: string, size: string) => {
     dispatch(removeFromCart({ id, size }));
+  };
+
+  const handlePayment = async () => {
+    await startRazorpayCheckout({
+      amount: subtotal,
+      onSuccess: () => {
+        alert("Payment Successful!");
+      },
+      onFailure: () => {
+        alert("Payment Failed");
+      },
+    });
   };
 
   return (
@@ -196,7 +209,7 @@ export default function CartBody() {
               </p>
             </div>
 
-            <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded mt-6 font-medium">
+            <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded mt-6 font-medium" onClick={handlePayment}>
               Place Order
             </button>
           </div>

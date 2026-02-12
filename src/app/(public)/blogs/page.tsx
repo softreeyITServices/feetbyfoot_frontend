@@ -47,7 +47,7 @@ const BLOGS: BlogCard[] = [
 export default function BlogsPage() {
   return (
     <>
-    <Navbar/>
+      <Navbar />
       <main className="bg-white">
         <div className="mx-auto max-w-[980px] px-4 py-10">
           {/* Header (matches screenshot style) */}
@@ -72,7 +72,7 @@ export default function BlogsPage() {
           </section>
         </div>
       </main>
-      <Footer/>
+      <Footer />
     </>
 
   );

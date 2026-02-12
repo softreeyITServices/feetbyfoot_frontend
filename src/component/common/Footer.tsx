@@ -43,8 +43,8 @@ export default function Footer() {
           <div className="min-w-[140px]">
             <h4 className="font-semibold mb-3 text-gray-900 text-lg">About Us</h4>
             <ul className="space-y-2 text-gray-700">
-              <li><Link href="/ourstory">About Us</Link> </li>
-              <li>Blog</li>
+              <li><Link href="/worksofart">About Us</Link> </li>
+              <li><Link href="/blogs">Blog</Link></li>
               <li><Link href="/privacypolicy">Privacy Policy</Link></li>
               <li><Link href="/shippingpolicy">Shipping Policy</Link></li>
               <li><Link href="/termsandconditions">Terms & Conditions</Link></li>

@@ -131,10 +131,9 @@ export default async function CategoryPage({
 
             {/* Product Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {products.map((product, index) => (
+              {products.map((product) => (
                 <ProductCard
-                  key={index}
-                  id={product._id}
+                  key={product._id}
                   size={product.sizes[0]?.size}
                   imageSrc={product.imageUrls[0]}
                   altText={product.name}

@@ -6,7 +6,6 @@ export default function BestSelling() {
 
   const products = [
     {
-      id: "1",
       imageSrc: "/assets/images/product-1.png",
       altText: "Grey Woolen Socks",
       categories: "Womens, Crew, Mens, Winter",
@@ -15,7 +14,6 @@ export default function BestSelling() {
       discountedPrice: "209.00",
     },
     {
-      id: "2",
       imageSrc: "/assets/images/product-2.png",
       altText: "Reindeer Pattern Socks",
       categories: "Womens, Crew, Winter Socks",
@@ -24,7 +22,6 @@ export default function BestSelling() {
       discountedPrice: "199.00",
     },
     {
-      id: "3",
       imageSrc: "/assets/images/product-3.png",
       altText: "Navy Blue Crew Socks",
       categories: "Mens, Crew, Winter Socks",
@@ -52,9 +49,9 @@ export default function BestSelling() {
         {/* FLEX LAYOUT */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
 
-          {products.map((product) => 
+          {products.map((product, index) => (
             <ProductCard
-              key={product.id}
+              key={index.toString()}
               size=""
               imageSrc={product.imageSrc}
               altText={product.altText}
@@ -63,7 +60,7 @@ export default function BestSelling() {
               originalPrice={product.originalPrice}
               discountedPrice={product.discountedPrice}
             />
-          )}
+          ))}
 
         </div>
       </section>

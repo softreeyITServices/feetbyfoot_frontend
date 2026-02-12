@@ -8,6 +8,7 @@ import {
   removeFromCart,
   updateQuantity,
 } from "@/store/slices/cart.slice";
+import {useRouter} from 'next/navigation'
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export default function CartDrawer({
 }: CartDrawerProps) {
   const dispatch = useAppDispatch();
   const items = useAppSelector(state => state.cart.items);
+  const Router = useRouter()
 
   const getPrice = (price: string | number): number => {
     if (typeof price === "number") return price;
@@ -55,10 +57,6 @@ export default function CartDrawer({
 
   const handleRemove = (id: string, size: string) => {
     dispatch(removeFromCart({ id, size }));
-  };
-
-  const handleCheckout = () => {
-    alert("Proceeding to checkout!");
   };
 
   const handleCart = () => {
@@ -192,12 +190,6 @@ export default function CartDrawer({
                 onClick={onClose}
               >
                 Continue Shopping
-              </button>
-              <button
-                className="w-full bg-black text-white py-3 text-sm rounded"
-                onClick={handleCheckout}
-              >
-                Checkout
               </button>
             </div>
           </div>

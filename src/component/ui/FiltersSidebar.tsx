@@ -54,82 +54,37 @@ export default function FiltersSidebar() {
 
       <FilterSection title="Product Category">
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> Socks
+          <input type="checkbox" /> Crew Socks
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> Underwear
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Belts
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Scarves
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Towels
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Accessories
+          <input type="checkbox" /> Ankle Socks
         </label>
       </FilterSection>
 
       <FilterSection title="Subcategory">
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> New Arrivals
+          <input type="checkbox" /> Winter Socks
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> All Bamboo Socks
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Trainer Socks
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> No-Show Socks
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Athletic Socks
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Comfort Cuff Socks
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Large Sizes
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Boot Socks
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Gift Boxes & Bundles
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Sock Club
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Best Socks for Men
+          <input type="checkbox" /> Sports Socks
         </label>
       </FilterSection>
 
       <FilterSection title="Discounts">
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> On Sale
+          <input type="checkbox" /> 10% & above
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> Clearance
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Percentage Off
+          <input type="checkbox" /> 20% & above
         </label>
       </FilterSection>
 
       <FilterSection title="Shoe Size">
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> UK 4–7 (US 5–7.5 / EU 37–40)
+          <input type="checkbox" /> 6–8
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> UK 7–11 (US 8–12 / EU 40–47)
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> UK 12–15 (US 13–15.5 / EU 47–50)
+          <input type="checkbox" /> 9–11
         </label>
       </FilterSection>
 
@@ -138,10 +93,7 @@ export default function FiltersSidebar() {
           <input type="checkbox" /> Ankle
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> Calf
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> No-Show
+          <input type="checkbox" /> Crew
         </label>
       </FilterSection>
 
@@ -153,22 +105,16 @@ export default function FiltersSidebar() {
           <input type="checkbox" /> Blue
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> Grey
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Blue
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Multicolor
+          <input type="checkbox" /> Green
         </label>
       </FilterSection>
 
       <FilterSection title="Pack Type">
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> Single Pair
+          <input type="checkbox" /> Single
         </label>
         <label className="flex items-center gap-2">
-          <input type="checkbox" /> Multi-Pack
+          <input type="checkbox" /> Combo
         </label>
       </FilterSection>
 
