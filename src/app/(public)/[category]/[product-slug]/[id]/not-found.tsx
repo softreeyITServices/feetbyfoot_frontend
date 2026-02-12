@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 // not-found.tsx
 export default function ProductNotFound() {
   return (
@@ -8,12 +10,12 @@ export default function ProductNotFound() {
       <p className="text-gray-600 mb-6">
         This product may have been removed or doesn’t exist.
       </p>
-      <a
+      <Link
         href="/shop"
         className="bg-black text-white px-6 py-3 rounded-md"
       >
         Continue Shopping
-      </a>
+      </Link>
     </main>
   );
 }
