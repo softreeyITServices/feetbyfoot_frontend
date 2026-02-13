@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 interface Size {
   _id?: string;
   size: string;
@@ -9,9 +7,17 @@ interface Size {
   isActive: boolean;
 }
 
-export default function SizeSelector({ sizes }: { sizes: Size[] }) {
-  const [selected, setSelected] = useState<string | null>(null);
+interface SizeSelectorProps {
+  sizes: Size[];
+  selectedSize: string | null;
+  onSelectSize: (size: string) => void;
+}
 
+export default function SizeSelector({
+  sizes,
+  selectedSize,
+  onSelectSize,
+}: SizeSelectorProps) {
   return (
     <div>
       <p className="text-sm font-medium mb-2">SELECT SIZE</p>
@@ -24,10 +30,10 @@ export default function SizeSelector({ sizes }: { sizes: Size[] }) {
             <button
               key={item._id || index}
               disabled={disabled}
-              onClick={() => setSelected(item.size)}
+              onClick={() => onSelectSize(item.size)}
               className={`border px-4 py-2 text-sm transition
                 ${
-                  selected === item.size
+                  selectedSize === item.size
                     ? "border-black"
                     : "border-gray-300"
                 }

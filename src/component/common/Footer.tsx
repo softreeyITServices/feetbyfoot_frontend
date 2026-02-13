@@ -52,7 +52,7 @@ export default function Footer() {
           </div>
 
           {/* SUPPORT */}
-          <div className="min-w-[160px]">
+          <div className="min-w-40">
             <h4 className="font-semibold mb-3 text-gray-900 text-lg">Support</h4>
             <ul className="space-y-2 text-gray-700">
               <li><Link href="/refundreturnpolicy">Returns & Refunds</Link></li>

@@ -133,9 +133,10 @@ export default async function CategoryPage({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {products.map((product) => (
                 <ProductCard
+                  home={false}
                   key={product._id}
                   id={product._id}
-                  size={product.sizes[0]?.size}
+                  size={product.sizes}
                   imageSrc={product.imageUrls[0]}
                   altText={product.name}
                   categories={product.tags.join(", ")}

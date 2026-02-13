@@ -15,9 +15,10 @@ export const DASHBOARD_URL = API_BASE_URL + "/dashboard"
 
 export const PRODUCTS_URL = API_BASE_URL + "/products";
 export const CATEGORIES_URL = API_BASE_URL + "/categories";
-export const ORDERS_URL = API_BASE_URL + "/orders";
+export const ORDERS_URL = API_BASE_URL + "/payments/create-order";
 export const CART_URL = API_BASE_URL + "/cart";
 export const WISHLIST_URL = API_BASE_URL + "/wishlist";
+export const PAYMENT_VERIFY = API_BASE_URL + "/payments/verify"
 
 
 // External APIs (for server-side use)
@@ -33,8 +34,8 @@ export const EX_USER_PROFILE_URL = EXTERNAL_API_BASE_URL + "/auth/me";
 
 export const EX_PRODUCTS_URL = EXTERNAL_API_BASE_URL + "/products";
 export const EX_CATEGORIES_URL = EXTERNAL_API_BASE_URL + "/categories";
-export const EX_ORDERS_URL = EXTERNAL_API_BASE_URL + "/orders";
+export const EX_ORDERS_URL = EXTERNAL_API_BASE_URL + "/payments/create-order";
 export const EX_CART_URL = EXTERNAL_API_BASE_URL + "/cart";
 export const EX_WISHLIST_URL = EXTERNAL_API_BASE_URL + "/wishlist";
 
-export const EX_PAYMENT_INTENT_URL = EXTERNAL_API_BASE_URL + "/payments/intent";
+export const EX_PAYMENT_VERIFY = EXTERNAL_API_BASE_URL + "/payments/verify";

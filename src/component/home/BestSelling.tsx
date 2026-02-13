@@ -12,6 +12,20 @@ export default function BestSelling() {
       title: "Grey & Black Checked Woolen Socks | Soft Fleece-Lined Warm Winter Socks",
       originalPrice: "299.00",
       discountedPrice: "209.00",
+      sizes: [
+        {
+          size: "M",
+          quantity: 10,
+          isActive: false,
+          _id: "698445691361d54349200a40"
+        },
+        {
+          size: "S",
+          quantity: 10,
+          isActive: false,
+          _id: "698445691361d54349200a41"
+        }
+      ],
     },
     {
       imageSrc: "/assets/images/product-2.png",
@@ -20,6 +34,20 @@ export default function BestSelling() {
       title: "Winter Reindeer Pattern Woolen Socks – Cozy Warm Thermal Socks",
       originalPrice: "299.00",
       discountedPrice: "199.00",
+      sizes: [
+        {
+          size: "M",
+          quantity: 10,
+          isActive: false,
+          _id: "698445691361d54349200a40"
+        },
+        {
+          size: "S",
+          quantity: 10,
+          isActive: false,
+          _id: "698445691361d54349200a41"
+        }
+      ],
     },
     {
       imageSrc: "/assets/images/product-3.png",
@@ -28,6 +56,20 @@ export default function BestSelling() {
       title: "Classic Navy Blue Woolen Crew Socks – Soft, Durable & Everyday Comfort",
       originalPrice: "299.00",
       discountedPrice: "199.00",
+      sizes: [
+        {
+          size: "M",
+          quantity: 10,
+          isActive: false,
+          _id: "698445691361d54349200a40"
+        },
+        {
+          size: "S",
+          quantity: 10,
+          isActive: false,
+          _id: "698445691361d54349200a41"
+        }
+      ],
     },
   ];
 
@@ -51,9 +93,10 @@ export default function BestSelling() {
 
           {products.map((product, index) => (
             <ProductCard
+              home={true}
               key={index.toString()}
               id={index.toString()}
-              size=""
+              size={product.sizes}
               imageSrc={product.imageSrc}
               altText={product.altText}
               categories={product.categories}

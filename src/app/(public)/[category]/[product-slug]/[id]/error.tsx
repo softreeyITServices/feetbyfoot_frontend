@@ -1,8 +1,6 @@
 // error.tsx
 "use client";
 
-import Link from "next/link";
-
 export default function ProductError({
   error,
   reset,
@@ -28,12 +26,12 @@ export default function ProductError({
           Retry
         </button>
 
-        <Link
+        <a
           href="/shop"
           className="border px-6 py-3 rounded-md"
         >
           Back to Shop
-        </Link>
+        </a>
       </div>
     </main>
   );

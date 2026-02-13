@@ -84,7 +84,7 @@ export const authOptions: AuthOptions = {
           const user = meResponse.data;
 
           return {
-            id: user.id,
+            id: user._id,
             role: user.role,
             name: user.name,
             email: user.email,
@@ -192,7 +192,7 @@ export const authOptions: AuthOptions = {
     },
   },
 
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.JWT_ACCESS_SECRET,
   debug: process.env.NODE_ENV === "development",
 };
 

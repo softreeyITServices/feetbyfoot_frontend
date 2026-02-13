@@ -5,35 +5,56 @@ import Image from 'next/image'
 import { useAppDispatch } from '@/store/hooks';
 import { addToCart } from '@/store/slices/cart.slice';
 import { toSlug } from '@/lib/slugConverter';
+import { openCart } from '@/store/slices/ui.slice';
+import SizeSelector from '@/app/(public)/[category]/[product-slug]/[id]/components/SizeSelector';
+import { useState } from 'react';
 
-function ProductCard({ id, imageSrc, altText, categories, title, originalPrice, discountedPrice, size }: {
-  id: string,
+function ProductCard({ id, imageSrc, altText, categories, title, originalPrice, discountedPrice, size, home }: {
+  home?: boolean;
+  id: string;
   imageSrc: string;
-  size: string;
+  size: {
+    _id?: string;
+    size: string;
+    quantity: number;
+    isActive: boolean;
+  }[];
   altText: string;
   categories: string;
   title: string;
   originalPrice: string;
   discountedPrice: string;
 }) {
-
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [error, setError] = useState("");
   const dispatch = useAppDispatch();
 
+  const handleSize = (e: string) => {
+    setSelectedSize(e)
+    setError("")
+  }
+
   const handleCart = () => {
+    if (!selectedSize) {
+      setError("Size not selected")
+      return
+    }
     dispatch(
       addToCart({
         id,
         name: title,
         price: discountedPrice,
         image: imageSrc,
-        size: size,
+        size: selectedSize,
         quantity: 1,
       })
     );
+    setSelectedSize('')
+    dispatch(openCart());
   }
   return (
     <div className="rounded-xl bg-white border border-gray-200 p-3">
-      <div className='w-66.25 h-66.25'>
+      <div className={`${home ? '' : 'w-66.25 h-66.25'}`}>
         <Image
           src={imageSrc}
           alt={altText}
@@ -59,6 +80,12 @@ function ProductCard({ id, imageSrc, altText, categories, title, originalPrice, 
           <span className="text-green-600 font-bold text-lg ml-2">₹{discountedPrice}</span>
         </div>
 
+        <SizeSelector
+          sizes={size}
+          selectedSize={selectedSize}
+          onSelectSize={handleSize}
+        />
+        <span className='text-red-500 text-sm'>{error}</span>
         <button className="mt-4 w-full bg-black text-white py-2 hover:bg-gray-800 flex items-center justify-evenly gap-2" onClick={handleCart}>
           <CartBasketIcon width={13} height={15} fill='#fff' /> <span> ADD TO BASKET</span>
         </button>

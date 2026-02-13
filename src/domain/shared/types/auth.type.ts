@@ -1,7 +1,7 @@
 import { User } from "next-auth";
 
 export type UserProfile = {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   phone: string;

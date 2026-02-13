@@ -6,12 +6,19 @@ import Image from "next/image";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
+  clearCart,
   removeFromCart,
   updateQuantity,
 } from "@/store/slices/cart.slice";
+import { useSession } from "next-auth/react";
 import { startRazorpayCheckout } from "@/lib/payments/razorpay/razorpay.client";
+import { cartService } from "@/domain/application/services/cart.service";
+import { useRouter } from "next/navigation";
 
 export default function CartBody() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
   const dispatch = useAppDispatch();
   const items = useAppSelector(state => state.cart.items);
 
@@ -53,16 +60,52 @@ export default function CartBody() {
     dispatch(removeFromCart({ id, size }));
   };
 
+  // const handlePayment = async () => {
+  //   await startRazorpayCheckout({
+  //     amount: subtotal,
+  //     onSuccess: () => {
+  //       alert("Payment Successful!");
+  //     },
+  //     onFailure: () => {
+  //       alert("Payment Failed");
+  //     },
+  //   });
+  // };
+
   const handlePayment = async () => {
-    await startRazorpayCheckout({
-      amount: subtotal,
-      onSuccess: () => {
-        alert("Payment Successful!");
-      },
-      onFailure: () => {
-        alert("Payment Failed");
-      },
-    });
+    try {
+      /* ---------------- CHECK LOGIN ---------------- */
+      if (status === "loading") return;
+      if (!session) {
+        router.push("/login?redirect=/cart");
+        return;
+      }
+      /* ---------------- SYNC REDUX CART TO BACKEND ---------------- */
+      if (items.length > 0) {
+        for (const item of items) {
+          await cartService.addItem({
+            productId: item.id,
+            size: item.size,
+            quantity: item.quantity,
+          });
+        }
+      }
+
+      /* ---------------- START RAZORPAY ---------------- */
+      await startRazorpayCheckout({
+        amount: total, // IMPORTANT → use total (with shipping)
+        onSuccess: async () => {
+          dispatch(clearCart());
+          router.push("/order-success");
+        },
+        onFailure: () => {
+          alert("Payment Failed");
+        },
+      });
+
+    } catch (error) {
+      console.error("Checkout error:", error);
+    }
   };
 
   return (

@@ -1,54 +1,63 @@
+import { ORDERS_URL, PAYMENT_VERIFY } from "@/constants/apis";
+import { httpClient } from "@/lib/httpClient";
+
 interface StartCheckoutParams {
   amount: number;
+  addressId?: string;
   onSuccess?: () => void;
   onFailure?: () => void;
+}
+interface RazorpayOrder {
+  id: string;
+  amount: number;
+  currency: string;
 }
 
 export const startRazorpayCheckout = async ({
   amount,
+  addressId,
   onSuccess,
   onFailure,
 }: StartCheckoutParams) => {
   try {
-    const res = await fetch("/api/payments/create-order", {
+    if (typeof window === "undefined") return;
+
+    // ✅ Step 1: Create Razorpay Order (NOT app order)
+    const data = await httpClient.request<RazorpayOrder>({
+      url: ORDERS_URL,
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ amount }),
+      requiresAuth: true,
+      data: { amount },
     });
 
-    if (!res.ok) {
-      throw new Error("Failed to create order");
-    }
-
-    const order: {
-      id: string;
-      amount: number;
-      currency: string;
-    } = await res.json();
-
     const options: RazorpayOptions = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: order.currency,
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+      amount: data.amount,
+      currency: data.currency,
       name: "FeetByFoot",
-      order_id: order.id,
+      order_id: data.id,
+
       handler: async (response) => {
-        const verifyRes = await fetch("/api/payments/verify", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(response),
-        });
+        try {
+          // ✅ Step 2: Verify payment + Create app order (server side)
+          await httpClient.request({
+            url: PAYMENT_VERIFY,
+            method: "POST",
+            requiresAuth: true,
+            data: {
+              ...response,
+              address_id: addressId,
+            },
+          });
 
-        if (!verifyRes.ok) {
-          throw new Error("Payment verification failed");
+          onSuccess?.();
+
+        } catch (err) {
+          console.error("Verification failed", err);
+          onFailure?.();
         }
-
-        onSuccess?.();
       },
+
       modal: {
         ondismiss: () => {
           onFailure?.();
@@ -58,6 +67,7 @@ export const startRazorpayCheckout = async ({
 
     const rzp = new window.Razorpay(options);
     rzp.open();
+
   } catch (error) {
     console.error("Checkout error:", error);
     onFailure?.();

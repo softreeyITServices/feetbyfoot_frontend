@@ -49,7 +49,7 @@ export default function BlogsPage() {
     <>
       <Navbar />
       <main className="bg-white">
-        <div className="mx-auto max-w-[980px] px-4 py-10">
+        <div className="mx-auto max-w-245 px-4 py-10">
           {/* Header (matches screenshot style) */}
           <header className="text-center">
             <div className="mx-auto inline-flex items-center justify-center bg-[#F2C100] px-14 py-2">

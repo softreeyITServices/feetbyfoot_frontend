@@ -1,3 +1,4 @@
+import { TickIcon } from '@/icons/TickIcon'
 import React from 'react'
 
 function ProductDescriptionTab({ description }: { description: string }) {

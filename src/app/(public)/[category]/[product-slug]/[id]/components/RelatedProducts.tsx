@@ -8,18 +8,19 @@ interface RelatedProductsProps {
     title: string;
     originalPrice: string;
     discountedPrice: string;
+    size: {
+      _id?: string;
+      size: string;
+      quantity: number;
+      isActive: boolean;
+    }[];
   }[];
 }
 export default function RelatedProducts({ products }: RelatedProductsProps) {
   return (
     <section className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
       {products?.map((product, i) => (
-        <ProductCard key={i.toString()} id={i.toString()} size="" imageSrc={product.imageSrc} 
-        altText={product.altText} 
-        categories={product.categories} 
-        title={product.title} 
-        originalPrice={product.originalPrice} 
-        discountedPrice={product.discountedPrice} />
+        <ProductCard key={i.toString()} id={i.toString()} size={product.size} imageSrc={product.imageSrc} altText={product.altText} categories={product.categories} title={product.title} originalPrice={product.originalPrice} discountedPrice={product.discountedPrice} />
       ))}
     </section>
   );

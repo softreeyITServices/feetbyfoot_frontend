@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
 import { ProfileIcon } from "@/icons/ProfileIcon";
 import { CartIcon } from "@/icons/CartIcon";
 import { SearchIcon } from "@/icons/SearchIcon";
 import CartDrawer from "../ui/CartDrawer";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { openCart, closeCart } from "@/store/slices/ui.slice";
 
 const menuItems = [
   { label: "MENS", href: "/mens" },
@@ -15,12 +15,13 @@ const menuItems = [
   { label: "KIDS", href: "/kids" },
   { label: "GIFTS", href: "/gifts", active: true },
   { label: "OUTLET", href: "/outlet" },
-  { label: "BRAND", href: "/ourstory" },
+  { label: "BRAND", href: "/brand" },
   { label: "CONTACT", href: "/contactus" },
 ];
 
 export default function Navbar() {
-  const [openCart, setOpenCart] = useState(false);
+  const dispatch = useAppDispatch();
+  const openCartState = useAppSelector(state => state.ui.isCartOpen);
 
   // 🔥 Get cart items from Redux
   const cartItems = useAppSelector(state => state.cart.items);
@@ -33,7 +34,7 @@ export default function Navbar() {
 
   const handleCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    setOpenCart(true);
+    dispatch(openCart());
   };
 
   return (
@@ -57,10 +58,9 @@ export default function Navbar() {
                 key={item.label}
                 href={item.href}
                 className={`text-sm font-bold px-3 py-1
-                  ${
-                    item.active
-                      ? "bg-yellow-400 text-black"
-                      : "text-gray-700 hover:text-black"
+                  ${item.active
+                    ? "bg-yellow-400 text-black"
+                    : "text-gray-700 hover:text-black"
                   }
                 `}
               >
@@ -111,8 +111,8 @@ export default function Navbar() {
 
       {/* 🔥 Redux-powered Cart Drawer */}
       <CartDrawer
-        isOpen={openCart}
-        onClose={() => setOpenCart(false)}
+        isOpen={openCartState}
+        onClose={() => dispatch(closeCart())}
       />
     </>
   );

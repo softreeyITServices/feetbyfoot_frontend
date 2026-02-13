@@ -27,12 +27,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const data = response
 
   const product = {
+    id: data._id,
     name: data.name,
     price: data.salePrice,     // show discounted price
     mrp: data.price,           // original price
     description: data.description,
     images: data.imageUrls,    // correct field
     sizes: data.sizes,
+    baseImage: data.imageUrls[0]
   };
 
   return (
