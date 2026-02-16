@@ -7,7 +7,6 @@ import {
   VERIFY_OTP_URL,
   REFRESH_TOKEN_URL,
   SEND_OTP_URL,
-  EX_LOGOUT_URL
 } from "@/constants/apis";
 import {
   LoginData,

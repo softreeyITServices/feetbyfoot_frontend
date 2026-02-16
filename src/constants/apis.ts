@@ -19,7 +19,10 @@ export const ORDERS_URL = API_BASE_URL + "/payments/create-order";
 export const CART_URL = API_BASE_URL + "/cart";
 export const WISHLIST_URL = API_BASE_URL + "/wishlist";
 export const PAYMENT_VERIFY = API_BASE_URL + "/payments/verify"
+export const ADDRESS_URL = API_BASE_URL + "/address";
+export const PLATFORM_FEES_URL = API_BASE_URL + "/platform-fees";
 
+export const ALL_ORDERS_URL = "/orders";
 
 // External APIs (for server-side use)
 
@@ -39,3 +42,7 @@ export const EX_CART_URL = EXTERNAL_API_BASE_URL + "/cart";
 export const EX_WISHLIST_URL = EXTERNAL_API_BASE_URL + "/wishlist";
 
 export const EX_PAYMENT_VERIFY = EXTERNAL_API_BASE_URL + "/payments/verify";
+export const EX_ADDRESS_URL = EXTERNAL_API_BASE_URL + "/address";
+export const EX_PLATFORM_FEES_URL = EXTERNAL_API_BASE_URL + "/platform-fees";
+export const EX_ALL_ORDERS_URL = EXTERNAL_API_BASE_URL + "/orders";
+

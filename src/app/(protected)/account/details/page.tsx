@@ -1,40 +1,87 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
+
+type AccountForm = {
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  email: string;
+  phoneNumber: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
 
 export default function AccountPage() {
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    displayName: "6oxstkc39x",
-    email: "6oxstkc39x@daouse.com",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
+  const { data: session, status } = useSession();
 
+  /* ---------------------------------------
+     Track if user has manually edited fields
+  ---------------------------------------- */
+  const [hasEdited, setHasEdited] = useState(false);
+  const [editedForm, setEditedForm] = useState<Partial<AccountForm>>({});
+
+  /* ---------------------------------------
+     Derive values from session (always fresh)
+  ---------------------------------------- */
+  const fullName = session?.user?.name || "";
+  const nameParts = fullName.trim().split(" ").filter(Boolean);
+
+  const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+  const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : fullName;
+
+  // Use edited values if available, otherwise use session data
+  const form: AccountForm = {
+    firstName: hasEdited && editedForm.firstName !== undefined ? editedForm.firstName : firstName,
+    lastName: hasEdited && editedForm.lastName !== undefined ? editedForm.lastName : lastName,
+    displayName: hasEdited && editedForm.displayName !== undefined ? editedForm.displayName : fullName,
+    email: hasEdited && editedForm.email !== undefined ? editedForm.email : session?.user?.email || "",
+    phoneNumber: hasEdited && editedForm.phoneNumber !== undefined ? editedForm.phoneNumber : (session?.user)?.phone || "",
+    currentPassword: editedForm.currentPassword || "",
+    newPassword: editedForm.newPassword || "",
+    confirmPassword: editedForm.confirmPassword || "",
+  };
+
+  /* ---------------------------------------
+     Handlers
+  ---------------------------------------- */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setHasEdited(true);
+    setEditedForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Data:", form);
+
+    if (form.newPassword && form.newPassword !== form.confirmPassword) {
+      alert("New passwords do not match");
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    alert("Account details updated successfully (mock)");
   };
+
+  if (status === "loading") {
+    return <div className="p-10">Loading...</div>;
+  }
 
   return (
     <div className="px-4">
       <div className="max-w-4xl mx-auto bg-white p-10">
         <form onSubmit={handleSubmit} className="space-y-12">
-          
-          {/* PERSONAL INFORMATION */}
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">
               Personal Information
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {/* First Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   First name *
@@ -44,11 +91,11 @@ export default function AccountPage() {
                   name="firstName"
                   value={form.firstName}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  required
+                  className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400"
                 />
               </div>
 
-              {/* Last Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Last name *
@@ -58,12 +105,12 @@ export default function AccountPage() {
                   name="lastName"
                   value={form.lastName}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  required
+                  className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400"
                 />
               </div>
             </div>
 
-            {/* Display Name */}
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Display name *
@@ -73,14 +120,11 @@ export default function AccountPage() {
                 name="displayName"
                 value={form.displayName}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                required
+                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400"
               />
-              <p className="text-sm text-gray-500 mt-2">
-                This will be how your name will be displayed in the account section and in reviews.
-              </p>
             </div>
 
-            {/* Email */}
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email address *
@@ -89,77 +133,76 @@ export default function AccountPage() {
                 type="email"
                 name="email"
                 value={form.email}
-                disabled
-                className="w-full bg-gray-100 border border-gray-300 rounded-md px-4 py-3 text-gray-600 cursor-not-allowed"
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400"
+              />
+            </div>
+
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Phone number *
+              </label>
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={form.phoneNumber}
+                onChange={handleChange}
+                required
+                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400"
               />
             </div>
           </section>
 
-          {/* Divider */}
           <div className="border-t border-gray-200" />
 
-          {/* PASSWORD CHANGE */}
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">
               Password change
             </h2>
 
-            {/* Current Password */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Current password (leave blank to leave unchanged)
-              </label>
               <input
                 type="password"
                 name="currentPassword"
                 value={form.currentPassword}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                placeholder="Current password"
+                className="w-full border border-gray-300 rounded-md px-4 py-3"
               />
             </div>
 
-            {/* New Password */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                New password (leave blank to leave unchanged)
-              </label>
               <input
                 type="password"
                 name="newPassword"
                 value={form.newPassword}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                placeholder="New password"
+                className="w-full border border-gray-300 rounded-md px-4 py-3"
               />
             </div>
 
-            {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm new password
-              </label>
               <input
                 type="password"
                 name="confirmPassword"
                 value={form.confirmPassword}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                placeholder="Confirm new password"
+                className="w-full border border-gray-300 rounded-md px-4 py-3"
               />
             </div>
           </section>
 
-          {/* Divider */}
           <div className="border-t border-gray-200" />
 
-          {/* Submit Button */}
-          <div>
-            <button
-              type="submit"
-              className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium px-8 py-3 rounded-md transition-all duration-200"
-            >
-              Save changes
-            </button>
-          </div>
-
+          <button
+            type="submit"
+            className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium px-8 py-3 rounded-md"
+          >
+            Save changes
+          </button>
         </form>
       </div>
     </div>

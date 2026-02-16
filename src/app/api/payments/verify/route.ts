@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { httpClient } from "@/lib/httpClient";
-import { EX_ORDERS_URL, EX_PAYMENT_VERIFY } from "@/constants/apis";
+import { EX_PAYMENT_VERIFY } from "@/constants/apis";
 
 
 export async function POST(req: Request) {
@@ -23,48 +23,26 @@ export async function POST(req: Request) {
     } = body;
 
     const payloadVerify = {
-      razorpayOrderId: razorpay_payment_id,
-      razorpayPaymentId: razorpay_order_id,
-      razorpaySignature: razorpay_signature
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
+      razorpaySignature: razorpay_signature,
+      address_id
     }
 
-    const response = await httpClient.request({
+    await httpClient.request({
       url: EX_PAYMENT_VERIFY,
       method: "POST",
-      data: payloadVerify,
+      data: JSON.stringify(payloadVerify),
       headers: {
         Authorization: authorization,
       },
     });
 
-    if (response) {
-      const orderPayload = {
-        address_id,
-        paymentMethod: "ONLINE"
-
-      }
-      try {
-        await httpClient.request({
-          url: EX_ORDERS_URL,
-          method: "POST",
-          data: orderPayload,
-          headers: {
-            Authorization: authorization,
-          },
-        });
-      } catch {
-        return NextResponse.json(
-          { message: "Order creation failed" },
-          { status: 500 }
-        );
-      }
-    }
-
     return NextResponse.json({
       message: "Payment verified successfully",
     });
   } catch (error) {
-    console.error("Verify error:", error);
+    console.error("Verify error:", JSON.stringify(error));
 
     return NextResponse.json(
       { message: "Payment verification failed" },

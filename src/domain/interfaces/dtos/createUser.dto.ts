@@ -1,6 +1,7 @@
 // domain/interfaces/dtos/auth.dto.ts
 import { z } from "zod";
-const indianPhoneRegex = /^\+91[6-9]\d{9}$/;
+
+const indianPhoneRegex = /^(?:\+91)?\d{10}$/;
 
 export const RegisterSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -9,7 +10,7 @@ export const RegisterSchema = z.object({
     .string()
     .regex(
       indianPhoneRegex,
-      "Phone number must be in format +91XXXXXXXXXX"
+      "Phone number must be 10 digits or in format +91XXXXXXXXXX",
     ),
   role: z.string().min(1, "Role is required"),
 });

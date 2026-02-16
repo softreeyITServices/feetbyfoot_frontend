@@ -4,6 +4,8 @@ import Script from "next/script";
 import "./globals.css";
 import { MainProviders } from "@/domain/application/providers/MainProviders";
 import ReduxProvider from "@/store/ReduxProvider";
+import CartSyncProvider from "@/domain/application/providers/CartSyncProvider";
+
 
 export const poppins = Poppins({
   subsets: ["latin"],
@@ -35,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
-        
+
         {/* ✅ Razorpay Script (correct way) */}
         <Script
           src="https://checkout.razorpay.com/v1/checkout.js"
@@ -44,7 +46,9 @@ export default function RootLayout({
 
         <MainProviders>
           <ReduxProvider>
-            {children}
+            <CartSyncProvider>
+              {children}
+            </CartSyncProvider>
           </ReduxProvider>
         </MainProviders>
       </body>

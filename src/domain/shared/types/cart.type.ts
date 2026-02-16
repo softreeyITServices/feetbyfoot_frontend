@@ -3,13 +3,29 @@ export interface CartItem {
   productId: string;
   size: string;
   quantity: number;
+  productImage: string;
+  productName: string;
+  productSlug: string;
+  unitPrice: number;
+  sizeDetails: {
+    isActive: boolean;
+    productId: string;
+    quantity: number;
+    size: string;
+  }
 }
 
 export interface Cart {
   _id: string;
   userId: string;
   items: CartItem[];
-  totalAmount: number;
+  discountAmount: number;
+  gstAmount: number;
+  platformFee: number;
+  shippingCost: number;
+  shippingMethod: string;
+  subtotal: number;
+  total: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,4 +52,10 @@ export interface DeleteCartItemsRequest {
   }[];
 }
 
-export type CartResponse = Cart;
+export interface CartResponse {
+  success: boolean,
+  data: {
+    data: Cart
+  },
+  timestamp: string
+};

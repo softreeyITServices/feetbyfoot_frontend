@@ -3,11 +3,12 @@ import { CartBasketIcon } from '@/icons/CartBasketIcon';
 import Link from 'next/link';
 import Image from 'next/image'
 import { useAppDispatch } from '@/store/hooks';
-import { addToCart } from '@/store/slices/cart.slice';
+import { addToCart, addToCartAsync } from '@/store/slices/cart.slice';
 import { toSlug } from '@/lib/slugConverter';
 import { openCart } from '@/store/slices/ui.slice';
 import SizeSelector from '@/app/(public)/[category]/[product-slug]/[id]/components/SizeSelector';
 import { useState } from 'react';
+
 
 function ProductCard({ id, imageSrc, altText, categories, title, originalPrice, discountedPrice, size, home }: {
   home?: boolean;
@@ -29,18 +30,19 @@ function ProductCard({ id, imageSrc, altText, categories, title, originalPrice, 
   const [error, setError] = useState("");
   const dispatch = useAppDispatch();
 
+
   const handleSize = (e: string) => {
     setSelectedSize(e)
     setError("")
   }
 
-  const handleCart = () => {
+  const handleCart = async () => {
     if (!selectedSize) {
       setError("Size not selected")
       return
     }
     dispatch(
-      addToCart({
+      addToCartAsync({
         id,
         name: title,
         price: discountedPrice,

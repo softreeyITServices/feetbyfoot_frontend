@@ -3,7 +3,7 @@
 import Navbar from "@/component/common/navbar";
 import Footer from "@/component/common/Footer";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   clearCart,
@@ -14,95 +14,183 @@ import { useSession } from "next-auth/react";
 import { startRazorpayCheckout } from "@/lib/payments/razorpay/razorpay.client";
 import { cartService } from "@/domain/application/services/cart.service";
 import { useRouter } from "next/navigation";
+import { AddressService } from "@/domain/application/services/address.service";
+import { Address } from "@/domain/shared/types/address.types";
+import CartPlatformFees from "@/component/ui/CartPlatformFees";
+import { setCart } from "@/store/slices/cart.slice";
+import { mapBackendCartToRedux } from "@/domain/shared/mappers/cartMapper";
+import {
+  handleIncreaseCart,
+  handleDecreaseCart,
+  handleRemoveCart,
+} from "@/lib/cartHandler";
+
+
 
 export default function CartBody() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
   const dispatch = useAppDispatch();
-  const items = useAppSelector(state => state.cart.items);
+  const items = useAppSelector((state) => state.cart.items);
 
-  const [shipping, setShipping] = useState<"free" | "flat">("free");
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedShippingId, setSelectedShippingId] =
+    useState<string | null>(null);
+  const [selectedBillingId, setSelectedBillingId] =
+    useState<string | null>(null);
+  const [sameAsShipping, setSameAsShipping] = useState(true);
+  const [addressLoading, setAddressLoading] = useState(false);
 
+  /* ---------------- PRICE HELPER ---------------- */
   const getPrice = (price: string | number): number => {
     if (typeof price === "number") return price;
     const parsed = Number(price);
     return isNaN(parsed) ? 0 : parsed;
   };
 
+  /* ---------------- SUBTOTAL ---------------- */
   const subtotal = items.reduce(
     (sum, item) => sum + getPrice(item.price) * item.quantity,
     0
   );
 
-  const shippingCost = shipping === "free" ? 0 : 51.45;
-  const total = subtotal + shippingCost;
+  /* ---------------- FETCH ADDRESSES ---------------- */
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (!session) return;
 
-  const handleIncrease = (
+      try {
+        setAddressLoading(true);
+
+        const res = await AddressService.getAll();
+
+        const sorted = [...res].sort(
+          (a, b) => Number(b.isDefault) - Number(a.isDefault)
+        );
+
+        setAddresses(sorted);
+
+        const defaultShipping = sorted.find(
+          (a) => a.type === "Shipping" && a.isDefault
+        );
+
+        const defaultBilling = sorted.find(
+          (a) => a.type === "Billing" && a.isDefault
+        );
+
+        if (defaultShipping) {
+          setSelectedShippingId(defaultShipping._id);
+        }
+
+        if (defaultBilling) {
+          setSelectedBillingId(defaultBilling._id);
+        }
+      } catch (error) {
+        console.error("Failed to fetch addresses:", error);
+      } finally {
+        setAddressLoading(false);
+      }
+    };
+
+    fetchAddresses();
+  }, [session]);
+
+  const shippingAddresses = addresses.filter(
+    (a) => a.type === "Shipping"
+  );
+  const billingAddresses = addresses.filter(
+    (a) => a.type === "Billing"
+  );
+
+  /* ---------------- CART ACTIONS ---------------- */
+
+  const refreshBackendCart = async () => {
+    const dbCart = await cartService.getCart();
+    dispatch(setCart(mapBackendCartToRedux(dbCart.data.data.items)));
+  };
+
+  const handleIncrease = async (
     id: string,
     size: string,
-    quantity: number
+    quantity: number,
+    itemId?: string
   ) => {
-    dispatch(updateQuantity({ id, size, quantity: quantity + 1 }));
+    await handleIncreaseCart({
+      id,
+      size,
+      quantity,
+      itemId,
+      isAuthenticated: !!session,
+      onLocalUpdate: () =>
+        dispatch(updateQuantity({ id, size, quantity: quantity + 1 })),
+      refreshBackend: refreshBackendCart,
+    });
   };
 
-  const handleDecrease = (
+  const handleDecrease = async (
     id: string,
     size: string,
-    quantity: number
+    quantity: number,
+    itemId?: string
   ) => {
-    if (quantity > 1) {
-      dispatch(updateQuantity({ id, size, quantity: quantity - 1 }));
-    }
+    await handleDecreaseCart({
+      id,
+      size,
+      quantity,
+      itemId,
+      isAuthenticated: !!session,
+      onLocalUpdate: () =>
+        dispatch(updateQuantity({ id, size, quantity: quantity - 1 })),
+      refreshBackend: refreshBackendCart,
+    });
   };
 
-  const handleRemove = (id: string, size: string) => {
-    dispatch(removeFromCart({ id, size }));
+  const handleRemove = async (
+    id: string,
+    size: string,
+    itemId?: string
+  ) => {
+    await handleRemoveCart({
+      id,
+      size,
+      itemId,
+      isAuthenticated: !!session,
+      onLocalUpdate: () =>
+        dispatch(removeFromCart({ id, size })),
+      refreshBackend: refreshBackendCart,
+    });
   };
 
-  // const handlePayment = async () => {
-  //   await startRazorpayCheckout({
-  //     amount: subtotal,
-  //     onSuccess: () => {
-  //       alert("Payment Successful!");
-  //     },
-  //     onFailure: () => {
-  //       alert("Payment Failed");
-  //     },
-  //   });
-  // };
-
+  /* ---------------- PAYMENT ---------------- */
   const handlePayment = async () => {
     try {
-      /* ---------------- CHECK LOGIN ---------------- */
       if (status === "loading") return;
+
       if (!session) {
         router.push("/login?redirect=/cart");
         return;
       }
-      /* ---------------- SYNC REDUX CART TO BACKEND ---------------- */
-      if (items.length > 0) {
-        for (const item of items) {
-          await cartService.addItem({
-            productId: item.id,
-            size: item.size,
-            quantity: item.quantity,
-          });
-        }
+
+      if (!selectedShippingId) {
+        alert("Please select a shipping address");
+        return;
       }
 
-      /* ---------------- START RAZORPAY ---------------- */
+      if (!sameAsShipping && !selectedBillingId) {
+        alert("Please select a billing address");
+        return;
+      }
+
       await startRazorpayCheckout({
-        amount: total, // IMPORTANT → use total (with shipping)
+        addressId: selectedShippingId,
         onSuccess: async () => {
           dispatch(clearCart());
-          router.push("/order-success");
         },
         onFailure: () => {
           alert("Payment Failed");
         },
       });
-
     } catch (error) {
       console.error("Checkout error:", error);
     }
@@ -111,153 +199,217 @@ export default function CartBody() {
   return (
     <>
       <Navbar />
+
       <main className="max-w-7xl mx-auto px-6 py-14">
         <h1 className="text-3xl font-semibold mb-10">Cart</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* LEFT SIDE */}
           <div className="lg:col-span-2">
-            <div className="grid grid-cols-[2fr_1fr_1fr_1fr] text-xs text-gray-500 uppercase border-b pb-3 border-gray-300">
-              <div>Product</div>
-              <div className="text-center">Price</div>
-              <div className="text-center">Quantity</div>
-              <div className="text-right">Subtotal</div>
+            <div className="p-0">
+              <div className="grid grid-cols-[2fr_1fr_1fr_1fr] text-xs text-gray-500 uppercase border-b pb-3 border-gray-300">
+                <div>Product</div>
+                <div className="text-center">Price</div>
+                <div className="text-center">Quantity</div>
+                <div className="text-right">Subtotal</div>
+              </div>
+
+              {items.length === 0 && (
+                <p className="py-6 text-gray-500">Your cart is empty</p>
+              )}
+
+              {items.map(item => (
+                <div
+                  key={`${item.id}-${item.size}`}
+                  className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center py-6 border-b border-gray-300"
+                >
+                  {/* Product */}
+                  <div className="flex gap-4">
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      width={80}
+                      height={80}
+                      className="rounded"
+                    />
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-sm text-gray-500">
+                        Size: {item.size}
+                      </p>
+                      <button
+                        onClick={() =>
+                          handleRemove(item.id, item.size, item.itemId)
+                        }
+                        className="text-red-500 text-sm mt-1"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div className="text-center">
+                    ₹{getPrice(item.price).toFixed(2)}
+                  </div>
+
+                  {/* Quantity */}
+                  <div className="flex justify-center">
+                    <div className="flex border border-gray-300 rounded">
+                      <button
+                        className="px-3 py-1"
+                        onClick={() =>
+                          handleDecrease(
+                            item.id,
+                            item.size,
+                            item.quantity,
+                            item.itemId
+                          )
+                        }
+                      >
+                        −
+                      </button>
+                      <span className="px-4 py-1 border-x border-gray-300">
+                        {item.quantity}
+                      </span>
+                      <button
+                        className="px-3 py-1"
+                        onClick={() =>
+                          handleIncrease(
+                            item.id,
+                            item.size,
+                            item.quantity,
+                            item.itemId
+                          )
+                        }
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Subtotal */}
+                  <div className="text-right font-medium">
+                    ₹
+                    {(
+                      getPrice(item.price) *
+                      item.quantity
+                    ).toFixed(2)}
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {items.length === 0 && (
-              <p className="py-6 text-gray-500">Your cart is empty</p>
-            )}
+            {items && items.length > 0 && <>
+              <div className="mb-8 p-4">
+                <h3 className="font-medium mb-4 text-sm">Shipping Address</h3>
 
-            {items.map(item => (
-              <div
-                key={`${item.id}-${item.size}`}
-                className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center py-6 border-b border-gray-300"
-              >
-                {/* Product */}
-                <div className="flex gap-4">
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    width={80}
-                    height={80}
-                    className="rounded"
-                  />
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-gray-500">
-                      Size: {item.size}
-                    </p>
-                    <button
-                      onClick={() =>
-                        handleRemove(item.id, item.size)
-                      }
-                      className="text-red-500 text-sm mt-1"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
+                {addressLoading && (
+                  <p className="text-sm text-gray-500">Loading addresses...</p>
+                )}
 
-                {/* Price */}
-                <div className="text-center">
-                  ₹{getPrice(item.price).toFixed(2)}
-                </div>
+                {!addressLoading && shippingAddresses.length === 0 && (
+                  <button
+                    onClick={() => router.push("/account/addresses")}
+                    className="text-blue-600 text-sm"
+                  >
+                    + Add Shipping Address
+                  </button>
+                )}
 
-                {/* Quantity */}
-                <div className="flex justify-center">
-                  <div className="flex border border-gray-300 rounded">
-                    <button
-                      className="px-3 py-1"
-                      onClick={() =>
-                        handleDecrease(
-                          item.id,
-                          item.size,
-                          item.quantity
-                        )
-                      }
-                    >
-                      −
-                    </button>
-                    <span className="px-4 py-1 border-x border-gray-300">
-                      {item.quantity}
-                    </span>
-                    <button
-                      className="px-3 py-1"
-                      onClick={() =>
-                        handleIncrease(
-                          item.id,
-                          item.size,
-                          item.quantity
-                        )
-                      }
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
+                {shippingAddresses.map(addr => (
+                  <label
+                    key={addr._id}
+                    className={`flex items-start gap-3 border p-3 rounded mb-3 cursor-pointer ${selectedShippingId === addr._id
+                      ? "border-green-600 bg-green-50"
+                      : "border-gray-300"
+                      }`}
+                  >
+                    <input
+                      type="radio"
+                      checked={selectedShippingId === addr._id}
+                      onChange={() => setSelectedShippingId(addr._id)}
+                    />
 
-                {/* Subtotal */}
-                <div className="text-right font-medium">
-                  ₹
-                  {(
-                    getPrice(item.price) *
-                    item.quantity
-                  ).toFixed(2)}
-                </div>
+                    <div className="text-sm">
+                      <p className="font-medium">{addr.fullName}</p>
+                      <p>{addr.addressLine1}</p>
+                      <p>
+                        {addr.city}, {addr.state} - {addr.pincode}
+                      </p>
+                      {addr.isDefault && (
+                        <span className="text-xs text-green-600">Default</span>
+                      )}
+                    </div>
+                  </label>
+                ))}
               </div>
-            ))}
+
+              {/* BILLING SAME AS SHIPPING */}
+              <div className="mb-6">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={sameAsShipping}
+                    onChange={() => setSameAsShipping(!sameAsShipping)}
+                  />
+                  Billing address same as shipping
+                </label>
+              </div>
+
+              {/* BILLING ADDRESS */}
+              {!sameAsShipping && (
+                <div className="mb-8 p-4 rounded border border-gray-200">
+                  <h3 className="font-medium mb-4 text-sm">Billing Address</h3>
+
+                  {billingAddresses.length === 0 && (
+                    <button
+                      onClick={() => router.push("/account/addresses")}
+                      className="text-blue-600 text-sm"
+                    >
+                      + Add Billing Address
+                    </button>
+                  )}
+
+                  {billingAddresses.map(addr => (
+                    <label
+                      key={addr._id}
+                      className={`flex items-start gap-3 border p-3 rounded mb-3 cursor-pointer ${selectedBillingId === addr._id
+                        ? "border-green-600 bg-green-50"
+                        : "border-gray-300"
+                        }`}
+                    >
+                      <input
+                        type="radio"
+                        checked={selectedBillingId === addr._id}
+                        onChange={() => setSelectedBillingId(addr._id)}
+                      />
+
+                      <div className="text-sm">
+                        <p className="font-medium">{addr.fullName}</p>
+                        <p>{addr.addressLine1}</p>
+                        <p>
+                          {addr.city}, {addr.state} - {addr.pincode}
+                        </p>
+                        {addr.isDefault && (
+                          <span className="text-xs text-green-600">Default</span>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </>}
           </div>
 
           {/* RIGHT SIDE */}
-          <div className="bg-gray-50 p-6 rounded-lg h-fit">
-            <h2 className="text-lg font-semibold mb-3">
-              Basket Totals
-            </h2>
-
-            <div className="flex justify-between text-sm mb-4 border-t pt-6 border-gray-300">
-              <span>Subtotal</span>
-              <span>₹{subtotal.toFixed(2)}</span>
-            </div>
-
-            {/* Shipping */}
-            <div className="border-t pt-4 border-gray-300">
-              <p className="text-sm font-medium mb-3">Shipping</p>
-
-              <label className="flex items-center gap-2 text-sm mb-2">
-                <input
-                  type="radio"
-                  checked={shipping === "free"}
-                  onChange={() => setShipping("free")}
-                />
-                Free shipping
-                <span className="ml-auto">₹0.00</span>
-              </label>
-
-              <label className="flex items-center gap-2 text-sm mb-2">
-                <input
-                  type="radio"
-                  checked={shipping === "flat"}
-                  onChange={() => setShipping("flat")}
-                />
-                Flat rate
-                <span className="ml-auto">₹51.45</span>
-              </label>
-            </div>
-
-            {/* Total */}
-            <div className="border-t mt-6 pt-4 flex justify-between items-center border-gray-300">
-              <p className="font-semibold">Total</p>
-              <p className="text-xl font-semibold">
-                ₹{total.toFixed(2)}
-              </p>
-            </div>
-
-            <button className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded mt-6 font-medium" onClick={handlePayment}>
-              Place Order
-            </button>
-          </div>
+          <CartPlatformFees
+            subtotal={subtotal}
+            handlePayment={handlePayment}
+          />
         </div>
       </main>
+
       <Footer />
     </>
   );

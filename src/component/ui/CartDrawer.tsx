@@ -6,9 +6,18 @@ import { CartBasketIcon } from "@/icons/CartBasketIcon";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   removeFromCart,
+  setCart,
   updateQuantity,
 } from "@/store/slices/cart.slice";
-import {useRouter} from 'next/navigation'
+import { useRouter } from 'next/navigation'
+import {
+  handleIncreaseCart,
+  handleDecreaseCart,
+  handleRemoveCart,
+} from "@/lib/cartHandler";
+import { useSession } from "next-auth/react";
+import { cartService } from "@/domain/application/services/cart.service";
+import { mapBackendCartToRedux } from "@/domain/shared/mappers/cartMapper";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -22,6 +31,7 @@ export default function CartDrawer({
   const dispatch = useAppDispatch();
   const items = useAppSelector(state => state.cart.items);
   const Router = useRouter()
+  const { data: session } = useSession();
 
   const getPrice = (price: string | number): number => {
     if (typeof price === "number") return price;
@@ -35,32 +45,71 @@ export default function CartDrawer({
     0
   );
 
-  const handleIncrease = (
+  const handleIncrease = async (
     id: string,
     size: string,
-    quantity: number
+    quantity: number,
+    itemId?: string
   ) => {
-    dispatch(updateQuantity({ id, size, quantity: quantity + 1 }));
+    await handleIncreaseCart({
+      id,
+      size,
+      quantity,
+      itemId,
+      isAuthenticated: !!session,
+      onLocalUpdate: () =>
+        dispatch(updateQuantity({ id, size, quantity: quantity + 1 })),
+      refreshBackend: async () => {
+        const dbCart = await cartService.getCart();
+        dispatch(setCart(mapBackendCartToRedux(dbCart.data.data.items)));
+      },
+    });
   };
 
-  const handleDecrease = (
+  const handleDecrease = async (
     id: string,
     size: string,
-    quantity: number
+    quantity: number,
+    itemId?: string
   ) => {
-    if (quantity > 1) {
-      dispatch(
-        updateQuantity({ id, size, quantity: quantity - 1 })
-      );
-    }
+    await handleDecreaseCart({
+      id,
+      size,
+      quantity,
+      itemId,
+      isAuthenticated: !!session,
+      onLocalUpdate: () =>
+        dispatch(updateQuantity({ id, size, quantity: quantity - 1 })),
+      refreshBackend: async () => {
+        const dbCart = await cartService.getCart();
+        dispatch(setCart(mapBackendCartToRedux(dbCart.data.data.items)));
+
+      },
+    });
   };
 
-  const handleRemove = (id: string, size: string) => {
-    dispatch(removeFromCart({ id, size }));
+  const handleRemove = async (
+    id: string,
+    size: string,
+    itemId?: string
+  ) => {
+    await handleRemoveCart({
+      id,
+      size,
+      itemId,
+      isAuthenticated: !!session,
+      onLocalUpdate: () =>
+        dispatch(removeFromCart({ id, size })),
+      refreshBackend: async () => {
+        const dbCart = await cartService.getCart();
+        dispatch(setCart(mapBackendCartToRedux(dbCart.data.data.items)));
+      },
+    });
   };
+
 
   const handleCart = () => {
-    window.location.href = "/cart";
+    Router.push('/cart')
   };
 
   return (
@@ -125,7 +174,8 @@ export default function CartDrawer({
                         handleDecrease(
                           item.id,
                           item.size,
-                          item.quantity
+                          item.quantity,
+                          item.itemId
                         )
                       }
                     >
@@ -140,7 +190,8 @@ export default function CartDrawer({
                         handleIncrease(
                           item.id,
                           item.size,
-                          item.quantity
+                          item.quantity,
+                          item.itemId
                         )
                       }
                     >
@@ -161,7 +212,7 @@ export default function CartDrawer({
               <button
                 className="text-red-500 mt-1"
                 onClick={() =>
-                  handleRemove(item.id, item.size)
+                  handleRemove(item.id, item.size, item.itemId)
                 }
               >
                 <Trash2 className="w-4 h-4" />

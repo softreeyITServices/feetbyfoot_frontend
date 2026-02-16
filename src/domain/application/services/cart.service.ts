@@ -17,7 +17,6 @@ class CartService {
         method: "GET",
         requiresAuth: true,
       });
-
       return response;
     } catch (error) {
       handleApiError(error, "getCart");

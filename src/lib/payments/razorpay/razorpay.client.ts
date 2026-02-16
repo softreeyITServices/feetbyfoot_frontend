@@ -2,19 +2,17 @@ import { ORDERS_URL, PAYMENT_VERIFY } from "@/constants/apis";
 import { httpClient } from "@/lib/httpClient";
 
 interface StartCheckoutParams {
-  amount: number;
   addressId?: string;
   onSuccess?: () => void;
   onFailure?: () => void;
 }
 interface RazorpayOrder {
-  id: string;
-  amount: number;
+  razorpayOrderId: string;
+  totalAmount: number;
   currency: string;
 }
 
 export const startRazorpayCheckout = async ({
-  amount,
   addressId,
   onSuccess,
   onFailure,
@@ -22,25 +20,32 @@ export const startRazorpayCheckout = async ({
   try {
     if (typeof window === "undefined") return;
 
+    const orderPayload = {
+      address_id: addressId,
+      paymentMethod: "ONLINE"
+    }
+
     // ✅ Step 1: Create Razorpay Order (NOT app order)
     const data = await httpClient.request<RazorpayOrder>({
       url: ORDERS_URL,
       method: "POST",
       requiresAuth: true,
-      data: { amount },
+      data: orderPayload,
     });
 
     const options: RazorpayOptions = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-      amount: data.amount,
-      currency: data.currency,
+      amount: data.totalAmount,
+      currency: 'INR',
       name: "FeetByFoot",
-      order_id: data.id,
+      order_id: data.razorpayOrderId,
 
       handler: async (response) => {
         try {
-          // ✅ Step 2: Verify payment + Create app order (server side)
-          await httpClient.request({
+          // ✅ Step 2: Verify payment
+          const verifyResponse = await httpClient.request<{
+            orderId: string;
+          }>({
             url: PAYMENT_VERIFY,
             method: "POST",
             requiresAuth: true,
@@ -49,12 +54,14 @@ export const startRazorpayCheckout = async ({
               address_id: addressId,
             },
           });
-
-          onSuccess?.();
+          onSuccess?.()
+          const orderId = verifyResponse.orderId;
+          window.location.href = `/order/success?orderId=${orderId}`;
 
         } catch (err) {
           console.error("Verification failed", err);
           onFailure?.();
+          window.location.href = `/order/failure`;
         }
       },
 
