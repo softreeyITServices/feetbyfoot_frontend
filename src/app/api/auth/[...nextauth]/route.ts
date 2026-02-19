@@ -104,7 +104,20 @@ export const authOptions: AuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      if (trigger === "update" && session) {
+        const t = token as ExtendedJWT;
+
+        return {
+          ...t,
+          user: {
+            ...t.user,
+            name: session.name ?? t.user.name,
+            email: session.email ?? t.user.email,
+            phone: session.phone ?? t.user.phone,
+          },
+        };
+      }
       if (user) {
         const u = user as ExtendedUser;
 

@@ -4,28 +4,43 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ShopIcon } from "@/icons/ShopIcon";
 import { NoOrderIcon } from "@/icons/NoOrderIcon";
+import toast from "react-hot-toast";
 
 import {
   Order,
   OrderMeta,
   PaginatedOrders,
   OrderItem,
+  OrderStatus,
 } from "@/domain/shared/types/order.type";
 import { ordersService } from "@/domain/application/services/order.service";
 import { DataTable } from "@/component/ui/DataTable";
 import { getStatusBadgeClasses } from "@/lib/common";
-import ExchangeModal from "@/component/ui/ExchangeModal";
+import ExchangeModal from "@/component/ui/modals/ExchangeModal";
+import { RowActionMenu } from "@/component/ui/tables/order/RowActionMenu";
+import ReturnModal from "@/component/ui/modals/ReturnModal";
+import UpdateAddressModal from "@/component/ui/modals/UpdateAddressModal";
+import CancelOrderModal from "@/component/ui/modals/CancelOrderModal";
+
+
 
 interface FormattedOrder {
   orderId: string;
   orderNumber: string;
   date: string;
   total: number;
-  status: string;
+  status: OrderStatus;
   items: OrderItem[];
+  addressId: string;
 }
 
 interface ExchangeOrderData {
+  orderId: string;
+  items: OrderItem[];
+  status: string;
+}
+
+interface ReturnOrderData {
   orderId: string;
   items: OrderItem[];
   status: string;
@@ -46,6 +61,17 @@ export default function OrdersPage() {
   const [exchangeOrder, setExchangeOrder] = useState<ExchangeOrderData | null>(null);
   const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
 
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [returnOrder, setReturnOrder] = useState<ReturnOrderData | null>(null);
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [addressOrderId, setAddressOrderId] = useState<string | null>(null);
+  const [addressOrder, setAddressOrder] = useState<FormattedOrder | null>(null);
+
+  const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
+  const [cancelOrderNumber, setCancelOrderNumber] = useState<string>("");
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+
+
   const fetchingRef = useRef(false);
 
   /* ---------------- FETCH ORDERS ---------------- */
@@ -61,7 +87,6 @@ export default function OrdersPage() {
           page,
           perPage: pageSize,
         });
-
       setOrders(response?.data ?? []);
       setMeta(response?.meta);
       setError(null);
@@ -95,19 +120,65 @@ export default function OrdersPage() {
 
   const handleExchangeSuccess = async () => {
     closeExchangeModal();
+    toast.success("Exchange request submitted successfully!");
     await fetchOrders();
   };
 
   const formattedOrders: FormattedOrder[] = orders.map((order) => ({
-    orderId: order.orderId,
+    orderId: order._id,
     orderNumber: order.orderNumber,
     date: new Date(order.createdAt).toLocaleDateString(),
     total: order.totalAmount,
     status: order.orderStatus,
     items: order.items,
+    addressId: order.shippingAddress?._id
   }));
 
   const totalPages = meta?.totalPages ?? 1;
+
+  const handleReturn = (order: FormattedOrder) => {
+    openReturnModal({
+      orderId: order.orderId,
+      items: order.items,
+      status: order.status,
+    });
+  };
+
+  const handleAddressChange = (order: FormattedOrder) => {
+    setAddressOrderId(order.orderId);
+    setAddressOrder(order);
+    setAddressModalOpen(true);
+  };
+
+  const handleCancel = (order: FormattedOrder) => {
+    setCancelOrderId(order.orderId);
+    setCancelOrderNumber(order.orderNumber);
+    setIsCancelModalOpen(true);
+  };
+
+  const handleCancelSuccess = async () => {
+    setIsCancelModalOpen(false);
+    setCancelOrderId(null);
+    toast.success("Order cancelled successfully!");
+    await fetchOrders();
+  };
+
+
+  const openReturnModal = (order: ReturnOrderData) => {
+    setReturnOrder(order);
+    setIsReturnModalOpen(true);
+  };
+
+  const closeReturnModal = () => {
+    setIsReturnModalOpen(false);
+    setReturnOrder(null);
+  };
+
+  const handleReturnSuccess = () => {
+    closeReturnModal();
+    fetchOrders(); // or whatever you use to refresh
+  };
+
 
   return (
     <div className="px-6">
@@ -162,7 +233,7 @@ export default function OrdersPage() {
           <DataTable
             loading={loading}
             data={formattedOrders}
-            searchable
+            // searchable
             pagination={{
               page,
               totalPages,
@@ -216,21 +287,51 @@ export default function OrdersPage() {
               },
               {
                 header: "Action",
-                accessor: (row) => (
-                  <div className="space-y-1">
-                    {row.status === "DELIVERED" ? (
-                      <button
-                        onClick={() => openExchangeModal(row)}
-                        className="block text-blue-600 hover:underline text-xs"
-                      >
-                        Exchange
-                      </button>
-                    ) : (
-                      <span className="text-xs text-gray-500">Processing</span>
-                    )}
-                  </div>
-                ),
-              },
+                accessor: (row) => {
+                  const actions = [];
+
+                  // Exchange only if delivered
+                  if (row.status === "DELIVERED") {
+                    actions.push({
+                      label: "Exchange Item",
+                      onClick: () => openExchangeModal(row),
+                    });
+                  }
+
+                  // Return only if delivered
+                  if (row.status === "DELIVERED") {
+                    actions.push({
+                      label: "Return Item",
+                      onClick: () => handleReturn(row),
+                    });
+                  }
+
+                  // Change address only if processing
+                  if (row.status === 'CONFIRMED' || row.status === 'PACKED') {
+                    actions.push({
+                      label: "Change Address",
+                      onClick: () => handleAddressChange(row),
+                    });
+                  }
+
+                  // Cancel only if not delivered
+                  if (row.status === 'CONFIRMED' || row.status === 'PACKED') {
+                    actions.push({
+                      label: "Cancel Order",
+                      onClick: () => handleCancel(row),
+                      danger: true,
+                    });
+                  }
+
+                  // If no actions available
+                  if (actions.length === 0) {
+                    return <span className="text-xs text-gray-400"></span>;
+                  }
+
+                  return <RowActionMenu actions={actions} />;
+                },
+              }
+
             ]}
           />
         )}
@@ -244,6 +345,47 @@ export default function OrdersPage() {
             onSuccess={handleExchangeSuccess}
           />
         )}
+
+        {returnOrder && (
+          <ReturnModal
+            open={isReturnModalOpen}
+            order={returnOrder}
+            onClose={closeReturnModal}
+            onSuccess={handleReturnSuccess}
+          />
+        )}
+
+        {addressOrderId && (
+          <UpdateAddressModal
+            open={addressModalOpen}
+            orderId={addressOrderId}
+            currentAddressId={addressOrder?.addressId}
+            onClose={() => {
+              setAddressModalOpen(false);
+              setAddressOrderId(null);
+            }}
+            onSuccess={() => {
+              setAddressModalOpen(false);
+              setAddressOrderId(null);
+              fetchOrders();
+              toast.success("Delivery address updated successfully!");
+            }}
+          />
+        )}
+
+        {cancelOrderId && (
+          <CancelOrderModal
+            open={isCancelModalOpen}
+            orderId={cancelOrderId}
+            orderNumber={cancelOrderNumber}
+            onClose={() => {
+              setIsCancelModalOpen(false);
+              setCancelOrderId(null);
+            }}
+            onSuccess={handleCancelSuccess}
+          />
+        )}
+
       </div>
     </div>
   );

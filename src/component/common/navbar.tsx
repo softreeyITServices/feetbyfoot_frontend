@@ -8,6 +8,7 @@ import { SearchIcon } from "@/icons/SearchIcon";
 import CartDrawer from "../ui/CartDrawer";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { openCart, closeCart } from "@/store/slices/ui.slice";
+import { WishlistIcon } from "@/icons/WishlistIcon";
 
 const menuItems = [
   { label: "MENS", href: "/mens" },
@@ -74,6 +75,11 @@ export default function Navbar() {
             {/* Account */}
             <Link href="/login" aria-label="Account">
               <ProfileIcon width={20} height={20} fill="#000" />
+            </Link>
+
+             {/* Wishlist */}
+            <Link href="/wishlists" aria-label="Wishlists">
+              <WishlistIcon width={24} height={24} fill="#000" />
             </Link>
 
             {/* Cart */}

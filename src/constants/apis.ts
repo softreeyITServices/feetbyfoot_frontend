@@ -10,6 +10,8 @@ export const REFRESH_TOKEN_URL = API_BASE_URL + "/auth/refresh";
 export const SEND_OTP_URL = API_BASE_URL + "/auth/send-otp";
 export const VERIFY_OTP_URL = API_BASE_URL + "/auth/verify-otp";
 export const USER_PROFILE_URL = API_BASE_URL + "/auth/me";
+export const UPDATE_PROFILE_URL = API_BASE_URL + "/auth/profile";
+
 
 export const DASHBOARD_URL = API_BASE_URL + "/dashboard"
 
@@ -22,7 +24,11 @@ export const PAYMENT_VERIFY = API_BASE_URL + "/payments/verify"
 export const ADDRESS_URL = API_BASE_URL + "/address";
 export const PLATFORM_FEES_URL = API_BASE_URL + "/platform-fees";
 
-export const ALL_ORDERS_URL = "/orders";
+export const ALL_ORDERS_URL = API_BASE_URL + "/orders";
+export const EXCHANGE_URL = API_BASE_URL + "/orders/exchange";
+export const RETURN_URL = API_BASE_URL + "/orders/return";
+export const CANCEL_UPDATE_ORDER_URL = API_BASE_URL + "/orders";
+export const CONTACT_URL = API_BASE_URL + "/contact";
 
 // External APIs (for server-side use)
 
@@ -45,4 +51,8 @@ export const EX_PAYMENT_VERIFY = EXTERNAL_API_BASE_URL + "/payments/verify";
 export const EX_ADDRESS_URL = EXTERNAL_API_BASE_URL + "/address";
 export const EX_PLATFORM_FEES_URL = EXTERNAL_API_BASE_URL + "/platform-fees";
 export const EX_ALL_ORDERS_URL = EXTERNAL_API_BASE_URL + "/orders";
-
+export const EX_EXCHANGE_URL = EXTERNAL_API_BASE_URL + "/user/order/exchange";
+export const EX_RETURN_URL = EXTERNAL_API_BASE_URL + "/user/order/return";
+export const EX_CANCEL_UPDATE_ORDER_URL = EXTERNAL_API_BASE_URL + "/user/orders";
+export const EX_UPDATE_PROFILE_URL = EXTERNAL_API_BASE_URL + "/auth/profile";
+export const EX_CONTACT_URL = EXTERNAL_API_BASE_URL + "/contact";

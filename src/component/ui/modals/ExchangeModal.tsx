@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Modal from "./Modal";
+import Modal from "../Modal";
 import { OrderItem } from "@/domain/shared/types/order.type";
 import { ordersService } from "@/domain/application/services/order.service";
 
@@ -34,9 +34,11 @@ export default function ExchangeModal({
 
   const selectedItem = order.items.find((item) => item._id === selectedItemId);
 
+  const orderId = order.orderId
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedItemId || !newSize) {
       setError("Please select an item and new size");
       return;
@@ -51,10 +53,16 @@ export default function ExchangeModal({
     setError(null);
 
     try {
-      await ordersService.exchangeItem(order.orderId, selectedItemId, {
-        reason,
-        oldSize: selectedItem.size,
-        newSize,
+      await ordersService.exchangeItems({
+        items: [
+          {
+            orderId: orderId,
+            itemId: selectedItemId,
+            reason,
+            oldSize: selectedItem.size,
+            newSize,
+          },
+        ],
       });
 
       onSuccess();
@@ -118,10 +126,9 @@ export default function ExchangeModal({
                   disabled={size === selectedItem?.size || loading}
                   className={`
                     px-4 py-2 rounded-md text-sm font-medium transition-all
-                    ${
-                      size === selectedItem?.size
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : newSize === size
+                    ${size === selectedItem?.size
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : newSize === size
                         ? "bg-blue-600 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }

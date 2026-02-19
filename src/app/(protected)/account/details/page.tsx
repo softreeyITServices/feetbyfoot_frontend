@@ -1,55 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import toast from "react-hot-toast";
+import { authService } from "@/domain/application/services/auth.service";
 
 type AccountForm = {
   firstName: string;
   lastName: string;
-  displayName: string;
   email: string;
   phoneNumber: string;
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
+};
+
+type SessionUser = {
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
 };
 
 export default function AccountPage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
+
+  const [form, setForm] = useState<AccountForm>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+  });
+
+  const [loading, setLoading] = useState(false);
 
   /* ---------------------------------------
-     Track if user has manually edited fields
+     Initialize form once when session loads
   ---------------------------------------- */
-  const [hasEdited, setHasEdited] = useState(false);
-  const [editedForm, setEditedForm] = useState<Partial<AccountForm>>({});
+  useEffect(() => {
+    if (!session?.user) return;
 
-  /* ---------------------------------------
-     Derive values from session (always fresh)
-  ---------------------------------------- */
-  const fullName = session?.user?.name || "";
-  const nameParts = fullName.trim().split(" ").filter(Boolean);
+    const user = session.user as SessionUser;
 
-  const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
-  const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : fullName;
+    const fullName = user.name || "";
+    const nameParts = fullName.trim().split(" ").filter(Boolean);
 
-  // Use edited values if available, otherwise use session data
-  const form: AccountForm = {
-    firstName: hasEdited && editedForm.firstName !== undefined ? editedForm.firstName : firstName,
-    lastName: hasEdited && editedForm.lastName !== undefined ? editedForm.lastName : lastName,
-    displayName: hasEdited && editedForm.displayName !== undefined ? editedForm.displayName : fullName,
-    email: hasEdited && editedForm.email !== undefined ? editedForm.email : session?.user?.email || "",
-    phoneNumber: hasEdited && editedForm.phoneNumber !== undefined ? editedForm.phoneNumber : (session?.user)?.phone || "",
-    currentPassword: editedForm.currentPassword || "",
-    newPassword: editedForm.newPassword || "",
-    confirmPassword: editedForm.confirmPassword || "",
-  };
+    const lastName =
+      nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+    const firstName =
+      nameParts.length > 1
+        ? nameParts.slice(0, -1).join(" ")
+        : fullName;
+
+    setForm({
+      firstName,
+      lastName,
+      email: user.email || "",
+      phoneNumber: user.phone || "",
+    });
+  }, [session]);
 
   /* ---------------------------------------
      Handlers
   ---------------------------------------- */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setHasEdited(true);
-    setEditedForm((prev) => ({
+    setForm((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
@@ -58,23 +69,51 @@ export default function AccountPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (form.newPassword && form.newPassword !== form.confirmPassword) {
-      alert("New passwords do not match");
-      return;
+    try {
+      setLoading(true);
+
+      const fullUpdatedName =
+        `${form.firstName} ${form.lastName}`.trim();
+
+      const response = await authService.updateProfile({
+        name: fullUpdatedName,
+        email: form.email,
+        phone: form.phoneNumber,
+      });
+
+      if (response.success) {
+        toast.success(
+          response.data?.message || "Profile updated successfully"
+        );
+        await update({
+          name: fullUpdatedName,
+          email: form.email,
+          phone: form.phoneNumber,
+        });
+      } else {
+        toast.error("Failed to update profile");
+      }
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Something went wrong";
+      toast.error(message);
+    } finally {
+      setLoading(false);
     }
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    alert("Account details updated successfully (mock)");
   };
 
   if (status === "loading") {
     return <div className="p-10">Loading...</div>;
   }
 
+  const displayName =
+    `${form.firstName} ${form.lastName}`.trim();
+
   return (
     <div className="px-4">
-      <div className="max-w-4xl mx-auto bg-white p-10">
+      <div className="max-w-4xl mx-auto bg-white p-10 rounded-xl shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-12">
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-6">
@@ -92,7 +131,7 @@ export default function AccountPage() {
                   value={form.firstName}
                   onChange={handleChange}
                   required
-                  className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400"
+                  className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                 />
               </div>
 
@@ -106,23 +145,24 @@ export default function AccountPage() {
                   value={form.lastName}
                   onChange={handleChange}
                   required
-                  className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400"
+                  className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Display name *
+                Display name
               </label>
               <input
                 type="text"
-                name="displayName"
-                value={form.displayName}
-                onChange={handleChange}
-                required
-                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400"
+                value={displayName}
+                readOnly
+                className="w-full border border-gray-200 rounded-md px-4 py-3 bg-gray-50 text-gray-500 cursor-not-allowed"
               />
+              <p className="mt-1 text-xs text-gray-400">
+                Automatically generated from your first and last name.
+              </p>
             </div>
 
             <div className="mt-6">
@@ -135,7 +175,7 @@ export default function AccountPage() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400"
+                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
               />
             </div>
 
@@ -149,48 +189,7 @@ export default function AccountPage() {
                 value={form.phoneNumber}
                 onChange={handleChange}
                 required
-                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400"
-              />
-            </div>
-          </section>
-
-          <div className="border-t border-gray-200" />
-
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-              Password change
-            </h2>
-
-            <div className="mb-6">
-              <input
-                type="password"
-                name="currentPassword"
-                value={form.currentPassword}
-                onChange={handleChange}
-                placeholder="Current password"
-                className="w-full border border-gray-300 rounded-md px-4 py-3"
-              />
-            </div>
-
-            <div className="mb-6">
-              <input
-                type="password"
-                name="newPassword"
-                value={form.newPassword}
-                onChange={handleChange}
-                placeholder="New password"
-                className="w-full border border-gray-300 rounded-md px-4 py-3"
-              />
-            </div>
-
-            <div>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm new password"
-                className="w-full border border-gray-300 rounded-md px-4 py-3"
+                className="w-full border border-gray-300 rounded-md px-4 py-3 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
               />
             </div>
           </section>
@@ -199,9 +198,10 @@ export default function AccountPage() {
 
           <button
             type="submit"
-            className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium px-8 py-3 rounded-md"
+            disabled={loading}
+            className="bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed text-black font-medium px-8 py-3 rounded-md transition"
           >
-            Save changes
+            {loading ? "Saving..." : "Save changes"}
           </button>
         </form>
       </div>

@@ -98,13 +98,6 @@ export interface UpdateOrderStatusRequest {
   }[];
 }
 
-/* ---------------- EXCHANGE ---------------- */
-
-export interface ExchangeRequest {
-  reason: string;
-  oldSize: string;
-  newSize: string;
-}
 /* ---------------- BULK UPDATE RESULT ---------------- */
 
 export interface BulkWriteResult {
@@ -129,3 +122,30 @@ export interface ExchangeOrderResponse {
   message: string;
   data: unknown;
 }
+
+
+export type ExchangeItemPayload = {
+  orderId: string;
+  itemId: string;
+  reason: string;
+  newSize: string;
+  oldSize: string;
+};
+
+export type ReturnItemPayload = {
+  orderId: string;
+  itemId: string;
+  reason: string;
+};
+
+export type ExchangeRequest = {
+  items: ExchangeItemPayload[];
+};
+
+export type ReturnRequest = {
+  items: ReturnItemPayload[];
+};
+
+export type GenericMessageResponse = {
+  message: string;
+};

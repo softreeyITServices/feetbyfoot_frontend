@@ -7,6 +7,7 @@ import {
   VERIFY_OTP_URL,
   REFRESH_TOKEN_URL,
   SEND_OTP_URL,
+  UPDATE_PROFILE_URL,
 } from "@/constants/apis";
 import {
   LoginData,
@@ -32,6 +33,14 @@ export interface SendOtpPayload {
   identifier: string; // email or phone
   type: "email" | "phone";
 }
+
+// Add this interface
+export interface UpdateProfilePayload {
+  name?: string;
+  email?: string;
+  phone?: string;
+}
+
 
 class AuthService {
   /**
@@ -120,6 +129,26 @@ class AuthService {
       throw error;
     }
   }
+
+  /**
+ * Update user profile
+ */
+  async updateProfile(
+    payload: UpdateProfilePayload
+  ): Promise<AuthResponse> {
+    try {
+      return await httpClient.request<AuthResponse>({
+        url: UPDATE_PROFILE_URL,
+        method: "PATCH",
+        data: payload,
+        requiresAuth: true,
+      });
+    } catch (error) {
+      handleAuthError(error, "update profile");
+      throw error;
+    }
+  }
+
 }
 
 

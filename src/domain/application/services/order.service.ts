@@ -1,14 +1,13 @@
 import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
-import { ALL_ORDERS_URL } from "@/constants/apis";
+import { ALL_ORDERS_URL, EXCHANGE_URL, RETURN_URL } from "@/constants/apis";
 
 import {
   PaginatedOrders,
-  UpdateOrderStatusRequest,
   ExchangeRequest,
-  UpdateOrderStatusResponse,
-  ExchangeOrderResponse,
   PaginatedOrdersResponse,
+  GenericMessageResponse,
+  ReturnRequest,
 } from "@/domain/shared/types/order.type";
 
 class OrdersService {
@@ -43,37 +42,38 @@ class OrdersService {
       throw error;
     }
   }
-
-  /* ---------------- UPDATE STATUS ---------------- */
-  async updateStatus(
-    payload: UpdateOrderStatusRequest
-  ): Promise<UpdateOrderStatusResponse> {
-    try {
-      const response =
-        await httpClient.request<UpdateOrderStatusResponse>({
-          url: `${ALL_ORDERS_URL}/status`,
-          method: "PATCH",
-          requiresAuth: true,
-          data: payload,
-        });
-
-      return response;
-    } catch (error) {
-      handleApiError(error, "updateOrderStatus");
-      throw error;
-    }
-  }
-
+  
   /* ---------------- EXCHANGE ITEM ---------------- */
-  async exchangeItem(
-    orderId: string,
-    itemId: string,
+//   async exchangeItem(
+//     orderId: string,
+//     itemId: string,
+//     payload: ExchangeRequest
+//   ): Promise<ExchangeOrderResponse> {
+//     try {
+//       const response =
+//         await httpClient.request<ExchangeOrderResponse>({
+//           url: `${ALL_ORDERS_URL}/${orderId}/items/${itemId}/exchange`,
+//           method: "POST",
+//           requiresAuth: true,
+//           data: payload,
+//         });
+
+//       return response;
+//     } catch (error) {
+//       handleApiError(error, "exchangeOrderItem");
+//       throw error;
+//     }
+//   }
+// }
+
+/* ---------------- EXCHANGE ITEMS ---------------- */
+  async exchangeItems(
     payload: ExchangeRequest
-  ): Promise<ExchangeOrderResponse> {
+  ): Promise<GenericMessageResponse> {
     try {
       const response =
-        await httpClient.request<ExchangeOrderResponse>({
-          url: `${ALL_ORDERS_URL}/${orderId}/items/${itemId}/exchange`,
+        await httpClient.request<GenericMessageResponse>({
+          url: EXCHANGE_URL,
           method: "POST",
           requiresAuth: true,
           data: payload,
@@ -81,7 +81,67 @@ class OrdersService {
 
       return response;
     } catch (error) {
-      handleApiError(error, "exchangeOrderItem");
+      handleApiError(error, "exchangeItems");
+      throw error;
+    }
+  }
+
+  /* ---------------- RETURN ITEMS ---------------- */
+  async returnItems(
+    payload: ReturnRequest
+  ): Promise<GenericMessageResponse> {
+    try {
+      const response =
+        await httpClient.request<GenericMessageResponse>({
+          url: RETURN_URL,
+          method: "POST",
+          requiresAuth: true,
+          data: payload,
+        });
+
+      return response;
+    } catch (error) {
+      handleApiError(error, "returnItems");
+      throw error;
+    }
+  }
+
+  /* ---------------- CANCEL ORDER ---------------- */
+  async cancelOrder(
+    orderId: string
+  ): Promise<GenericMessageResponse> {
+    try {
+      const response =
+        await httpClient.request<GenericMessageResponse>({
+          url: `${ALL_ORDERS_URL}/${orderId}/cancel`,
+          method: "PATCH",
+          requiresAuth: true,
+        });
+
+      return response;
+    } catch (error) {
+      handleApiError(error, "cancelOrder");
+      throw error;
+    }
+  }
+
+  /* ---------------- UPDATE ORDER ADDRESS ---------------- */
+  async updateOrderAddress(
+    orderId: string,
+    addressId: string
+  ): Promise<GenericMessageResponse> {
+    try {
+      const response =
+        await httpClient.request<GenericMessageResponse>({
+          url: `${ALL_ORDERS_URL}/${orderId}/update`,
+          method: "PATCH",
+          requiresAuth: true,
+          data: { addressId },
+        });
+
+      return response;
+    } catch (error) {
+      handleApiError(error, "updateOrderAddress");
       throw error;
     }
   }
