@@ -1,10 +1,18 @@
 "use client"
+import { useLayout } from "@/domain/application/context/LayoutContext";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 export default function AccountPage() {
   const { data: session } = useSession();
   const { name } = session?.user ?? {};
+  const { setTitle, setSubtitle } = useLayout();
+
+  useEffect(() => {
+    setTitle('My Accounts');
+    setSubtitle('View and manage your accounts.');
+  }, []);
 
   return (
     <section className="p-6">

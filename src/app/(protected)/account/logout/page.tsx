@@ -1,10 +1,17 @@
 "use client";
 
+import { useLayout } from "@/domain/application/context/LayoutContext";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function LogoutPage() {
   const router = useRouter();
+  const { setTitle, setSubtitle } = useLayout();
+  useEffect(() => {
+    setTitle('Logout');
+    setSubtitle('Logging out from your account');
+  }, []);
 
   const handleConfirm = async () => {
     await signOut({ callbackUrl: "/login" });

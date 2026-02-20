@@ -8,6 +8,7 @@ import { AddressService } from "@/domain/application/services/address.service";
 import { Address, AddressType } from "@/domain/shared/types/address.types";
 import { AddressCard, EmptyCard } from "@/component/ui/AddressCard";
 import AddressModal from "@/component/ui/AddressModal";
+import { useLayout } from "@/domain/application/context/LayoutContext";
 
 export default function AddressesPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -15,9 +16,15 @@ export default function AddressesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<AddressType | null>(null);
 
+  const { setTitle, setSubtitle } = useLayout();
 
   useEffect(() => {
     fetchAddresses();
+  }, []);
+
+  useEffect(() => {
+    setTitle('My Address');
+    setSubtitle('View and manage your address.');
   }, []);
 
   const openModal = (type: AddressType) => {
@@ -67,10 +74,6 @@ export default function AddressesPage() {
   return (
     <div className="py-10">
       <div className="max-w-6xl mx-auto px-6">
-
-        <p className="text-md text-gray-600 mb-6">
-          The following addresses will be used on the checkout page by default.
-        </p>
 
         {loading ? (
           <p>Loading addresses...</p>

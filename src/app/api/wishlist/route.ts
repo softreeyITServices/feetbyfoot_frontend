@@ -12,12 +12,24 @@ import { NextRequest, NextResponse } from "next/server";
 export const POST = apiHandler(
   async (req: NextRequest) => {
     try {
+      const authorization = req.headers.get("authorization");
+
+      if (!authorization) {
+        return NextResponse.json(
+          { message: "Missing Authorization header" },
+          { status: 401 }
+        );
+      }
+
       const body = await req.json();
 
       const response = await httpClient.request({
         url: EX_WISHLIST_URL,
         method: "POST",
         data: body,
+        headers: {
+          Authorization: authorization,
+        },
       });
 
       return createSuccessResponse(response, 201);
@@ -25,8 +37,8 @@ export const POST = apiHandler(
       if (isHttpClientError(error)) {
         throw new ExternalApiError(
           error.data?.message ??
-            error.message ??
-            "Failed to create wishlist",
+          error.message ??
+          "Failed to create wishlist",
           error.status,
           error.data
         );
@@ -65,8 +77,8 @@ export const GET = apiHandler(
       if (isHttpClientError(error)) {
         throw new ExternalApiError(
           error.data?.message ??
-            error.message ??
-            "Failed to fetch wishlist",
+          error.message ??
+          "Failed to fetch wishlist",
           error.status,
           error.data
         );

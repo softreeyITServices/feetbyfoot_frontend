@@ -21,8 +21,7 @@ import { RowActionMenu } from "@/component/ui/tables/order/RowActionMenu";
 import ReturnModal from "@/component/ui/modals/ReturnModal";
 import UpdateAddressModal from "@/component/ui/modals/UpdateAddressModal";
 import CancelOrderModal from "@/component/ui/modals/CancelOrderModal";
-
-
+import { useLayout } from "@/domain/application/context/LayoutContext";
 
 interface FormattedOrder {
   orderId: string;
@@ -73,6 +72,7 @@ export default function OrdersPage() {
 
 
   const fetchingRef = useRef(false);
+  const { setTitle, setSubtitle } = useLayout();
 
   /* ---------------- FETCH ORDERS ---------------- */
   const fetchOrders = useCallback(async () => {
@@ -102,6 +102,11 @@ export default function OrdersPage() {
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
+
+  useEffect(() => {
+    setTitle('My Orders');
+    setSubtitle('View and manage your past orders.');
+  }, []);
 
   /* ---------------- EXCHANGE HANDLERS ---------------- */
   const openExchangeModal = (row: FormattedOrder) => {
@@ -183,15 +188,6 @@ export default function OrdersPage() {
   return (
     <div className="px-6">
       <div className="max-w-5xl mx-auto">
-        <div className="mb-10">
-          <h1 className="text-xl font-semibold text-gray-900">
-            My Orders
-          </h1>
-          <p className="text-gray-500 mt-2 text-md">
-            View and manage your past orders.
-          </p>
-        </div>
-
         {error && (
           <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-md">
             {error}

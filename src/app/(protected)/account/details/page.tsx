@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import { authService } from "@/domain/application/services/auth.service";
+import { useLayout } from "@/domain/application/context/LayoutContext";
 
 type AccountForm = {
   firstName: string;
@@ -20,6 +21,7 @@ type SessionUser = {
 
 export default function AccountPage() {
   const { data: session, status, update } = useSession();
+  const { setTitle, setSubtitle } = useLayout();
 
   const [form, setForm] = useState<AccountForm>({
     firstName: "",
@@ -55,6 +57,11 @@ export default function AccountPage() {
       phoneNumber: user.phone || "",
     });
   }, [session]);
+
+  useEffect(() => {
+    setTitle('Personal Information');
+    setSubtitle('View and manage your personal information.');
+  }, []);
 
   /* ---------------------------------------
      Handlers
@@ -111,15 +118,13 @@ export default function AccountPage() {
   const displayName =
     `${form.firstName} ${form.lastName}`.trim();
 
+
+
   return (
     <div className="px-4">
       <div className="max-w-4xl mx-auto bg-white p-10 rounded-xl shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-12">
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-              Personal Information
-            </h2>
-
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">

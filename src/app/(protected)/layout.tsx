@@ -1,12 +1,25 @@
-
-import { AuthProvider } from '@/domain/application/providers/Authproviders';
+'use client';
+import { useState } from 'react';
 import ClientLayout from './_layout/client-layout';
-import { Toaster } from "react-hot-toast";
+import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from '@/domain/application/providers/Authproviders';
+import { LayoutContext } from '@/domain/application/context/LayoutContext';
 
-export default function ProtectedLayout({
-  children,
-}: {
+interface ProtectedLayoutProps {
   children: React.ReactNode;
-}) {
-  return <AuthProvider><ClientLayout>{children}<Toaster position="top-right" /></ClientLayout></AuthProvider>;
+}
+export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
+  const [title, setTitle] = useState('');
+  const [subtitle, setSubtitle] = useState('');
+
+  return (
+    <AuthProvider>
+      <LayoutContext.Provider value={{ title, setTitle, subtitle, setSubtitle }}>
+        <ClientLayout title={title} subtitle={subtitle}>
+          {children}
+          <Toaster position="top-right" />
+        </ClientLayout>
+      </LayoutContext.Provider>
+    </AuthProvider>
+  );
 }

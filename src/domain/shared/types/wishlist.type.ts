@@ -1,13 +1,29 @@
-export interface WishlistProduct {
+export interface WishlistApiProduct {
   _id: string;
   name: string;
+  description: string;
+  slug: string;
+  brand: string;
+  color: string;
+  sizes: {
+    _id: string;
+    size: string;
+    quantity: number;
+    isActive: boolean;
+  }[];
   price: number;
-  images: string[];
+  salePrice: number;
+  currency: string;
+  imageUrls: string[];
+  tags: string[];
+  isActive: boolean;
 }
 
 export interface WishlistResponse {
   message: string;
-  products: WishlistProduct[];
+  data: {
+    products: WishlistApiProduct[]
+  };
 }
 
 export interface AddToWishlistRequest {

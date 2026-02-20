@@ -4,21 +4,21 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { wishlistService } from "@/domain/application/services/wishlist.service";
-import { WishlistProduct } from "@/domain/shared/types/wishlist.type";
+import { WishlistApiProduct } from "@/domain/shared/types/wishlist.type";
+import ProductCard from "@/component/ui/ProductCard";
 
 
 const WishlistPage = () => {
   const router = useRouter();
 
-  const [products, setProducts] = useState<WishlistProduct[]>([]);
+  const [products, setProducts] = useState<WishlistApiProduct[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchWishlist = useCallback(async () => {
     try {
       setLoading(true);
       const response = await wishlistService.getWishlist();
-
-      setProducts(response.products ?? []);
+      setProducts(response.data.products ?? []);
     } catch (error: unknown) {
       toast.error("Failed to load wishlist");
     } finally {
@@ -70,40 +70,19 @@ const WishlistPage = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {products.map((product) => (
-          <div
+          <ProductCard
+            wishlist={false}
+            home={false}
             key={product._id}
-            className="border rounded-lg p-4 hover:shadow-md transition"
-          >
-            {/* Product Image */}
-            <div
-              className="cursor-pointer"
-              onClick={() => router.push(`/product/${product._id}`)}
-            >
-              <img
-                src={product.images?.[0] || "/placeholder.png"}
-                alt={product.name || "Product"}
-                className="w-full h-48 object-cover rounded-md"
-              />
-            </div>
-
-            {/* Product Info */}
-            <div className="mt-4 space-y-2">
-              <h3 className="font-medium truncate">
-                {product.name || "Product Name"}
-              </h3>
-
-              {product.price && (
-                <p className="text-gray-600">₹ {product.price}</p>
-              )}
-
-              <button
-                onClick={() => handleRemove(product._id)}
-                className="w-full mt-2 py-2 border border-red-500 text-red-500 rounded-md hover:bg-red-500 hover:text-white transition"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
+            id={product._id}
+            size={product.sizes}
+            imageSrc={product.imageUrls[0]}
+            altText={product.name}
+            categories={product.tags.join(", ")}
+            title={product.name}
+            originalPrice={product.price.toFixed(2)}
+            discountedPrice={product.salePrice.toFixed(2)}
+          />
         ))}
       </div>
     </div>

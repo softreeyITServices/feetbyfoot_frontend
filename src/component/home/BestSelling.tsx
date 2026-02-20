@@ -94,6 +94,7 @@ export default function BestSelling() {
           {products.map((product, index) => (
             <ProductCard
               home={true}
+              wishlist={true}
               key={index.toString()}
               id={index.toString()}
               size={product.sizes}

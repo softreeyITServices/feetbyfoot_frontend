@@ -7,9 +7,11 @@ import AccountSidebar from '@/component/account/AccountSidebar';
 
 interface LayoutProps {
   children: React.ReactNode;
+  title?: string;
+  subtitle?: string;
 }
 
-export default function ClientLayout({ children }: LayoutProps) {
+export default function ClientLayout({ children, title, subtitle, }: LayoutProps) {
 
   return (
     <>
@@ -17,9 +19,9 @@ export default function ClientLayout({ children }: LayoutProps) {
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-2xl font-semibold">My Account</h1>
+          <h1 className="text-2xl font-semibold">{title}</h1>
           <p className="text-md text-gray-500 mt-1">
-            Manage your account settings and preferences.
+            {subtitle}
           </p>
         </div>
 
