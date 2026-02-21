@@ -24,6 +24,8 @@ import {
   handleDecreaseCart,
   handleRemoveCart,
 } from "@/lib/cartHandler";
+import { couponService } from "@/domain/application/services/coupon.service";
+import toast from "react-hot-toast";
 
 
 
@@ -41,6 +43,12 @@ export default function CartBody() {
     useState<string | null>(null);
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [addressLoading, setAddressLoading] = useState(false);
+
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [couponId, setCouponId] = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
   /* ---------------- PRICE HELPER ---------------- */
   const getPrice = (price: string | number): number => {
@@ -96,12 +104,43 @@ export default function CartBody() {
     fetchAddresses();
   }, [session]);
 
+  useEffect(() => {
+    setDiscount(0);
+    setCouponId(null);
+  }, [items]);
+
   const shippingAddresses = addresses.filter(
     (a) => a.type === "Shipping"
   );
   const billingAddresses = addresses.filter(
     (a) => a.type === "Billing"
   );
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+
+    try {
+      setCouponLoading(true);
+      setCouponError(null);
+
+      const response = await couponService.applyCoupon({
+        code: couponCode,
+        orderAmount: subtotal,
+      });
+
+      setDiscount(response.discount);
+      setCouponId(response.couponId);
+      toast.success("Coupon code added successfully")
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setCouponError(error.message);
+      } else {
+        setCouponError("Failed to apply coupon");
+      }
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   /* ---------------- CART ACTIONS ---------------- */
 
@@ -184,6 +223,7 @@ export default function CartBody() {
 
       await startRazorpayCheckout({
         addressId: selectedShippingId,
+        discount,
         onSuccess: async () => {
           dispatch(clearCart());
         },
@@ -194,6 +234,14 @@ export default function CartBody() {
     } catch (error) {
       console.error("Checkout error:", error);
     }
+  };
+
+  const handleRemoveCoupon = () => {
+    setDiscount(0);
+    setCouponId(null);
+    setCouponCode("");
+    setCouponError(null);
+    toast.success("Coupon code removed successfully")
   };
 
   return (
@@ -299,6 +347,61 @@ export default function CartBody() {
                 </div>
               ))}
             </div>
+            {session && items.length > 0 && (
+              <div className="mt-6 p-4">
+                <h3 className="text-sm font-medium mb-3">
+                  Apply Coupon
+                </h3>
+
+                {!couponId ? (
+                  <>
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) =>
+                          setCouponCode(e.target.value.toUpperCase())
+                        }
+                        placeholder="Enter coupon code"
+                        className="flex-1 border px-3 py-2 rounded text-sm"
+                      />
+
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={couponLoading || !couponCode.trim()}
+                        className="bg-black text-white px-4 py-2 rounded text-sm disabled:opacity-50"
+                      >
+                        {couponLoading ? "Applying..." : "Apply"}
+                      </button>
+                    </div>
+
+                    {couponError && (
+                      <p className="text-xs text-red-500 mt-2">
+                        {couponError}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-300 p-3 rounded">
+                    <div>
+                      <p className="text-sm font-medium text-green-700">
+                        {`Coupon ${couponCode}" applied`}
+                      </p>
+                      <p className="text-xs text-green-600">
+                        You saved ₹{discount.toFixed(2)}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleRemoveCoupon}
+                      className="text-red-500 text-sm font-medium"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {items && items.length > 0 && <>
               <div className="mb-8 p-4">
@@ -344,6 +447,7 @@ export default function CartBody() {
                   </label>
                 ))}
               </div>
+
 
               {/* BILLING SAME AS SHIPPING */}
               <div className="mb-6">
@@ -405,6 +509,7 @@ export default function CartBody() {
           {/* RIGHT SIDE */}
           <CartPlatformFees
             subtotal={subtotal}
+            discount={discount}
             handlePayment={handlePayment}
           />
         </div>

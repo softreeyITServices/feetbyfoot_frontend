@@ -6,11 +6,13 @@ import { platformFeesService } from "@/domain/application/services/platformFees.
 
 type Props = {
   subtotal: number;
+  discount?: number;
   handlePayment: () => void;
 };
 
 export default function CartPlatformFees({
   subtotal,
+  discount = 0,
   handlePayment,
 }: Props) {
   const [fees, setFees] = useState<PlatformFee[]>([]);
@@ -58,7 +60,8 @@ export default function CartPlatformFees({
     );
   }, [calculatedFees]);
 
-  const total = subtotal + totalPlatformFees;
+  const totalBeforeDiscount = subtotal + totalPlatformFees;
+  const finalTotal = totalBeforeDiscount - discount;
 
   return (
     <div className="bg-gray-50 p-6 rounded-lg h-fit">
@@ -66,7 +69,6 @@ export default function CartPlatformFees({
         Basket Totals
       </h2>
 
-      {/* Subtotal */}
       <div className="flex justify-between text-sm mb-4 border-t pt-6 border-gray-300">
         <span>Subtotal</span>
         <span>₹{subtotal.toFixed(2)}</span>
@@ -97,16 +99,24 @@ export default function CartPlatformFees({
         ))}
       </div>
 
+      {/* Discount */}
+      {discount > 0 && (
+        <div className="flex justify-between text-sm mt-4 text-green-600">
+          <span>Coupon Discount</span>
+          <span>- ₹{discount.toFixed(2)}</span>
+        </div>
+      )}
+
       {/* Total */}
       <div className="border-t mt-6 pt-4 flex justify-between items-center border-gray-300">
         <p className="font-semibold">Total</p>
         <p className="text-xl font-semibold">
-          ₹{total.toFixed(2)}
+          ₹{finalTotal.toFixed(2)}
         </p>
       </div>
 
       <button
-        className={`w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded mt-6 font-medium ${total > 0 ? 'pointer-events-auto': 'pointer-events-none'}`}
+        className={`w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded mt-6 font-medium ${finalTotal > 0 ? 'pointer-events-auto': 'pointer-events-none'}`}
         onClick={() => handlePayment()}
       >
         Place Order

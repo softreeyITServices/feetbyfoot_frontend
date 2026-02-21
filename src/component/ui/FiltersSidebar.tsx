@@ -1,8 +1,11 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { DownCaretIcon } from '@/icons/DownCaretIcon'
 import { UpCaretIcon } from '@/icons/UpCaretIcon'
-import { useState } from 'react'
+import { productService } from '@/domain/application/services/product.service'
+import { ProductFilterMeta } from '@/domain/shared/types/product.type'
 
 type FilterSectionProps = {
   title: string
@@ -19,7 +22,13 @@ function FilterSection({ title, children }: FilterSectionProps) {
         className="flex w-full items-center justify-between text-sm font-medium uppercase tracking-wide"
       >
         {title}
-        <span className="text-lg">{open ? <DownCaretIcon width={24} height={24} /> : <UpCaretIcon width={24} height={24} />}</span>
+        <span className="text-lg">
+          {open ? (
+            <DownCaretIcon width={24} height={24} />
+          ) : (
+            <UpCaretIcon width={24} height={24} />
+          )}
+        </span>
       </button>
 
       {open && (
@@ -32,90 +41,152 @@ function FilterSection({ title, children }: FilterSectionProps) {
 }
 
 export default function FiltersSidebar() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const [filters, setFilters] = useState<ProductFilterMeta | null>(null)
+
+  useEffect(() => {
+    const fetchFilters = async () => {
+      const data = await productService.getProductFilters()
+      setFilters(data)
+    }
+    fetchFilters()
+  }, [])
+
+  if (!filters) return null
+
+  // Get all selected values for a given key as an array
+  const getSelected = (key: string): string[] => searchParams.getAll(key)
+
+  const isSelected = (key: string, value: string): boolean =>
+    getSelected(key).includes(value)
+
+  // Toggle a value in the multi-select params
+  const toggleQuery = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    const current = params.getAll(key)
+
+    // Remove all existing entries for this key, then re-add minus/plus the toggled value
+    params.delete(key)
+
+    if (current.includes(value)) {
+      // Deselect: re-add all except this one
+      current.filter((v) => v !== value).forEach((v) => params.append(key, v))
+    } else {
+      // Select: re-add all plus this one
+      ;[...current, value].forEach((v) => params.append(key, v))
+    }
+
+    params.delete('page') // reset pagination on filter change
+    router.push(`?${params.toString()}`)
+  }
+
   return (
     <aside className="w-full max-w-[260px]">
-
-      <div className='flex flex-row justify-between items-center p-2'>
+      <div className="flex flex-row justify-between items-center p-2">
         <h3 className="text-sm font-semibold mb-4">Filters</h3>
-        <button className="text-sm mb-6 p-0 ">Clear All</button>
+        <button
+          className="text-sm mb-6 p-0"
+          onClick={() => router.push('?')}
+        >
+          Clear All
+        </button>
       </div>
 
       <FilterSection title="Gender">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Men
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Women
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Kids
-        </label>
+        {filters.genders.map((gender) => (
+          <label key={gender} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isSelected('gender', gender)}
+              onChange={() => toggleQuery('gender', gender)}
+            />
+            {gender}
+          </label>
+        ))}
       </FilterSection>
 
       <FilterSection title="Product Category">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Crew Socks
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Ankle Socks
-        </label>
+        {filters.categories.map((category) => (
+          <label key={category._id} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isSelected('category', category._id)}
+              onChange={() => toggleQuery('category', category._id)}
+            />
+            {category.name}
+          </label>
+        ))}
       </FilterSection>
 
       <FilterSection title="Subcategory">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Winter Socks
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Sports Socks
-        </label>
+        {filters.subcategories.map((sub) => (
+          <label key={sub._id} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isSelected('subcategory', sub._id)}
+              onChange={() => toggleQuery('subcategory', sub._id)}
+            />
+            {sub.name}
+          </label>
+        ))}
       </FilterSection>
 
-      <FilterSection title="Discounts">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> 10% & above
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> 20% & above
-        </label>
-      </FilterSection>
-
-      <FilterSection title="Shoe Size">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> 6–8
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> 9–11
-        </label>
-      </FilterSection>
-
-      <FilterSection title="Length">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Ankle
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Crew
-        </label>
+      <FilterSection title="Size">
+        {filters.sizes.map((size) => (
+          <label key={size} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isSelected('size', size)}
+              onChange={() => toggleQuery('size', size)}
+            />
+            {size}
+          </label>
+        ))}
       </FilterSection>
 
       <FilterSection title="Color">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Black
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Blue
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Green
-        </label>
+        {filters.colors.map((color) => (
+          <label key={color} className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isSelected('color', color)}
+              onChange={() => toggleQuery('color', color)}
+            />
+            {color}
+          </label>
+        ))}
       </FilterSection>
 
       <FilterSection title="Pack Type">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Single
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" /> Combo
-        </label>
+        {filters.packTypes.map((pack) => {
+          const value = String(pack.value)
+
+          const selectedValue = searchParams.get('isGiftPack')
+
+          return (
+            <label key={value} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={selectedValue === value}
+                onChange={() => {
+                  const params = new URLSearchParams(searchParams.toString())
+
+                  if (selectedValue === value) {
+                    params.delete('isGiftPack')
+                  } else {
+                    params.set('isGiftPack', value)
+                  }
+
+                  params.delete('page')
+                  router.push(`?${params.toString()}`)
+                }}
+              />
+              {pack.label}
+            </label>
+          )
+        })}
       </FilterSection>
 
     </aside>

@@ -19,28 +19,22 @@ const WishlistPage = () => {
       setLoading(true);
       const response = await wishlistService.getWishlist();
       setProducts(response.data.products ?? []);
-    } catch (error: unknown) {
+    } catch {
       toast.error("Failed to load wishlist");
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const handleWishlistChange = (productId: string, removed: boolean) => {
+    if (removed) {
+      setProducts((prev) => prev.filter((p) => p._id !== productId));
+    }
+  };
+
   useEffect(() => {
     fetchWishlist();
   }, [fetchWishlist]);
-
-  const handleRemove = async (productId: string) => {
-    try {
-      await wishlistService.removeFromWishlist(productId);
-      toast.success("Removed from wishlist");
-
-      // refresh list
-      fetchWishlist();
-    } catch (error) {
-      toast.error("Failed to remove item");
-    }
-  };
 
   if (loading) {
     return (
@@ -68,10 +62,11 @@ const WishlistPage = () => {
     <div className="max-w-6xl mx-auto px-4 py-10">
       <h1 className="text-2xl font-semibold mb-8">My Wishlist</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
         {products.map((product) => (
           <ProductCard
-            wishlist={false}
+            wishlist={true}
+            wishlistSelect={true}
             home={false}
             key={product._id}
             id={product._id}
@@ -82,6 +77,7 @@ const WishlistPage = () => {
             title={product.name}
             originalPrice={product.price.toFixed(2)}
             discountedPrice={product.salePrice.toFixed(2)}
+            onWishlistChange={handleWishlistChange}
           />
         ))}
       </div>

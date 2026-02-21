@@ -3,9 +3,13 @@ import ProductCard from "@/component/ui/ProductCard";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Dropdown from "@/component/ui/Dropdown";
 import { productService } from "@/domain/application/services/product.service";
 import Link from "next/link";
+import SortDropdown from "@/component/ui/SortDropdown";
+import { wishlistService } from "@/domain/application/services/wishlist.service";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 
 const CATEGORY_CONFIG = {
   mens: {
@@ -39,8 +43,8 @@ export async function generateMetadata({
 }: {
   params: { category: string };
 }): Promise<Metadata> {
-  const { category } = await params
-  const key = category.toLowerCase() as CategoryKey
+  const { category } = await params;
+  const key = category.toLowerCase() as CategoryKey;
   const config = CATEGORY_CONFIG[key];
 
   if (!config) notFound();
@@ -51,21 +55,26 @@ export async function generateMetadata({
   };
 }
 
-const SORT_OPTIONS = [
-  { label: "Latest", value: "latest" },
-  { label: "Price: Low to High", value: "price_asc" },
-  { label: "Price: High to Low", value: "price_desc" },
-];
-
 export default async function CategoryPage({
   params,
   searchParams,
 }: {
   params: { category: string };
-  searchParams: { page?: string };
+  searchParams: {
+    page?: string;
+    gender?: string | string[];
+    category?: string | string[];
+    subcategory?: string | string[];
+    size?: string | string[];
+    color?: string | string[];
+    length?: string | string[];
+    discount?: string;
+    packType?: string | string[];
+    sortBy?: string;
+  };
 }) {
-  const { category } = await params
-  const key = category.toLowerCase() as CategoryKey
+  const { category } = await params;
+  const key = category.toLowerCase() as CategoryKey;
   const config = CATEGORY_CONFIG[key];
 
   if (!config) notFound();
@@ -73,16 +82,51 @@ export default async function CategoryPage({
   const resolvedSearchParams = await searchParams;
   const page = Number(resolvedSearchParams.page ?? 1);
   const perpage = 20;
+  const sortBy = resolvedSearchParams.sortBy ?? "default";
 
-  const {
-    products,
-    total,
-    totalPages,
-  } = await productService.getPublicProducts({
-    gender: category.toUpperCase(),
+  // Helper: always return string[] from a searchParam value
+  const toArray = (val: string | string[] | undefined): string[] => {
+    if (!val) return [];
+    return Array.isArray(val) ? val : [val];
+  };
+
+  const session = await getServerSession(authOptions);
+  const token = session?.accessToken ?? null;
+
+  // FIX 1: type as Set<string> and initialise as empty Set (not empty string)
+  let wishlistIds = new Set<string>();
+  if (token) {
+    const response = await wishlistService.getWishlist(token);
+    const wishlistProducts = response?.data?.products ?? [];
+    wishlistIds = new Set(wishlistProducts.map((item) => item._id));
+  }
+
+  const { products, total, totalPages } = await productService.getPublicProducts({
+    gender: toArray(resolvedSearchParams.gender),
     page,
     limit: perpage,
+    sortBy,
+    categories: toArray(resolvedSearchParams.category),
+    subcategories: toArray(resolvedSearchParams.subcategory),
+    sizes: toArray(resolvedSearchParams.size),
+    colors: toArray(resolvedSearchParams.color),
+    minDiscount: resolvedSearchParams.discount
+      ? Number(resolvedSearchParams.discount)
+      : undefined,
+    packTypes: toArray(resolvedSearchParams.packType).map((v) => v === "true"),
   });
+
+  // FIX 2: build a base query string that preserves all current filters
+  const buildPageHref = (pageNum: number) => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(resolvedSearchParams)) {
+      if (k === "page") continue;
+      if (Array.isArray(v)) v.forEach((val) => qs.append(k, val));
+      else if (v !== undefined) qs.set(k, v);
+    }
+    qs.set("page", String(pageNum));
+    return `?${qs.toString()}`;
+  };
 
   return (
     <main className="w-full">
@@ -125,39 +169,44 @@ export default async function CategoryPage({
                 Showing {(page - 1) * perpage + 1}–
                 {Math.min(page * perpage, total)} of {total} products
               </span>
-
-              <Dropdown label="" options={SORT_OPTIONS} />
+              <SortDropdown />
             </div>
 
             {/* Product Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {products.map((product) => (
-                <ProductCard
-                  wishlist={true}
-                  home={false}
-                  key={product._id}
-                  id={product._id}
-                  size={product.sizes}
-                  imageSrc={product.imageUrls[0]}
-                  altText={product.name}
-                  categories={product.tags.join(", ")}
-                  title={product.name}
-                  originalPrice={product.price.toFixed(2)}
-                  discountedPrice={product.salePrice.toFixed(2)}
-                />
-              ))}
-            </div>
+            {products.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {products.map((product) => (
+                  <ProductCard
+                    wishlist={true}
+                    wishlistSelect={wishlistIds.has(product._id)}
+                    home={false}
+                    key={product._id}
+                    id={product._id}
+                    size={product.sizes}
+                    imageSrc={product.imageUrls[0]}
+                    altText={product.name}
+                    categories={product.tags.join(", ")}
+                    title={product.name}
+                    originalPrice={product.price.toFixed(2)}
+                    discountedPrice={product.salePrice.toFixed(2)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="align-middle justify-center flex py-10">
+                No Products found with the combination of filters
+              </div>
+            )}
 
             {/* Pagination */}
             <div className="flex justify-center gap-2 mt-10">
               {Array.from({ length: totalPages }).map((_, i) => (
                 <Link
                   key={i}
-                  href={`?page=${i + 1}`}
-                  className={`px-4 py-2 border text-sm ${page === i + 1
-                    ? "bg-black text-white"
-                    : "hover:bg-gray-100"
-                    }`}
+                  href={buildPageHref(i + 1)}
+                  className={`px-4 py-2 border text-sm ${
+                    page === i + 1 ? "bg-black text-white" : "hover:bg-gray-100"
+                  }`}
                 >
                   {i + 1}
                 </Link>

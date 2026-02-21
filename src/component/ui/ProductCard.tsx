@@ -8,7 +8,7 @@ import { addToCartAsync } from "@/store/slices/cart.slice";
 import { toSlug } from "@/lib/slugConverter";
 import { openCart } from "@/store/slices/ui.slice";
 import SizeSelector from "@/app/(public)/[category]/[product-slug]/[id]/components/SizeSelector";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import toast from "react-hot-toast";
 import { wishlistService } from "@/domain/application/services/wishlist.service";
@@ -24,6 +24,8 @@ function ProductCard({
   size,
   home,
   wishlist,
+  wishlistSelect,
+  onWishlistChange
 }: {
   home?: boolean;
   wishlist?: boolean;
@@ -40,10 +42,12 @@ function ProductCard({
   title: string;
   originalPrice: string;
   discountedPrice: string;
+  wishlistSelect?: boolean;
+  onWishlistChange?: (id: string, removed: boolean) => void;
 }) {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(wishlistSelect ?? false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const dispatch = useAppDispatch();
@@ -83,17 +87,23 @@ function ProductCard({
         await wishlistService.removeFromWishlist(id);
         setIsWishlisted(false);
         toast.success("Removed from wishlist");
+        onWishlistChange?.(id, true);
       } else {
         await wishlistService.addToWishlist({ productId: id });
         setIsWishlisted(true);
         toast.success("Added to wishlist");
+        onWishlistChange?.(id, false);
       }
-    } catch (error) {
+    } catch {
       toast.error("Wishlist action failed");
     } finally {
       setWishlistLoading(false);
     }
   };
+
+  useEffect(() => {
+    setIsWishlisted(wishlistSelect ?? false);
+  }, [wishlistSelect]);
 
   return (
     <div className="rounded-xl bg-white border border-gray-200 p-3 relative">

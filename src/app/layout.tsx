@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Inter, Poppins, Montserrat } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
-import { MainProviders } from "@/domain/application/providers/MainProviders";
 import ReduxProvider from "@/store/ReduxProvider";
 import CartSyncProvider from "@/domain/application/providers/CartSyncProvider";
+import { AuthProvider } from "@/domain/application/providers/Authproviders";
 
 
 export const poppins = Poppins({
@@ -44,13 +44,13 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
 
-        <MainProviders>
+        <AuthProvider>
           <ReduxProvider>
             <CartSyncProvider>
               {children}
             </CartSyncProvider>
           </ReduxProvider>
-        </MainProviders>
+        </AuthProvider>
       </body>
     </html>
   );

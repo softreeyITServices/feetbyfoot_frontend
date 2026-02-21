@@ -109,6 +109,7 @@ export default function CartDrawer({
 
 
   const handleCart = () => {
+    onClose()
     Router.push('/cart')
   };
 

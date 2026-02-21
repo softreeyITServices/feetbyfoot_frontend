@@ -1,84 +1,25 @@
-import Image from "next/image";
+import { cache } from "react";
+import { productService } from "@/domain/application/services/product.service";
 import Container from "../ui/Container";
 import ProductCard from "../ui/ProductCard";
 
-export default function BestSelling() {
+// ✅ Inline cache (no extra files)
+const getBestSellingProducts = cache(async () => {
+  console.log(">>> fetching best selling products");
+  return productService.getPublicProducts({
+    isBestseller: true,
+    page: 1,
+    limit: 6,
+  });
+});
 
-  const products = [
-    {
-      imageSrc: "/assets/images/product-1.png",
-      altText: "Grey Woolen Socks",
-      categories: "Womens, Crew, Mens, Winter",
-      title: "Grey & Black Checked Woolen Socks | Soft Fleece-Lined Warm Winter Socks",
-      originalPrice: "299.00",
-      discountedPrice: "209.00",
-      sizes: [
-        {
-          size: "M",
-          quantity: 10,
-          isActive: false,
-          _id: "698445691361d54349200a40"
-        },
-        {
-          size: "S",
-          quantity: 10,
-          isActive: false,
-          _id: "698445691361d54349200a41"
-        }
-      ],
-    },
-    {
-      imageSrc: "/assets/images/product-2.png",
-      altText: "Reindeer Pattern Socks",
-      categories: "Womens, Crew, Winter Socks",
-      title: "Winter Reindeer Pattern Woolen Socks – Cozy Warm Thermal Socks",
-      originalPrice: "299.00",
-      discountedPrice: "199.00",
-      sizes: [
-        {
-          size: "M",
-          quantity: 10,
-          isActive: false,
-          _id: "698445691361d54349200a40"
-        },
-        {
-          size: "S",
-          quantity: 10,
-          isActive: false,
-          _id: "698445691361d54349200a41"
-        }
-      ],
-    },
-    {
-      imageSrc: "/assets/images/product-3.png",
-      altText: "Navy Blue Crew Socks",
-      categories: "Mens, Crew, Winter Socks",
-      title: "Classic Navy Blue Woolen Crew Socks – Soft, Durable & Everyday Comfort",
-      originalPrice: "299.00",
-      discountedPrice: "199.00",
-      sizes: [
-        {
-          size: "M",
-          quantity: 10,
-          isActive: false,
-          _id: "698445691361d54349200a40"
-        },
-        {
-          size: "S",
-          quantity: 10,
-          isActive: false,
-          _id: "698445691361d54349200a41"
-        }
-      ],
-    },
-  ];
-
+export default async function BestSelling() {
+  const response = await getBestSellingProducts();
+  const products = response?.products ?? [];
 
   return (
     <Container>
       <section className="flex flex-col gap-8 py-12">
-
-        {/* Heading */}
         <div className="text-center">
           <h2 className="inline-block bg-yellow-400 px-6 py-2 text-4xl font-bold">
             Best Selling Socks
@@ -88,25 +29,22 @@ export default function BestSelling() {
           </p>
         </div>
 
-        {/* FLEX LAYOUT */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-
-          {products.map((product, index) => (
+          {products.map((product) => (
             <ProductCard
-              home={true}
-              wishlist={true}
-              key={index.toString()}
-              id={index.toString()}
+              key={product._id}
+              id={product._id}
+              home
+              wishlist
               size={product.sizes}
-              imageSrc={product.imageSrc}
-              altText={product.altText}
-              categories={product.categories}
-              title={product.title}
-              originalPrice={product.originalPrice}
-              discountedPrice={product.discountedPrice}
+              imageSrc={product.imageUrls?.[0] ?? "/placeholder.png"}
+              altText={product.name}
+              categories={product.tags?.join(", ") ?? ""}
+              title={product.name}
+              originalPrice={product.price?.toFixed(2) ?? "0.00"}
+              discountedPrice={product.salePrice?.toFixed(2) ?? "0.00"}
             />
           ))}
-
         </div>
       </section>
     </Container>

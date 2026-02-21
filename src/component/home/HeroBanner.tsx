@@ -1,17 +1,20 @@
-import Image from "next/image";
+import BannerSlider, { Slide } from "../ui/BannerSlider";
 import Container from "../ui/Container";
+import { bannerService } from "@/domain/application/services/banner.service";
 
-export default function HeroBanner() {
+export default async function HeroBanner() {
+  const activeBanners = await bannerService.getActiveBanners();
+
+  const slides: Slide[] = activeBanners.map((banner, index) => ({
+    id: index + 1,
+    image: banner.imageUrl,
+    title: banner.title,
+  }));
+
   return (
     <section className="section">
       <Container>
-      <Image
-        src="/assets/images/hero-christmas-sale.png"
-        alt="Christmas Sale"
-        width={1920}
-        height={650}
-        priority
-      />
+        <BannerSlider slides={slides} />
       </Container>
     </section>
   );

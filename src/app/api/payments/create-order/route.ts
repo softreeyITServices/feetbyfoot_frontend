@@ -18,6 +18,8 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
+    console.log("jshdgfjhsdgjs",JSON.stringify(body))
+
     const order = await httpClient.request({
       url: EX_ORDERS_URL,
       method: "POST",

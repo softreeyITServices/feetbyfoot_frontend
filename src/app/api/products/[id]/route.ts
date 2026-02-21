@@ -5,7 +5,6 @@ import {
   createSuccessResponse,
   ExternalApiError,
 } from "@/lib/apiHandler";
-import { productService } from "@/domain/application/services/product.service";
 import { isHttpClientError } from "@/lib/httpClientError";
 import { NextRequest } from "next/server";
 import { httpClient } from "@/lib/httpClient";

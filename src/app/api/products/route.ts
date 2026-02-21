@@ -15,23 +15,22 @@ export const GET = apiHandler(
     try {
       const { searchParams } = new URL(req.url);
 
-      const params: Record<string, string> = {};
+      const params = new URLSearchParams();
       searchParams.forEach((value, key) => {
-        params[key] = value;
+        params.append(key, value); // preserves duplicates
       });
 
       const response = await httpClient.get<PublicProductsApiResponse>(
-        EX_PRODUCTS_URL + "/public",
-        params,
+        `${EX_PRODUCTS_URL}/public?${params.toString()}`,
+        undefined,
         { skipAuth: true }
       );
+
       return createSuccessResponse(response, 200);
     } catch (error: unknown) {
       if (isHttpClientError(error)) {
         throw new ExternalApiError(
-          error.data?.message ??
-          error.message ??
-          "Failed to fetch products",
+          error.data?.message ?? error.message ?? "Failed to fetch products",
           error.status,
           error.data
         );

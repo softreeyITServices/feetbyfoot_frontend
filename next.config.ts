@@ -13,7 +13,16 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "res.cloudinary.com",
         pathname: "/**",
+      },{
+        protocol: "https",
+        hostname: "picsum.photos",
+        pathname: "/**",
+      },{
+        protocol: "https",
+        hostname: "cdn.site.com",
+        pathname: "/**",
       },
+
     ],
   },
 };

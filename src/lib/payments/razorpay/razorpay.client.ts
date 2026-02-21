@@ -3,6 +3,7 @@ import { httpClient } from "@/lib/httpClient";
 
 interface StartCheckoutParams {
   addressId?: string;
+  discount?: number;
   onSuccess?: () => void;
   onFailure?: () => void;
 }
@@ -14,6 +15,7 @@ interface RazorpayOrder {
 
 export const startRazorpayCheckout = async ({
   addressId,
+  discount,
   onSuccess,
   onFailure,
 }: StartCheckoutParams) => {
@@ -22,7 +24,8 @@ export const startRazorpayCheckout = async ({
 
     const orderPayload = {
       address_id: addressId,
-      paymentMethod: "ONLINE"
+      paymentMethod: "ONLINE",
+      discountAmount: discount
     }
 
     // ✅ Step 1: Create Razorpay Order (NOT app order)

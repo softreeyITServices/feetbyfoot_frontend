@@ -27,12 +27,12 @@ class WishlistService {
   }
 
   /* ---------------- GET WISHLIST ---------------- */
-  async getWishlist(): Promise<WishlistResponse> {
+  async getWishlist(token?: string): Promise<WishlistResponse> {
     try {
       const response = await httpClient.request<WishlistResponse>({
         url: WISHLIST_URL,
         method: "GET",
-        requiresAuth: true,
+        ...(token ? { token } : { requiresAuth: true }),
       });
 
       return response;

@@ -130,3 +130,61 @@ body {
   -webkit-text-fill-color: transparent;
   -webkit-text-stroke: 1px #2f6b4f;
 }
+
+.bs-wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  aspect-ratio: 1440 / 580;
+  background: #111;
+}
+
+.bs-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.75s ease-in-out;
+}
+
+.bs-slide.bs-active {
+  opacity: 1;
+}
+
+.bs-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bs-dots {
+  position: absolute;
+  /* bottom: clamp(8px, 1.4vw, 18px);
+  right: clamp(14px, 2.2vw, 28px); */
+  bottom: 0;
+  right: 0;
+  display: flex;
+  gap: clamp(5px, 0.8vw, 20px);
+  z-index: 10;
+}
+
+.bs-dot {
+  width: clamp(10px, 1.4vw, 22px);
+  height: clamp(10px, 1.4vw, 22px);
+  border-radius: 50%;
+  background: rgba(190, 190, 190, 0.75);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.bs-dot.bs-dot-on {
+  background: #4a4a4a;
+  transform: scale(1.28);
+}
+
+.bs-dot:hover {
+  background: #dbdbdb;
+}

@@ -29,6 +29,11 @@ export const EXCHANGE_URL = API_BASE_URL + "/orders/exchange";
 export const RETURN_URL = API_BASE_URL + "/orders/return";
 export const CANCEL_UPDATE_ORDER_URL = API_BASE_URL + "/orders";
 export const CONTACT_URL = API_BASE_URL + "/contact";
+export const BANNERS_URL = API_BASE_URL + "/banners";
+export const COUPONS_URL = API_BASE_URL + "/coupons";
+
+
+
 
 // External APIs (for server-side use)
 
@@ -56,3 +61,5 @@ export const EX_RETURN_URL = EXTERNAL_API_BASE_URL + "/user/order/return";
 export const EX_CANCEL_UPDATE_ORDER_URL = EXTERNAL_API_BASE_URL + "/user/orders";
 export const EX_UPDATE_PROFILE_URL = EXTERNAL_API_BASE_URL + "/auth/profile";
 export const EX_CONTACT_URL = EXTERNAL_API_BASE_URL + "/contact";
+export const EX_BANNERS_URL = EXTERNAL_API_BASE_URL + "/banners";
+export const EX_COUPONS_URL = EXTERNAL_API_BASE_URL + "/coupons";

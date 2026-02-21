@@ -60,3 +60,41 @@ export type ProductReview = {
 export type ProductByIdResponse = {
   data: Product;
 };
+
+
+export interface FilterCategory {
+  _id: string;
+  name: string;
+}
+
+export interface FilterSubcategory {
+  _id: string;
+  name: string;
+  categoryId: string;
+}
+
+export interface PackType {
+  label: string;
+  value: boolean;
+}
+
+export interface DiscountBracket {
+  label: string;
+  minDiscount: number;
+}
+
+export interface ProductFilterMeta {
+  genders: string[];
+  categories: FilterCategory[];
+  subcategories: FilterSubcategory[];
+  sizes: string[];
+  colors: string[];
+  packTypes: PackType[];
+
+}
+
+export interface ProductFilterResponse {
+  data: ProductFilterMeta;
+  success: boolean;
+  timestamp: string;
+}

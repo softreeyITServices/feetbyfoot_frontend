@@ -9,18 +9,21 @@ import CartDrawer from "../ui/CartDrawer";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { openCart, closeCart } from "@/store/slices/ui.slice";
 import { WishlistIcon } from "@/icons/WishlistIcon";
+import { usePathname } from "next/navigation";
+
 
 const menuItems = [
   { label: "MENS", href: "/mens" },
   { label: "WOMENS", href: "/womens" },
   { label: "KIDS", href: "/kids" },
-  { label: "GIFTS", href: "/gifts", active: true },
+  { label: "GIFTS", href: "/gifts" },
   { label: "OUTLET", href: "/outlet" },
   { label: "BRAND", href: "/brand" },
   { label: "CONTACT", href: "/contactus" },
 ];
 
 export default function Navbar() {
+  const pathname = usePathname();
   const dispatch = useAppDispatch();
   const openCartState = useAppSelector(state => state.ui.isCartOpen);
 
@@ -54,20 +57,25 @@ export default function Navbar() {
 
           {/* Menu */}
           <nav className="hidden md:flex items-center gap-6">
-            {menuItems.map(item => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={`text-sm font-bold px-3 py-1
-                  ${item.active
-                    ? "bg-yellow-400 text-black"
-                    : "text-gray-700 hover:text-black"
-                  }
+            {menuItems.map(item => {
+              const isActive =
+                pathname === item.href ||
+                pathname.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`text-sm font-bold px-3 py-1
+                  ${isActive
+                      ? "bg-yellow-400 text-black"
+                      : "text-gray-700 hover:text-black"
+                    }
                 `}
-              >
-                {item.label}
-              </Link>
-            ))}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
           </nav>
 
           {/* Right Icons */}
@@ -77,7 +85,7 @@ export default function Navbar() {
               <ProfileIcon width={20} height={20} fill="#000" />
             </Link>
 
-             {/* Wishlist */}
+            {/* Wishlist */}
             <Link href="/wishlists" aria-label="Wishlists">
               <WishlistIcon width={24} height={24} fill="#000" />
             </Link>
