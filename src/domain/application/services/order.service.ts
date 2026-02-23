@@ -4,10 +4,10 @@ import { ALL_ORDERS_URL, EXCHANGE_URL, RETURN_URL } from "@/constants/apis";
 
 import {
   PaginatedOrders,
-  ExchangeRequest,
+  ExchangeRequestPayload,
   PaginatedOrdersResponse,
   GenericMessageResponse,
-  ReturnRequest,
+  ReturnRequestPayload,
 } from "@/domain/shared/types/order.type";
 
 class OrdersService {
@@ -42,33 +42,10 @@ class OrdersService {
       throw error;
     }
   }
-  
-  /* ---------------- EXCHANGE ITEM ---------------- */
-//   async exchangeItem(
-//     orderId: string,
-//     itemId: string,
-//     payload: ExchangeRequest
-//   ): Promise<ExchangeOrderResponse> {
-//     try {
-//       const response =
-//         await httpClient.request<ExchangeOrderResponse>({
-//           url: `${ALL_ORDERS_URL}/${orderId}/items/${itemId}/exchange`,
-//           method: "POST",
-//           requiresAuth: true,
-//           data: payload,
-//         });
 
-//       return response;
-//     } catch (error) {
-//       handleApiError(error, "exchangeOrderItem");
-//       throw error;
-//     }
-//   }
-// }
-
-/* ---------------- EXCHANGE ITEMS ---------------- */
+  /* ---------------- EXCHANGE ITEMS ---------------- */
   async exchangeItems(
-    payload: ExchangeRequest
+    payload: ExchangeRequestPayload
   ): Promise<GenericMessageResponse> {
     try {
       const response =
@@ -88,7 +65,7 @@ class OrdersService {
 
   /* ---------------- RETURN ITEMS ---------------- */
   async returnItems(
-    payload: ReturnRequest
+    payload: ReturnRequestPayload
   ): Promise<GenericMessageResponse> {
     try {
       const response =
@@ -108,20 +85,21 @@ class OrdersService {
 
   /* ---------------- CANCEL ORDER ---------------- */
   async cancelOrder(
-    orderId: string
+    orderId: string,
+    reason: string
   ): Promise<GenericMessageResponse> {
     try {
       const response =
         await httpClient.request<GenericMessageResponse>({
           url: `${ALL_ORDERS_URL}/${orderId}/cancel`,
           method: "PATCH",
+          data: { reason },
           requiresAuth: true,
         });
 
       return response;
     } catch (error) {
       handleApiError(error, "cancelOrder");
-      throw error;
     }
   }
 
@@ -142,7 +120,6 @@ class OrdersService {
       return response;
     } catch (error) {
       handleApiError(error, "updateOrderAddress");
-      throw error;
     }
   }
 }

@@ -33,7 +33,8 @@ export default function LoginForm() {
 
   const handleIndentifier = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    if (validate(value)) {
+    const type = validate(value);
+    if (type === 'email') {
       setAuthType('email')
     } else {
       setAuthType('phone')
@@ -85,9 +86,11 @@ export default function LoginForm() {
       setError("");
       setSuccess("");
 
+      if(!authType) return;
+
       await authService.sendOtp({
         identifier,
-        type: "email",
+        type: authType,
       });
 
       setTimer(60);
@@ -236,11 +239,6 @@ export default function LoginForm() {
           </div>
         </>
       )}
-
-      <div className="flex items-center gap-2 text-sm">
-        <input type="checkbox" id="remember" />
-        <label htmlFor="remember">Remember me</label>
-      </div>
     </div>
   );
 }

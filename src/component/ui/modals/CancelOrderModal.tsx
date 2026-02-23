@@ -36,12 +36,16 @@ export default function CancelOrderModal({
     setError(null);
 
     try {
-      await ordersService.cancelOrder(orderId);
+      await ordersService.cancelOrder(orderId, reason);
 
       onSuccess();
-    } catch (err) {
-      console.error("Cancel order failed", err);
-      setError("Failed to cancel order. Please try again.");
+    } catch (error: unknown) {
+      // console.error("Cancel order failed", err);
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to cancel order. Please try again.";
+      setError(message);
     } finally {
       setLoading(false);
     }

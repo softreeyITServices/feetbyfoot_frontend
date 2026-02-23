@@ -10,7 +10,8 @@ import { MoneyBackIcon } from "@/icons/MoneyBackIcon";
 import { useAppDispatch } from "@/store/hooks";
 import { addToCart } from "@/store/slices/cart.slice";
 import { useState } from "react";
-import { openCart } from '@/store/slices/ui.slice';
+import { openCart } from "@/store/slices/ui.slice";
+import { RatingStarIcon } from "@/icons/RatingStarIcon";
 
 interface ProductSummaryProps {
   product: {
@@ -27,9 +28,15 @@ interface ProductSummaryProps {
       isActive: boolean;
     }[];
   };
+  totalRatings: number;
+  averageRating: number;
 }
 
-export default function ProductSummary({ product }: ProductSummaryProps) {
+export default function ProductSummary({
+  product,
+  totalRatings,
+  averageRating,
+}: ProductSummaryProps) {
   const dispatch = useAppDispatch();
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -55,12 +62,43 @@ export default function ProductSummary({ product }: ProductSummaryProps) {
     dispatch(openCart());
   };
 
+  const scrollToReviews = () => {
+    window.location.hash = "reviews";
+  };
+
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-2">
-        {product.name}
-      </h1>
+      <h1 className="text-2xl font-semibold mb-2">{product.name}</h1>
 
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <span
+              key={i}
+              className={`text-lg ${i < Math.round(averageRating)
+                ? "text-yellow-400"
+                : "text-gray-300"
+                }`}
+            >
+              <RatingStarIcon key={i}
+                fill={i < Math.round(averageRating) ? "#FACC15" : "#D1D5DB"} />
+            </span>
+          ))}
+        </div>
+
+        <span className="text-sm text-gray-600">
+          {averageRating.toFixed(1)}
+        </span>
+
+        <button
+          onClick={scrollToReviews}
+          className="text-sm text-gray-500 underline hover:text-black"
+        >
+          ({totalRatings} review{totalRatings !== 1 && "s"})
+        </button>
+      </div>
+
+      {/* Price */}
       <div className="flex gap-3 mb-4">
         <span className="text-green-600 text-xl font-semibold">
           ₹{product.price}

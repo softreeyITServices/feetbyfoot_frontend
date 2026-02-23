@@ -9,15 +9,21 @@ import { cartService } from "@/domain/application/services/cart.service";
 import { mapBackendCartToRedux } from "@/domain/shared/mappers/cartMapper";
 
 export function useCartSync() {
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const dispatch = useAppDispatch();
-
 
   useEffect(() => {
     const syncCart = async () => {
       if (status === "loading") return;
 
+      // 🔥 Not logged in
       if (status !== "authenticated") {
+        dispatch(setAuthMode(false));
+        return;
+      }
+
+      // 🔥 ADMIN should NEVER sync cart
+      if (session?.user?.role !== "customer") {
         dispatch(setAuthMode(false));
         return;
       }
@@ -27,7 +33,6 @@ export function useCartSync() {
       try {
         const guestCart = loadCartFromStorage();
 
-        // 🔥 Merge guest cart once on login
         if (guestCart.length > 0) {
           for (const item of guestCart) {
             await cartService.addItem({
@@ -40,7 +45,6 @@ export function useCartSync() {
           localStorage.removeItem("cart_items");
         }
 
-        // 🔥 Fetch backend cart ONCE
         const dbCart = await cartService.getCart();
 
         dispatch(
@@ -53,5 +57,5 @@ export function useCartSync() {
     };
 
     syncCart();
-  }, [status]);
+  }, [status, session]);
 }

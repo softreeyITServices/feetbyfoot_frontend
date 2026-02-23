@@ -33,15 +33,14 @@ export const PATCH = apiHandler(
         );
       }
 
-      const body = await req.json();
+      const {addressId} = await req.json();
 
       const response = await httpClient.request({
-        url: `${EX_CANCEL_UPDATE_ORDER_URL}/${orderId}/update`,
+        url: `${EX_CANCEL_UPDATE_ORDER_URL}/${orderId}/update?addressId=${addressId}`,
         method: "PATCH",
         headers: {
           Authorization: authorization,
         },
-        data: JSON.stringify(body), // { addressId }
       });
 
       return createSuccessResponse(response, 200);

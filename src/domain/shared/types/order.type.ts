@@ -22,6 +22,26 @@ export enum PaymentStatus {
   PARTIALLY_REFUNDED = "PARTIALLY_REFUNDED",
 }
 
+/* ---------------- ITEM & EXCHANGE ENUMS ---------------- */
+
+export enum OrderItemStatus {
+  CONFIRMED = "CONFIRMED",
+  PACKED = "PACKED",
+  SHIPPED = "SHIPPED",
+  DELIVERED = "DELIVERED",
+  CANCELLED = "CANCELLED",
+  RETURN_REQUESTED = "RETURN_REQUESTED",
+  EXCHANGE_REQUESTED = "EXCHANGE_REQUESTED",
+}
+
+export enum ExchangeStatus {
+  EXCHANGE_REQUESTED = "EXCHANGE_REQUESTED",
+  EXCHANGE_APPROVED = "EXCHANGE_APPROVED",
+  REPLACEMENT_SHIPPED = "REPLACEMENT_SHIPPED",
+  EXCHANGE_REJECTED = "EXCHANGE_REJECTED",
+  COMPLETED = "COMPLETED",
+}
+
 /* ---------------- PAGINATION ---------------- */
 
 export interface OrderMeta {
@@ -30,6 +50,7 @@ export interface OrderMeta {
   perPage: number;
   totalPages: number;
 }
+
 export interface PaginatedOrders {
   message: string;
   data: Order[];
@@ -40,7 +61,44 @@ export interface PaginatedOrdersResponse {
   data: PaginatedOrders;
 }
 
-/* ---------------- CORE ORDER ---------------- */
+/* ---------------- PRODUCT SNAPSHOT ---------------- */
+
+export interface ProductSize {
+  size: string;
+  quantity: number;
+  isActive: boolean;
+}
+
+export interface ProductSnapshot {
+  _id: string;
+  name: string;
+  sizes: ProductSize[];
+}
+
+/* ---------------- RETURN STRUCTURE (DB) ---------------- */
+
+export interface ReturnRequestInfo {
+  reason: string;
+  requestedAt: string;
+  status: "REQUESTED" | "APPROVED" | "REJECTED" | "COMPLETED";
+}
+
+/* ---------------- EXCHANGE STRUCTURE (DB) ---------------- */
+
+export interface ExchangeHistoryItem {
+  _id: string;
+  exchangeId: string;
+  reason?: string;
+  oldSize: string;
+  newSize: string;
+  quantity: number;
+  status: ExchangeStatus;
+  requestedAt: string;
+  approvedAt?: string;
+  replacementAwb?: string;
+}
+
+/* ---------------- CORE ORDER ITEM ---------------- */
 
 export interface OrderItem {
   _id: string;
@@ -52,37 +110,50 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   currency: string;
-  status: string;
+
+  status: OrderItemStatus;
+
+  returnRequest?: ReturnRequestInfo;
+  exchangeRequests?: ExchangeHistoryItem[];
+
+  product?: ProductSnapshot; // snapshot at order time
 }
+
+/* ---------------- CORE ORDER ---------------- */
 
 export interface Order {
   _id: string;
   userId: string;
   orderId: string;
   orderNumber: string;
+
   items: OrderItem[];
+
   subtotal: number;
   discountAmount: number;
   shippingCost: number;
+  platformFee: number;
+  gstAmount: number;
   totalAmount: number;
+
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
   paymentMethod: string;
-  platformFee: number;
-  gstAmount: number;
+
   shippingAddress: {
+    _id: string;
     fullName: string;
     phone: string;
     addressLine1: string;
-    addressLine2: string;
+    addressLine2?: string;
     city: string;
     state: string;
     pincode: string;
     country: string;
     latitude: number;
     longitude: number;
-    _id: string;
   };
+
   uuid: string;
   createdAt: string;
   updatedAt: string;
@@ -115,22 +186,24 @@ export interface UpdateOrderStatusResponse {
   data: BulkWriteResult;
 }
 
-/* ---------------- EXCHANGE RESPONSE ---------------- */
-/* Since backend response not provided,
-   keeping it safely structured but NOT using any */
-export interface ExchangeOrderResponse {
-  message: string;
-  data: unknown;
-}
-
+/* ---------------- EXCHANGE REQUEST PAYLOAD (API) ---------------- */
 
 export type ExchangeItemPayload = {
-  orderId: string;
-  itemId: string;
+  orderItemId: string;
+  productId: string;
   reason: string;
-  newSize: string;
-  oldSize: string;
+  toSize: string;
+  fromSize: string;
+  quantity: number;
 };
+
+export type ExchangeRequestPayload = {
+  orderId: string;
+  lines: ExchangeItemPayload[];
+  notes: string;
+};
+
+/* ---------------- RETURN REQUEST PAYLOAD (API) ---------------- */
 
 export type ReturnItemPayload = {
   orderId: string;
@@ -138,12 +211,15 @@ export type ReturnItemPayload = {
   reason: string;
 };
 
-export type ExchangeRequest = {
-  items: ExchangeItemPayload[];
+export type ReturnRequestPayload = {
+  items: ReturnItemPayload[];
 };
 
-export type ReturnRequest = {
-  items: ReturnItemPayload[];
+/* ---------------- GENERIC RESPONSES ---------------- */
+
+export type ExchangeOrderResponse = {
+  message: string;
+  data: unknown;
 };
 
 export type GenericMessageResponse = {

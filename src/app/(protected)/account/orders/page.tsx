@@ -22,6 +22,7 @@ import ReturnModal from "@/component/ui/modals/ReturnModal";
 import UpdateAddressModal from "@/component/ui/modals/UpdateAddressModal";
 import CancelOrderModal from "@/component/ui/modals/CancelOrderModal";
 import { useLayout } from "@/domain/application/context/LayoutContext";
+import RateProductModal from "@/component/ui/modals/RateProductModal";
 
 interface FormattedOrder {
   orderId: string;
@@ -69,7 +70,8 @@ export default function OrdersPage() {
   const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
   const [cancelOrderNumber, setCancelOrderNumber] = useState<string>("");
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [ratingOrder, setRatingOrder] = useState<FormattedOrder | null>(null);
 
   const fetchingRef = useRef(false);
   const { setTitle, setSubtitle } = useLayout();
@@ -110,6 +112,7 @@ export default function OrdersPage() {
 
   /* ---------------- EXCHANGE HANDLERS ---------------- */
   const openExchangeModal = (row: FormattedOrder) => {
+    console.log(row.items)
     setExchangeOrder({
       orderId: row.orderId,
       items: row.items,
@@ -127,6 +130,11 @@ export default function OrdersPage() {
     closeExchangeModal();
     toast.success("Exchange request submitted successfully!");
     await fetchOrders();
+  };
+
+  const handleRating = (order: FormattedOrder) => {
+    setRatingOrder(order);
+    setIsRatingModalOpen(true);
   };
 
   const formattedOrders: FormattedOrder[] = orders.map((order) => ({
@@ -256,12 +264,64 @@ export default function OrdersPage() {
               {
                 header: "Items",
                 accessor: (row) => (
-                  <div className="space-y-1">
-                    {row.items.map((item) => (
-                      <div key={item._id}>
-                        {item.productName} (Size {item.size})
-                      </div>
-                    ))}
+                  <div className="space-y-2">
+                    {row.items.map((item) => {
+                      const status = item.status;
+
+                      const showBadge =
+                        status === "RETURN_REQUESTED" ||
+                        status === "EXCHANGE_REQUESTED" ||
+                        status === "CANCELLED";
+
+                      const getBadgeStyle = () => {
+                        switch (status) {
+                          case "RETURN_REQUESTED":
+                            return "bg-amber-100 text-amber-700";
+                          case "EXCHANGE_REQUESTED":
+                            return "bg-blue-100 text-blue-700";
+                          case "CANCELLED":
+                            return "bg-red-100 text-red-700";
+                          default:
+                            return "";
+                        }
+                      };
+
+                      const getReadableStatus = () => {
+                        switch (status) {
+                          case "RETURN_REQUESTED":
+                            return "Return Requested";
+                          case "EXCHANGE_REQUESTED":
+                            return "Exchange Requested";
+                          case "CANCELLED":
+                            return "Cancelled";
+                          default:
+                            return status;
+                        }
+                      };
+
+                      return (
+                        <div key={item._id} className="text-sm">
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium text-gray-800">
+                              {item.productName} ({item.size})
+                            </div>
+
+
+                          </div>
+
+                          {showBadge && (
+                            <div className="text-xs text-gray-500 pt-2">
+                              <span
+                                className={`text-xs px-2 py-1 rounded-full font-medium ${getBadgeStyle()}`}
+                              >
+                                {getReadableStatus()}
+                              </span>
+
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ),
               },
@@ -316,6 +376,12 @@ export default function OrdersPage() {
                       label: "Cancel Order",
                       onClick: () => handleCancel(row),
                       danger: true,
+                    });
+                  }
+                  if (row.status === "DELIVERED") {
+                    actions.push({
+                      label: "Rate Product",
+                      onClick: () => handleRating(row),
                     });
                   }
 
@@ -379,6 +445,23 @@ export default function OrdersPage() {
               setCancelOrderId(null);
             }}
             onSuccess={handleCancelSuccess}
+          />
+        )}
+
+        {ratingOrder && (
+          <RateProductModal
+            open={isRatingModalOpen}
+            orderId={ratingOrder.orderId}
+            items={ratingOrder.items}
+            onClose={() => {
+              setIsRatingModalOpen(false);
+              setRatingOrder(null);
+            }}
+            onSuccess={() => {
+              setIsRatingModalOpen(false);
+              setRatingOrder(null);
+              toast.success("Review submitted successfully!");
+            }}
           />
         )}
 

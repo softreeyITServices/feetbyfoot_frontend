@@ -3,13 +3,13 @@
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface Column<T> {
+export interface Column<T> {
   header: string;
   accessor: keyof T | ((row: T) => ReactNode);
   className?: string;
 }
 
-interface PaginationConfig {
+export interface PaginationConfig {
   page: number;
   totalPages: number;
   totalItems?: number;
@@ -18,7 +18,7 @@ interface PaginationConfig {
   onPageSizeChange?: (size: number) => void;
 }
 
-interface DataTableProps<T> {
+export interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   loading?: boolean;

@@ -28,7 +28,7 @@ export const POST = apiHandler(
         headers: {
           Authorization: authorization,
         },
-        data: body,
+        data: JSON.stringify(body),
       });
 
       return createSuccessResponse(response, 200);

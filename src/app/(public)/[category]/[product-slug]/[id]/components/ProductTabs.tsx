@@ -1,12 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProductReviewTab from "./tabs/ProductReviewTab";
 import ProductDeliveryTab from "./tabs/ProductDeliveryTab";
 import ProductDescriptionTab from "./tabs/ProductDescriptionTab";
+import { Review } from "@/domain/shared/types/rating.type";
 
-export default function ProductTabs({description}:{description:string}) {
+interface Props {
+  description: string;
+  reviews: Review[];
+  totalRatings: number;
+  averageRating: number;
+}
+
+export default function ProductTabs({
+  description,
+  reviews,
+  totalRatings,
+  averageRating,
+}: Props) {
   const [tab, setTab] = useState("description");
+
+  // 🔥 Sync tab with URL hash
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === "#reviews") {
+        setTab("reviews");
+
+        setTimeout(() => {
+          document
+            .getElementById("reviews-section")
+            ?.scrollIntoView({ behavior: "smooth" });
+        }, 50);
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   return (
     <section className="mt-16">
@@ -25,17 +58,25 @@ export default function ProductTabs({description}:{description:string}) {
               ? "Description"
               : t === "delivery"
               ? "Delivery & Returns"
-              : "Reviews (0)"}
+              : `Reviews (${totalRatings})`}
           </button>
         ))}
       </div>
 
-      <div className=" shadow-xl rounded-lg p-8 text-sm text-gray-700">
-        {tab === "description" && <ProductDescriptionTab description = {description}/>}
+      <div className="shadow-xl rounded-lg p-8 text-sm text-gray-700">
+        {tab === "description" && (
+          <ProductDescriptionTab description={description} />
+        )}
 
         {tab === "delivery" && <ProductDeliveryTab />}
 
-        {tab === "reviews" && <ProductReviewTab />}
+        {tab === "reviews" && (
+          <ProductReviewTab
+            reviews={reviews}
+            totalRatings={totalRatings}
+            averageRating={averageRating}
+          />
+        )}
       </div>
     </section>
   );

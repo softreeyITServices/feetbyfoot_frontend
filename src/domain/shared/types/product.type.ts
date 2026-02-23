@@ -32,7 +32,6 @@ export interface Product {
   reviews: ProductReview[];
   createdAt: string;
   updatedAt: string;
-
 }
 
 /** 🔥 EXACT backend response */
@@ -56,11 +55,6 @@ export type ProductReview = {
   userId?: string;
   createdAt?: string;
 };
-
-export type ProductByIdResponse = {
-  data: Product;
-};
-
 
 export interface FilterCategory {
   _id: string;
@@ -98,3 +92,13 @@ export interface ProductFilterResponse {
   success: boolean;
   timestamp: string;
 }
+
+
+export type ProductByIdResponse = {
+  data: ProductByIdData[];
+};
+
+export type ProductByIdData = {
+  product: Product;
+  categoriesProducts: Product[];
+};

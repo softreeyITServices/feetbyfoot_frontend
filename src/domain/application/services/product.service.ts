@@ -3,7 +3,7 @@
 import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
 import { PRODUCTS_URL } from "@/constants/apis";
-import { Product, ProductByIdResponse, ProductFilterMeta, ProductFilterResponse, PublicProductsApiResponse, PublicProductsResponse } from "@/domain/shared/types/product.type";
+import { ProductByIdData, ProductByIdResponse, ProductFilterMeta, ProductFilterResponse, PublicProductsApiResponse, PublicProductsResponse } from "@/domain/shared/types/product.type";
 
 class ProductService {
   async getPublicProducts({
@@ -92,7 +92,7 @@ class ProductService {
   }
 
 
-  async getProductById(id: string): Promise<Product> {
+  async getProductById(id: string): Promise<ProductByIdData> {
 
     if (id && !id.match(/^[0-9a-fA-F]{24}$/)) {
       throw new Error("Invalid id");
@@ -109,8 +109,9 @@ class ProductService {
       if (!data) {
         throw new Error("Invalid product response");
       }
+      const [firstProduct] = data;
+      return firstProduct;
 
-      return data;
     } catch (error) {
       handleApiError(error, "getProductById");
     }

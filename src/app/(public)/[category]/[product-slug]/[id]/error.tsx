@@ -1,5 +1,6 @@
-// error.tsx
 "use client";
+
+import { useRouter } from "next/navigation";
 
 export default function ProductError({
   error,
@@ -8,6 +9,17 @@ export default function ProductError({
   error: Error;
   reset: () => void;
 }) {
+  const router = useRouter();
+
+  const handleRetry = () => {
+    // Hard reload
+    window.location.reload();
+  };
+
+  const handleBack = () => {
+    router.back(); // history back
+  };
+
   return (
     <main className="max-w-7xl mx-auto px-4 py-20 text-center">
       <h2 className="text-2xl font-semibold mb-4">
@@ -20,18 +32,18 @@ export default function ProductError({
 
       <div className="flex justify-center gap-4">
         <button
-          onClick={reset}
+          onClick={handleRetry}
           className="bg-black text-white px-6 py-3 rounded-md"
         >
           Retry
         </button>
 
-        <a
-          href="/shop"
+        <button
+          onClick={handleBack}
           className="border px-6 py-3 rounded-md"
         >
-          Back to Shop
-        </a>
+          Back
+        </button>
       </div>
     </main>
   );
