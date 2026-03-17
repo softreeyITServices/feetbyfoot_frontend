@@ -5,7 +5,6 @@ import Modal from "../Modal";
 import { OrderItem } from "@/domain/shared/types/order.type";
 import { ordersService } from "@/domain/application/services/order.service";
 import Image from "next/image";
-import { getSafeImageUrl } from "@/lib/imageUrl";
 
 interface ReturnOrderData {
   orderId: string;
@@ -139,7 +138,7 @@ export default function ReturnModal({
                   />
 
                   <Image
-                    src={getSafeImageUrl(item.productImage)}
+                    src={item.productImage}
                     alt={item.productName}
                     className="w-16 h-16 object-cover rounded-md"
                     width={200}

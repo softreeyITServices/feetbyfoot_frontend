@@ -1,20 +1,17 @@
 import Image from "next/image";
-import { getSafeImageUrls } from "@/lib/imageUrl";
 
 export default function ProductGallery({
   images,
 }: {
   images: string[];
 }) {
-  const safeImages = getSafeImageUrls(images);
-
   return (
     <div className="flex gap-4">
       {/* Thumbnails */}
       <div className="flex flex-col gap-3">
-        {safeImages.map((img, index) => (
+        {images.map((img) => (
           <Image
-            key={`${img}-${index}`}
+            key={img}
             src={img}
             width={80}
             height={80}
@@ -27,7 +24,7 @@ export default function ProductGallery({
       {/* Main Image */}
       <div className="flex-1 rounded-lg overflow-hidden">
         <Image
-          src={safeImages[0]}
+          src={images[0]}
           width={400}
           height={400}
           alt=""

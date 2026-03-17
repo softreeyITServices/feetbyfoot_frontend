@@ -3,7 +3,6 @@
 import Navbar from "@/component/common/navbar";
 import Footer from "@/component/common/Footer";
 import Image from "next/image";
-import { getSafeImageUrl } from "@/lib/imageUrl";
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -275,7 +274,7 @@ export default function CartBody() {
                   {/* Product */}
                   <div className="flex gap-4">
                     <Image
-                      src={getSafeImageUrl(item.image)}
+                      src={item.image}
                       alt={item.name}
                       width={80}
                       height={80}

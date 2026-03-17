@@ -205,7 +205,7 @@ export const authOptions: AuthOptions = {
     },
   },
 
-  secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_ACCESS_SECRET,
+  secret: process.env.JWT_ACCESS_SECRET,
   debug: process.env.NODE_ENV === "development",
 };
 

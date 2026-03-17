@@ -24,7 +24,6 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-import Link from "next/link";
 import React from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -383,12 +382,9 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
-          <Link
-            href="/admin/orders"
-            className="mt-4 w-full text-center text-[11px] text-amber-600 hover:text-amber-700 font-medium pt-3 border-t border-neutral-100 transition-colors"
-          >
+          <button className="mt-4 w-full text-center text-[11px] text-amber-600 hover:text-amber-700 font-medium pt-3 border-t border-neutral-100 transition-colors">
             View all orders →
-          </Link>
+          </button>
         </div>
       </div>
     </div>

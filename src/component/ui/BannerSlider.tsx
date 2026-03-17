@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { getSafeImageUrl } from "@/lib/imageUrl";
 
 /* ───────── Types ───────── */
 
@@ -44,7 +43,7 @@ export default function BannerSlider({
           >
             {/* <img src={slide.image} alt={slide.title} /> */}
             <Image
-              src={getSafeImageUrl(slide.image)}
+              src={slide.image}
               alt={slide.title}
               width={1920}
               height={650}

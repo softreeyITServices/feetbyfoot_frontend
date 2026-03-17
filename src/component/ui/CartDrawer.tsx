@@ -18,7 +18,6 @@ import {
 import { useSession } from "next-auth/react";
 import { cartService } from "@/domain/application/services/cart.service";
 import { mapBackendCartToRedux } from "@/domain/shared/mappers/cartMapper";
-import { getSafeImageUrl } from "@/lib/imageUrl";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -153,7 +152,7 @@ export default function CartDrawer({
               className="flex gap-4"
             >
               <Image
-                src={getSafeImageUrl(item.image)}
+                src={item.image}
                 alt={item.name}
                 width={80}
                 height={80}

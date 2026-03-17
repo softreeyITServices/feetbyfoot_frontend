@@ -1,95 +1,169 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Column, DataTable } from "@/component/admin/Admindatatable"
+import { AdminForm, FormField } from "@/component/admin/Adminform";
 
-interface Product {
-  id: string
-  name: string
-  brand?: string
-  salePrice?: number
-  isActive?: boolean
-}
+/* =========================================================
+   PRODUCT FORM CONFIG
+========================================================= */
 
-const PRODUCT_COLUMNS: Column<Product>[] = [
-  { key: "id", label: "ID" },
-  { key: "name", label: "Product Name", sortable: true },
+const PRODUCT_FIELDS: FormField[] = [
   {
-    key: "brand",
-    label: "Brand",
-    render: (row) => row.brand ?? "-",
+    key: "name",
+    label: "Product Name",
+    type: "text",
+    placeholder: "e.g. Nike Air Max 90",
+    required: true,
+    cols: 1,
   },
   {
-    key: "salePrice",
-    label: "Price",
-    sortable: true,
-    render: (row) => (row.salePrice ? `₹${row.salePrice}` : "-"),
+    key: "sku",
+    label: "SKU",
+    type: "text",
+    placeholder: "e.g. NK-AM90-BLK-42",
+    required: true,
+    cols: 1,
   },
   {
-    key: "isActive",
+    key: "category",
+    label: "Category",
+    type: "select",
+    placeholder: "Select category",
+    required: true,
+    cols: 1,
+    options: [
+      { label: "Running", value: "running" },
+      { label: "Casual", value: "casual" },
+      { label: "Formal", value: "formal" },
+      { label: "Sports", value: "sports" },
+      { label: "Kids", value: "kids" },
+    ],
+  },
+  {
+    key: "status",
     label: "Status",
-    render: (row) => (
-      <span
-        className={
-          row.isActive
-            ? "px-2 py-0.5 text-xs rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200"
-            : "px-2 py-0.5 text-xs rounded-lg bg-neutral-100 text-neutral-500 border border-neutral-200"
-        }
-      >
-        {row.isActive ? "Active" : "Inactive"}
-      </span>
-    ),
+    type: "radio",
+    required: true,
+    cols: 1,
+    options: [
+      { label: "Active", value: "active" },
+      { label: "Draft", value: "draft" },
+      { label: "Inactive", value: "inactive" },
+    ],
   },
-]
+  {
+    key: "price",
+    label: "Price (₹)",
+    type: "number",
+    placeholder: "0.00",
+    required: true,
+    cols: 1,
+  },
+  {
+    key: "stock",
+    label: "Stock Quantity",
+    type: "number",
+    placeholder: "0",
+    required: true,
+    cols: 1,
+  },
+  {
+    key: "tags",
+    label: "Tags",
+    type: "multiselect",
+    cols: 2,
+    options: [
+      { label: "New Arrival", value: "new" },
+      { label: "Best Seller", value: "bestseller" },
+      { label: "On Sale", value: "sale" },
+      { label: "Limited Edition", value: "limited" },
+      { label: "Featured", value: "featured" },
+    ],
+  },
+  {
+    key: "description",
+    label: "Description",
+    type: "textarea",
+    placeholder: "Write a short product description...",
+    cols: 2,
+  },
+  {
+    key: "images",
+    label: "Product Images",
+    type: "image",
+    accept: "image/*",
+    multiple: true,
+    cols: 2,
+    hint: "Upload up to 5 images (PNG, JPG, WEBP).",
+  },
+  {
+    key: "specSheet",
+    label: "Spec Sheet",
+    type: "file",
+    accept: ".pdf,.doc,.docx",
+    multiple: false,
+    cols: 2,
+    hint: "Optional — attach a PDF or Word document.",
+  },
+  {
+    key: "featured",
+    label: "Featured Product",
+    type: "checkbox",
+    placeholder: "Mark as featured on homepage",
+    cols: 2,
+  },
+];
 
-function ProductPage() {
-  const router = useRouter()
-  const [products, setProducts] = useState<Product[]>([])
+/* =========================================================
+   PAGE
+========================================================= */
 
-  useEffect(() => {
-    async function load() {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products?page=1&limit=50`,
-        {
-          headers: {
-            Authorization: `Bearer YOUR_ACCESS_TOKEN`,
-          },
-        }
-      )
-
-      const data = await res.json()
-
-      setProducts(data.products)
-    }
-
-    load()
-  }, [])
-
+export default function ProductPage() {
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-neutral-900 tracking-tight">
-          Products
+          Create Product
         </h1>
         <p className="text-sm text-neutral-400 mt-0.5">
-          Manage your product catalog
+          Fill in the details below to add a new product to your catalog.
         </p>
       </div>
 
-      <DataTable<Product>
-        title="All Products"
-        description="Sortable, searchable, paginated product list"
-        columns={PRODUCT_COLUMNS}
-        data={products}
-        searchKeys={["name"]}
-        onAdd={() => router.push("/admin/products/create")}
-        onEdit={(row) => router.push(`/admin/products/${row.id}/edit`)}
-        onView={(row) => router.push(`/admin/products/${row.id}`)}
-        onDelete={(row) => console.log("delete", row.id)}
+      <AdminForm
+        title="Product Details"
+        description="All fields marked * are required"
+        fields={PRODUCT_FIELDS}
+        initialValues={{
+          name: "",
+          sku: "",
+          category: "",
+          status: "draft",
+          price: "",
+          stock: "",
+          description: "",
+          featured: false,
+          tags: [],
+          images: [],
+          specSheet: null,
+        }}
+        submitLabel="Save Product"
+        onSubmit={async (values) => {
+          const payload = {
+            ...values,
+            price: Number(values.price),
+            stock: Number(values.stock),
+          };
+
+          await new Promise((resolve) => setTimeout(resolve, 1200));
+
+          console.log("Product Submitted:", payload);
+
+          // await productService.create(payload)
+        }}
+        onCancel={() => {
+          console.log("Cancelled");
+        }}
       />
     </div>
-  )
+  );
 }
-
-export default ProductPage

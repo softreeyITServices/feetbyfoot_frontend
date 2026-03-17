@@ -42,7 +42,7 @@ export function DataTable<T extends { id: string | number }>({
   title = "Data Table",
   description,
   columns,
-  data = [] as T[],
+  data,
   onAdd,
   onEdit,
   onDelete,
