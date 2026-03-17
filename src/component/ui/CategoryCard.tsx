@@ -1,13 +1,14 @@
 import { UpRightArrowIcon } from "@/icons/UpRightArrowIcon";
 import { CategoryItem } from "@/domain/shared/types/category";
 import Image from "next/image";
+import { getSafeImageUrl } from "@/lib/imageUrl";
 
 
 export default function CategoryCard({ label, image, href }: CategoryItem) {
   return (
     <a href={href} className="flex-1 relative group overflow-hidden rounded-2xl">
       <Image
-        src={image}
+        src={getSafeImageUrl(image)}
         alt={label}
         width={600}
         height={400}

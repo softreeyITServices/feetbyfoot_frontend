@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import toast from "react-hot-toast";
 import { wishlistService } from "@/domain/application/services/wishlist.service";
+import { getSafeImageUrl } from "@/lib/imageUrl";
 
 function ProductCard({
   id,
@@ -51,6 +52,7 @@ function ProductCard({
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const dispatch = useAppDispatch();
+  const safeImageSrc = getSafeImageUrl(imageSrc);
 
   const handleSize = (e: string) => {
     setSelectedSize(e);
@@ -68,7 +70,7 @@ function ProductCard({
         id,
         name: title,
         price: discountedPrice,
-        image: imageSrc,
+        image: safeImageSrc,
         size: selectedSize,
         quantity: 1,
       })
@@ -125,7 +127,7 @@ function ProductCard({
 
       <div className={`${home ? "" : "w-66.25 h-66.25"}`}>
         <Image
-          src={imageSrc}
+          src={safeImageSrc}
           alt={altText}
           width={400}
           height={450}

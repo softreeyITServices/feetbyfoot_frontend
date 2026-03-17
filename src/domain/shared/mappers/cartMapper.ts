@@ -7,9 +7,9 @@ import {
 } from "@/store/slices/cart.slice";
 
 export const mapBackendCartToRedux = (
-  backendItems: BackendCartItem[]
+  backendItems?: BackendCartItem[] | null
 ): ReduxCartItem[] => {
-  return backendItems.map((item) => ({
+  return (backendItems ?? []).map((item) => ({
     id: item.productId,
     itemId: item._id,
     name: item.productName,

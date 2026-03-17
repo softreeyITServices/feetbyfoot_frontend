@@ -6,7 +6,7 @@ export default async function proxy(req: NextRequest) {
 
   const token = await getToken({
     req,
-    secret: process.env.JWT_ACCESS_SECRET,
+    secret: process.env.NEXTAUTH_SECRET ?? process.env.JWT_ACCESS_SECRET,
   });
 
   // Not logged in
@@ -23,7 +23,7 @@ export default async function proxy(req: NextRequest) {
 
   // Customer routes
   if (pathname.startsWith("/account") && role !== "customer") {
-    return NextResponse.redirect(new URL("/admin", req.url));
+    return NextResponse.redirect(new URL("/admin/dashboard", req.url));
   }
 
   return NextResponse.next();
