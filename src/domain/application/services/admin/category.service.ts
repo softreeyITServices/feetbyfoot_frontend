@@ -1,52 +1,74 @@
 import { httpClient } from "@/lib/httpClient";
-import type { AdminCategory } from "@/domain/shared/types/admin/category";
+import { handleApiError } from "@/lib/serviceErrorHandler";
+import type { AdminCategory, AdminCategoryResponse, CategoryPayload, CategoryResponse } from "@/domain/shared/types/admin/category";
+import { CATEGORIES_URL } from "@/constants/apis";
 
-// This hits: `${NEXT_PUBLIC_API_URL}/v1/Categories`
-const BASE_URL = "/Categories";
+/* ================= TYPES ================= */
 
-export interface CategoryPayload {
-  name: string;
-  isActive?: boolean;
+
+
+/* =========================================================
+   SERVICE
+========================================================= */
+
+export class CategoryService {
+  /* ---------------- CREATE ---------------- */
+  static async create(payload: CategoryPayload): Promise<void> {
+    try {
+      await httpClient.request({
+        url: CATEGORIES_URL,
+        method: "POST",
+        data: payload,
+        requiresAuth: true, // ✅ works (browser → session)
+      });
+    } catch (error) {
+      throw handleApiError(error, "createCategory");
+    }
+  }
+
+  /* ---------------- GET ALL ---------------- */
+  static async getAll(): Promise<AdminCategory[]> {
+    try {
+      const res = await httpClient.request<
+        CategoryResponse<AdminCategoryResponse<AdminCategory[]>>
+      >({
+        url: CATEGORIES_URL,
+        method: "GET",
+        requiresAuth: true,
+      });
+      return res.data.data;
+    } catch (error) {
+      throw handleApiError(error, "getAllCategories");
+    }
+  }
+
+  /* ---------------- UPDATE ---------------- */
+  static async update(
+    id: string,
+    payload: CategoryPayload
+  ): Promise<void> {
+    try {
+      await httpClient.request({
+        url: `${CATEGORIES_URL}/${id}`,
+        method: "PATCH",
+        data: payload,
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "updateCategory");
+    }
+  }
+
+  /* ---------------- DELETE ---------------- */
+  static async delete(id: string): Promise<void> {
+    try {
+      await httpClient.request({
+        url: `${CATEGORIES_URL}/${id}`,
+        method: "DELETE",
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "deleteCategory");
+    }
+  }
 }
-
-export interface CategoryListResponse {
-  message: string;
-  data: AdminCategory[];
-}
-
-export async function fetchCategories(
-  token?: string
-): Promise<CategoryListResponse> {
-  return httpClient.get<CategoryListResponse>(BASE_URL, undefined, {
-    token,
-  });
-}
-
-export async function createCategory(
-  payload: CategoryPayload,
-  token?: string
-): Promise<void> {
-  await httpClient.post<unknown>(BASE_URL, payload, {
-    requiresAuth: true,
-    token,
-  });
-}
-
-export async function updateCategory(
-  id: string,
-  payload: CategoryPayload,
-  token?: string
-): Promise<void> {
-  await httpClient.patch<unknown>(`${BASE_URL}/${id}`, payload, {
-    requiresAuth: true,
-    token,
-  });
-}
-
-export async function deleteCategory(id: string, token?: string): Promise<void> {
-  await httpClient.delete<unknown>(`${BASE_URL}/${id}`, {
-    requiresAuth: true,
-    token,
-  });
-}
-

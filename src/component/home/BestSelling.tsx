@@ -5,7 +5,6 @@ import ProductCard from "../ui/ProductCard";
 
 // ✅ Inline cache (no extra files)
 const getBestSellingProducts = cache(async () => {
-  console.log(">>> fetching best selling products");
   return productService.getPublicProducts({
     isBestseller: true,
     page: 1,

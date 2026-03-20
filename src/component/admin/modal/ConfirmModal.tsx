@@ -16,6 +16,7 @@ interface AdminConfirmModalProps {
   cancelText?: string;
   variant?: ConfirmVariant;
   loadingText?: string;
+  loading?: boolean;
 }
 
 export function ConfirmModal({

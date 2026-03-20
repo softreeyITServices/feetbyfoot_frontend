@@ -10,6 +10,7 @@ import {
   Pencil,
   Trash2,
   Eye,
+  Settings,
 } from "lucide-react";
 
 /* =========================================================
@@ -36,6 +37,7 @@ export interface DataTableProps<T extends { id: string | number }> {
   pageSize?: number;
   searchKeys?: (keyof T)[];
   exportable?: boolean;
+  onSettings?: (row: T) => void;
 }
 
 export function DataTable<T extends { id: string | number }>({
@@ -47,9 +49,10 @@ export function DataTable<T extends { id: string | number }>({
   onEdit,
   onDelete,
   onView,
+  onSettings,
   pageSize: defaultPageSize = 10,
   searchKeys = [],
-  exportable = true,
+  exportable = false,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<keyof T | null>(null);
@@ -120,7 +123,7 @@ export function DataTable<T extends { id: string | number }>({
     }
   };
 
-  const hasActions = Boolean(onEdit || onDelete || onView);
+  const hasActions = Boolean(onEdit || onDelete || onView || onSettings);
 
   return (
     <div className="bg-white rounded-2xl border border-neutral-100 overflow-hidden shadow-sm">
@@ -248,7 +251,17 @@ export function DataTable<T extends { id: string | number }>({
                 ))}
 
                 {hasActions && (
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 flex justify-end gap-2">
+                    {onSettings && (
+                      <button
+                        onClick={() => onSettings(row)}
+                        className="text-neutral-500 hover:text-neutral-700"
+                        title="Manage subcategories"
+                      >
+                        <Settings size={13} />
+                      </button>
+                    )}
+
                     {onView && (
                       <button onClick={() => onView(row)}>
                         <Eye size={13} />

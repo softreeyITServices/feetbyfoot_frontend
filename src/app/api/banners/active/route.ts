@@ -11,13 +11,11 @@ import { BannerListResponse } from "@/domain/shared/types/banner.type";
 export const GET = apiHandler(
   async () => {
     try {
-      const response = await httpClient.request <BannerListResponse>({
-        url: `${EX_BANNERS_URL}/active`,
-        method: "GET",
-        skipAuth: true
-      });
-       
-      console.log("kfdhgkjdfhkdhkdf",response);
+      const response = await httpClient.get<BannerListResponse>(
+        `${EX_BANNERS_URL}/active`,
+        undefined,
+        { skipAuth: true }
+      );
 
       return createSuccessResponse(response, 200);
     } catch (error: unknown) {

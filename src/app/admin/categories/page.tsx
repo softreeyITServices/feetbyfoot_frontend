@@ -1,132 +1,110 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Column, DataTable } from "@/component/admin/Admindatatable";
-import { AdminModal } from "@/component/admin/AdminModal";
-import { AdminForm, FormField } from "@/component/admin/Adminform";
-import {
-  createCategory,
-  deleteCategory,
-  fetchCategories,
-  updateCategory,
-} from "@/domain/application/services/admin/category.service";
-import type { AdminCategory } from "@/domain/shared/types/admin/category";
+import { CategoryService } from "@/domain/application/services/admin/category.service";
+import { CategoryTypeService } from "@/domain/application/services/admin/subcategory.service";
+
+import type {
+  AdminCategory,
+  AdminCategoryType,
+  CategoryRow,
+} from "@/domain/shared/types/admin/category";
+
 import { toast } from "react-hot-toast";
+import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
+import { SubcategoryModal } from "@/component/ui/modals/admin/SubcategoryModal";
+import { AdminForm, FormField } from "@/component/admin/Adminform";
+import { AdminModal } from "@/component/admin/AdminModal";
 
-/* =========================================================
-   TYPES
-========================================================= */
-
-interface CategoryRow {
-  id: string;
-  name: string;
-  isActive: boolean;
-  createdAt?: string;
-}
-
-/* =========================================================
-   SAFE MAPPER (FIX)
-========================================================= */
-
-const mapCategories = (items: any): CategoryRow[] => {
-  const raw = Array.isArray(items.data)
-    ? items.data
-    : Array.isArray(items.data?.items)
-      ? items.data.items
-      : [];
-
-  return raw.map((item: AdminCategory) => ({
-    id: item._id,
-    name: item.name,
-    isActive: Boolean(item.isActive),
-    createdAt: item.createdAt,
-  }));
-};
-
-/* =========================================================
-   TABLE CONFIG
-========================================================= */
-
-const COLUMNS: Column<CategoryRow>[] = [
-  { key: "name", label: "Name", sortable: true },
-  {
-    key: "isActive",
-    label: "Status",
-    render: (row) => (
-      <span
-        className={
-          row.isActive
-            ? "px-2 py-0.5 text-xs rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200"
-            : "px-2 py-0.5 text-xs rounded-lg bg-neutral-100 text-neutral-500 border border-neutral-200"
-        }
-      >
-        {row.isActive ? "Active" : "Inactive"}
-      </span>
-    ),
-  },
-  {
-    key: "createdAt",
-    label: "Created",
-    render: (row) =>
-      row.createdAt
-        ? new Date(row.createdAt).toLocaleDateString()
-        : "—",
-  },
-];
-
-const CATEGORY_FIELDS: FormField[] = [
-  {
-    key: "name",
-    label: "Category Name",
-    type: "text",
-    required: true,
-    cols: 1,
-  },
-  {
-    key: "isActive",
-    label: "Status",
-    type: "radio",
-    required: true,
-    cols: 1,
-    options: [
-      { label: "Active", value: "Active" },
-      { label: "Inactive", value: "Inactive" },
-    ],
-  },
-];
-
-/* =========================================================
-   PAGE
-========================================================= */
+/* ================= PAGE ================= */
 
 export default function AdminCategoriesPage() {
   const [rows, setRows] = useState<CategoryRow[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [deleteTarget, setDeleteTarget] = useState<CategoryRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<CategoryRow | null>(null);
 
+  const [subModalOpen, setSubModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryRow | null>(null);
+
+  const [initialized, setInitialized] = useState(false);
+
   /* ================= LOAD ================= */
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
-      const items = await fetchCategories();
 
-      // 🔥 DEBUG (remove later if not needed)
-      console.log("API RESPONSE:", items);
+      const categories: AdminCategory[] = await CategoryService.getAll();
 
-      setRows(mapCategories(items));
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error?.message || "Failed to load categories");
+      const subcategories =
+        await CategoryTypeService.getAll<AdminCategoryType>();
+
+      const countMap: Record<string, number> = {};
+
+      subcategories.forEach((s) => {
+        countMap[s.categoryId] = (countMap[s.categoryId] || 0) + 1;
+      });
+
+      const mapped: CategoryRow[] = categories.map((item) => ({
+        id: item._id,
+        name: item.name,
+        isActive: Boolean(item.isActive),
+        createdAt: item.createdAt,
+        subcategoryCount: countMap[item._id] || 0,
+      }));
+
+      setRows(mapped);
+    } catch (error: unknown) {
+      toast.error(
+        (error as { message?: string })?.message ||
+        "Failed to load categories"
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  /* ================= EFFECT ================= */
 
   useEffect(() => {
+    if (initialized) return;
+
+    setInitialized(true);
     void loadCategories();
-  }, []);
+  }, [initialized, loadCategories]);
+
+  /* ================= DELETE ================= */
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      setDeleting(true);
+
+      await CategoryService.delete(deleteTarget.id);
+
+      setRows((prev) =>
+        prev.filter((c) => c.id !== deleteTarget.id)
+      );
+
+      toast.success("Category deleted");
+
+      setDeleteTarget(null);
+    } catch (error: unknown) {
+      toast.error(
+        (error as { message?: string })?.message ||
+        "Failed to delete category"
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   /* ================= SUBMIT ================= */
 
@@ -142,75 +120,115 @@ export default function AdminCategoriesPage() {
 
     try {
       if (editing) {
-        await updateCategory(editing.id, { name, isActive });
+        await CategoryService.update(editing.id, { name, isActive });
         toast.success("Category updated");
       } else {
-        await createCategory({ name, isActive });
+        await CategoryService.create({ name, isActive });
         toast.success("Category created");
       }
 
       setOpen(false);
       setEditing(null);
 
-      // ✅ REFRESH LIST (FIX)
       await loadCategories();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error(error?.message || "Failed to save category");
+      toast.error((error as { message?: string })?.message || "Failed to save category");
     }
   };
 
-  /* ================= DELETE ================= */
+  /* ================= COLUMNS ================= */
 
-  const handleDelete = async (row: CategoryRow) => {
-    if (!window.confirm(`Delete category "${row.name}"?`)) return;
+  const CATEGORY_FIELDS: FormField[] = [
+    {
+      key: "name",
+      label: "Category Name",
+      type: "text",
+      required: true,
+      cols: 1,
+    },
+    {
+      key: "isActive",
+      label: "Status",
+      type: "radio",
+      required: true,
+      cols: 1,
+      options: [
+        { label: "Active", value: "Active" },
+        { label: "Inactive", value: "Inactive" },
+      ],
+    },
+  ];
 
-    try {
-      await deleteCategory(row.id);
-      toast.success("Category deleted");
+  const COLUMNS: Column<CategoryRow>[] = [
+    {
+      key: "name",
+      label: "Category",
+      sortable: true,
+      render: (row) => (
+        <div className="flex flex-col gap-1">
+          {/* Category Name */}
+          <span className="font-medium text-sm text-neutral-900">
+            {row.name}
+          </span>
 
-      // Optimistic update (fast UI)
-      setRows((prev) => prev.filter((c) => c.id !== row.id));
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error?.message || "Failed to delete category");
-    }
-  };
+          {/* Pills Row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="px-2 py-0.5 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+              Subcategories: {row.subcategoryCount}
+            </span>
+          </div>
+        </div>
+      ),
+    },
+
+    {
+      key: "isActive",
+      label: "Status",
+      render: (row) => (
+        <span
+          className={
+            row.isActive
+              ? "px-2 py-0.5 text-xs rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200"
+              : "px-2 py-0.5 text-xs rounded-lg bg-neutral-100 text-neutral-500 border border-neutral-200"
+          }
+        >
+          {row.isActive ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+
+    {
+      key: "createdAt",
+      label: "Created",
+      render: (row) =>
+        row.createdAt
+          ? new Date(row.createdAt).toLocaleDateString()
+          : "—",
+    },
+
+  ];
 
   /* ================= UI ================= */
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-900 tracking-tight">
-          Categories
-        </h1>
-        <p className="text-sm text-neutral-400 mt-0.5">
-          Organize and manage product categories.
-        </p>
-      </div>
-
       <DataTable<CategoryRow>
-        title="All Categories"
-        description={
-          loading
-            ? "Loading categories..."
-            : "Sortable, searchable list of categories"
-        }
+        title="Categories"
+        description={loading ? "Loading..." : ""}
         columns={COLUMNS}
         data={rows}
         searchKeys={["name"]}
-        onAdd={() => {
-          setEditing(null);
-          setOpen(true);
-        }}
         onEdit={(row) => {
           setEditing(row);
           setOpen(true);
         }}
-        onDelete={handleDelete}
+        onSettings={(row) => {
+          setSelectedCategory(row);
+          setSubModalOpen(true);
+        }}
+        onDelete={(row) => setDeleteTarget(row)}
       />
-
       <AdminModal
         isOpen={open}
         onClose={() => {
@@ -239,6 +257,22 @@ export default function AdminCategoriesPage() {
           }}
         />
       </AdminModal>
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        loading={deleting}
+        title="Delete Category"
+        description={`Delete "${deleteTarget?.name}"?`}
+      />
+
+      <SubcategoryModal
+        open={subModalOpen}
+        onClose={() => setSubModalOpen(false)}
+        categoryId={selectedCategory?.id ?? null}
+        categoryName={selectedCategory?.name}
+      />
     </div>
   );
 }
