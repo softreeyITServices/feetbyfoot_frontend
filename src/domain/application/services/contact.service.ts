@@ -4,6 +4,7 @@ import { CONTACT_URL } from "@/constants/apis";
 import {
   CreateContactRequest,
   Contact,
+  ContactResponse,
 } from "@/domain/shared/types/contact.type";
 
 class ContactService {
@@ -28,13 +29,13 @@ class ContactService {
   /* ---------------- GET CONTACTS ---------------- */
   async getContacts(): Promise<Contact[]> {
     try {
-      const response = await httpClient.request<Contact[]>({
+      const response = await httpClient.request<ContactResponse>({
         url: CONTACT_URL,
         method: "GET",
         requiresAuth: true,
       });
 
-      return response;
+      return response.data;
     } catch (error) {
       handleApiError(error, "getContacts");
       throw error;

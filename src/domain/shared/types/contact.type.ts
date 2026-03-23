@@ -19,3 +19,9 @@ export interface Contact {
   resolvedAt?: string;
   __v?: number;
 }
+
+export interface ContactResponse {
+  data: Contact[];
+  success: boolean;
+  timestamp: string;
+}

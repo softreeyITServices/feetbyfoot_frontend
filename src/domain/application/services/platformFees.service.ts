@@ -7,17 +7,22 @@ import {
   UpdatePlatformFeeRequest,
 } from "@/domain/shared/types/platform-fee.type";
 
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+  timestamp: string;
+};
 class PlatformFeesService {
   /* ---------------- GET ALL ---------------- */
   async getAll(): Promise<PlatformFee[]> {
     try {
-      const response = await httpClient.request<PlatformFee[]>({
+      const response = await httpClient.request<ApiResponse<PlatformFee[]>>({
         url: PLATFORM_FEES_URL,
         method: "GET",
         requiresAuth: true,
       });
 
-      return response;
+      return response.data;
     } catch (error) {
       handleApiError(error, "getAllPlatformFees");
     }
@@ -45,15 +50,15 @@ class PlatformFeesService {
   /* ---------------- GET BY ID ---------------- */
   async getById(id: string): Promise<PlatformFee> {
     try {
-      const response = await httpClient.request<PlatformFee>({
+      const response = await httpClient.request<ApiResponse<PlatformFee>>({
         url: `${PLATFORM_FEES_URL}/${id}`,
         method: "GET",
         requiresAuth: true,
       });
 
-      return response;
+      return response.data;
     } catch (error) {
-      handleApiError(error, "getPlatformFeeById");
+      throw handleApiError(error, "getPlatformFeeById");
     }
   }
 
@@ -62,16 +67,16 @@ class PlatformFeesService {
     payload: CreatePlatformFeeRequest
   ): Promise<PlatformFee> {
     try {
-      const response = await httpClient.request<PlatformFee>({
+      const response = await httpClient.request<ApiResponse<PlatformFee>>({
         url: PLATFORM_FEES_URL,
         method: "POST",
         requiresAuth: true,
         data: payload,
       });
 
-      return response;
+      return response.data;
     } catch (error) {
-      handleApiError(error, "createPlatformFee");
+      throw handleApiError(error, "createPlatformFee");
     }
   }
 
@@ -81,23 +86,23 @@ class PlatformFeesService {
     payload: UpdatePlatformFeeRequest
   ): Promise<PlatformFee> {
     try {
-      const response = await httpClient.request<PlatformFee>({
+      const response = await httpClient.request<ApiResponse<PlatformFee>>({
         url: `${PLATFORM_FEES_URL}/${id}`,
         method: "PATCH",
         requiresAuth: true,
         data: payload,
       });
 
-      return response;
+      return response.data;
     } catch (error) {
-      handleApiError(error, "updatePlatformFee");
+      throw handleApiError(error, "updatePlatformFee");
     }
   }
 
   /* ---------------- DELETE ---------------- */
   async delete(id: string): Promise<void> {
     try {
-      await httpClient.request<void>({
+      await httpClient.request<ApiResponse<void>>({
         url: `${PLATFORM_FEES_URL}/${id}`,
         method: "DELETE",
         requiresAuth: true,

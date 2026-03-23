@@ -28,6 +28,38 @@ function getTokenExpiry(token: unknown): number {
   }
 }
 
+function extractTokens(payload: unknown): {
+  accessToken?: string;
+  refreshToken?: string;
+} {
+  if (!payload || typeof payload !== "object") return {};
+
+  const root = payload as Record<string, unknown>;
+  const firstData =
+    root.data && typeof root.data === "object"
+      ? (root.data as Record<string, unknown>)
+      : null;
+
+  const secondData =
+    firstData?.data && typeof firstData.data === "object"
+      ? (firstData.data as Record<string, unknown>)
+      : null;
+
+  const accessToken =
+    (typeof root.accessToken === "string" && root.accessToken) ||
+    (typeof firstData?.accessToken === "string" && firstData.accessToken) ||
+    (typeof secondData?.accessToken === "string" && secondData.accessToken) ||
+    undefined;
+
+  const refreshToken =
+    (typeof root.refreshToken === "string" && root.refreshToken) ||
+    (typeof firstData?.refreshToken === "string" && firstData.refreshToken) ||
+    (typeof secondData?.refreshToken === "string" && secondData.refreshToken) ||
+    undefined;
+
+  return { accessToken, refreshToken };
+}
+
 export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
@@ -63,7 +95,7 @@ export const authOptions: AuthOptions = {
             { skipAuth: true }
           );
 
-          const { accessToken, refreshToken } = otpResponse.data;
+          const { accessToken, refreshToken } = extractTokens(otpResponse);
 
           if (!accessToken || !refreshToken) return null;
 
@@ -172,12 +204,18 @@ export const authOptions: AuthOptions = {
           }
         );
 
+        const { accessToken, refreshToken } = extractTokens(refreshResponse);
+
+        if (!accessToken || !refreshToken) {
+          return { ...t, error: "MissingTokens" };
+        }
+
         return {
           ...t,
-          accessToken: refreshResponse.accessToken,
-          refreshToken: refreshResponse.refreshToken,
-          accessTokenExpiresAt: getTokenExpiry(refreshResponse.accessToken),
-          refreshTokenExpiresAt: getTokenExpiry(refreshResponse.refreshToken),
+          accessToken,
+          refreshToken,
+          accessTokenExpiresAt: getTokenExpiry(accessToken),
+          refreshTokenExpiresAt: getTokenExpiry(refreshToken),
           refreshCount: t.refreshCount + 1,
           lastRefreshedAt: Date.now(),
           error: undefined,

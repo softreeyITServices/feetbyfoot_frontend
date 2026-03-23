@@ -38,6 +38,8 @@ export interface DataTableProps<T extends { id: string | number }> {
   searchKeys?: (keyof T)[];
   exportable?: boolean;
   onSettings?: (row: T) => void;
+  loading?: boolean;
+  onSearchChange?: (query: string) => void;
 }
 
 export function DataTable<T extends { id: string | number }>({
@@ -53,6 +55,7 @@ export function DataTable<T extends { id: string | number }>({
   pageSize: defaultPageSize = 10,
   searchKeys = [],
   exportable = false,
+  onSearchChange,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<keyof T | null>(null);
@@ -145,8 +148,10 @@ export function DataTable<T extends { id: string | number }>({
             <input
               value={search}
               onChange={(e) => {
-                setSearch(e.target.value);
+                const nextQuery = e.target.value;
+                setSearch(nextQuery);
                 setPage(1);
+                onSearchChange?.(nextQuery);
               }}
               placeholder="Search..."
               className="h-8 pl-8 pr-3 text-xs bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-700"

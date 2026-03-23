@@ -1,6 +1,12 @@
 import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
-import { ALL_ORDERS_URL, EXCHANGE_URL, RETURN_URL } from "@/constants/apis";
+import {
+  ALL_ORDERS_URL,
+  EXCHANGE_URL,
+  RETURN_URL,
+  ADMIN_ORDER_STATUS_URL,
+  ADMIN_RETURN_URL,
+} from "@/constants/apis";
 
 import {
   PaginatedOrders,
@@ -8,9 +14,14 @@ import {
   PaginatedOrdersResponse,
   GenericMessageResponse,
   ReturnRequestPayload,
+  UpdateOrderStatusRequest,
 } from "@/domain/shared/types/order.type";
 
 class OrdersService {
+  /* =========================================================
+   * USER APIs
+   * ======================================================= */
+
   /* ---------------- GET ORDERS ---------------- */
   async getOrders(params: {
     page?: number;
@@ -30,8 +41,12 @@ class OrdersService {
       if (params.orderStatus)
         query.append("orderStatus", params.orderStatus);
 
+      const queryString = query.toString();
+
       const response = await httpClient.request<PaginatedOrdersResponse>({
-        url: `${ALL_ORDERS_URL}?${query.toString()}`,
+        url: queryString
+          ? `${ALL_ORDERS_URL}?${queryString}`
+          : ALL_ORDERS_URL,
         method: "GET",
         requiresAuth: true,
       });
@@ -100,6 +115,7 @@ class OrdersService {
       return response;
     } catch (error) {
       handleApiError(error, "cancelOrder");
+      throw error;
     }
   }
 
@@ -113,13 +129,91 @@ class OrdersService {
         await httpClient.request<GenericMessageResponse>({
           url: `${ALL_ORDERS_URL}/${orderId}/update`,
           method: "PATCH",
-          requiresAuth: true,
           data: { addressId },
+          requiresAuth: true,
         });
 
       return response;
     } catch (error) {
       handleApiError(error, "updateOrderAddress");
+      throw error;
+    }
+  }
+
+  /* =========================================================
+   * ADMIN APIs
+   * ======================================================= */
+
+  /* ---------------- UPDATE ORDER STATUS ---------------- */
+  async updateOrderStatus(
+    payload: UpdateOrderStatusRequest
+  ): Promise<GenericMessageResponse> {
+    try {
+      const response =
+        await httpClient.request<GenericMessageResponse>({
+          url: ADMIN_ORDER_STATUS_URL,
+          method: "PATCH",
+          requiresAuth: true,
+          data: payload,
+        });
+
+      return response;
+    } catch (error) {
+      handleApiError(error, "updateOrderStatus");
+      throw error;
+    }
+  }
+
+  /* ---------------- GET RETURN ORDERS ---------------- */
+  async getReturnOrders(params: {
+    page?: number;
+    perPage?: number;
+    status?: string;
+  }): Promise<PaginatedOrders> {
+    try {
+      const query = new URLSearchParams();
+
+      if (params.page !== undefined)
+        query.append("page", String(params.page));
+      if (params.perPage !== undefined)
+        query.append("perPage", String(params.perPage));
+      if (params.status) query.append("status", params.status);
+
+      const queryString = query.toString();
+
+      const response = await httpClient.request<PaginatedOrdersResponse>({
+        url: queryString
+          ? `${ADMIN_RETURN_URL}?${queryString}`
+          : ADMIN_RETURN_URL,
+        method: "GET",
+        requiresAuth: true,
+      });
+
+      return response.data;
+    } catch (error) {
+      handleApiError(error, "getReturnOrders");
+      throw error;
+    }
+  }
+
+  /* ---------------- UPDATE RETURN STATUS ---------------- */
+  async updateReturnStatus(payload: {
+    id: string;
+    status: string;
+  }): Promise<GenericMessageResponse> {
+    try {
+      const response =
+        await httpClient.request<GenericMessageResponse>({
+          url: ADMIN_RETURN_URL,
+          method: "PATCH",
+          requiresAuth: true,
+          data: payload,
+        });
+
+      return response;
+    } catch (error) {
+      handleApiError(error, "updateReturnStatus");
+      throw error;
     }
   }
 }

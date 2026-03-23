@@ -1,169 +1,558 @@
 "use client";
 
+import React, { useEffect, useState } from "react";
+import { DataTable, Column } from "@/component/admin/Admindatatable";
+import { AdminModal } from "@/component/admin/AdminModal";
 import { AdminForm, FormField } from "@/component/admin/Adminform";
+import { CreateProductPayload, Product } from "@/domain/shared/types/product.type";
+import { productService } from "@/domain/application/services/product.service";
+import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
+import { toast } from "react-hot-toast";
+import { CategoryService } from "@/domain/application/services/admin/category.service";
+import { CategoryTypeService } from "@/domain/application/services/admin/subcategory.service";
+import type {
+  AdminCategory,
+  AdminCategoryType,
+} from "@/domain/shared/types/admin/category";
 
-/* =========================================================
-   PRODUCT FORM CONFIG
-========================================================= */
+function ProductPage() {
+  const [data, setData] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-const PRODUCT_FIELDS: FormField[] = [
-  {
-    key: "name",
-    label: "Product Name",
-    type: "text",
-    placeholder: "e.g. Nike Air Max 90",
-    required: true,
-    cols: 1,
-  },
-  {
-    key: "sku",
-    label: "SKU",
-    type: "text",
-    placeholder: "e.g. NK-AM90-BLK-42",
-    required: true,
-    cols: 1,
-  },
-  {
-    key: "category",
-    label: "Category",
-    type: "select",
-    placeholder: "Select category",
-    required: true,
-    cols: 1,
-    options: [
-      { label: "Running", value: "running" },
-      { label: "Casual", value: "casual" },
-      { label: "Formal", value: "formal" },
-      { label: "Sports", value: "sports" },
-      { label: "Kids", value: "kids" },
-    ],
-  },
-  {
-    key: "status",
-    label: "Status",
-    type: "radio",
-    required: true,
-    cols: 1,
-    options: [
-      { label: "Active", value: "active" },
-      { label: "Draft", value: "draft" },
-      { label: "Inactive", value: "inactive" },
-    ],
-  },
-  {
-    key: "price",
-    label: "Price (₹)",
-    type: "number",
-    placeholder: "0.00",
-    required: true,
-    cols: 1,
-  },
-  {
-    key: "stock",
-    label: "Stock Quantity",
-    type: "number",
-    placeholder: "0",
-    required: true,
-    cols: 1,
-  },
-  {
-    key: "tags",
-    label: "Tags",
-    type: "multiselect",
-    cols: 2,
-    options: [
-      { label: "New Arrival", value: "new" },
-      { label: "Best Seller", value: "bestseller" },
-      { label: "On Sale", value: "sale" },
-      { label: "Limited Edition", value: "limited" },
-      { label: "Featured", value: "featured" },
-    ],
-  },
-  {
-    key: "description",
-    label: "Description",
-    type: "textarea",
-    placeholder: "Write a short product description...",
-    cols: 2,
-  },
-  {
-    key: "images",
-    label: "Product Images",
-    type: "image",
-    accept: "image/*",
-    multiple: true,
-    cols: 2,
-    hint: "Upload up to 5 images (PNG, JPG, WEBP).",
-  },
-  {
-    key: "specSheet",
-    label: "Spec Sheet",
-    type: "file",
-    accept: ".pdf,.doc,.docx",
-    multiple: false,
-    cols: 2,
-    hint: "Optional — attach a PDF or Word document.",
-  },
-  {
-    key: "featured",
-    label: "Featured Product",
-    type: "checkbox",
-    placeholder: "Mark as featured on homepage",
-    cols: 2,
-  },
-];
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Product | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [subcategories, setSubcategories] = useState<AdminCategoryType[]>([]);
 
-/* =========================================================
-   PAGE
-========================================================= */
+  const [deleteItem, setDeleteItem] = useState<Product | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-export default function ProductPage() {
+  /* ================= FETCH ================= */
+  const fetchProducts = async (search = "") => {
+    setLoading(true);
+    try {
+      const res = await productService.getPublicProducts({
+        page: 1,
+        limit: 100,
+        search,
+      });
+      setData(res.products); // adjust if needed
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void fetchProducts(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const loadLookups = async () => {
+      try {
+        const [categoryRows, subcategoryRows] = await Promise.all([
+          CategoryService.getAll(),
+          CategoryTypeService.getAll<AdminCategoryType>(),
+        ]);
+        setCategories(categoryRows);
+        setSubcategories(subcategoryRows);
+      } catch (error: unknown) {
+        toast.error(
+          (error as { message?: string })?.message ||
+          "Failed to load categories"
+        );
+      }
+    };
+
+    void loadLookups();
+  }, []);
+
+  const categoryOptions = categories.map((category) => ({
+    label: category.name,
+    value: category._id,
+  }));
+
+  const colorOptions = [
+    "Black",
+    "White",
+    "Red",
+    "Blue",
+    "Green",
+    "Yellow",
+    "Orange",
+    "Purple",
+    "Pink",
+    "Brown",
+    "Grey",
+    "Gray",
+    "Beige",
+    "Cream",
+    "Navy",
+    "Teal",
+    "Olive",
+    "Maroon",
+    "Mustard",
+    "Lavender",
+    "Turquoise",
+    "Coral",
+    "Mint",
+    "Peach",
+    "Charcoal",
+    "Ivory",
+    "Khaki",
+    "Magenta",
+    "Cyan",
+    "Gold",
+    "Silver",
+    "Bronze",
+  ].map((color) => ({ label: color, value: color }));
+
+  const subcategoryOptions = subcategories
+    .filter(
+      (subcategory) =>
+        !selectedCategoryId || subcategory.categoryId === selectedCategoryId
+    )
+    .map((subcategory) => ({
+      label: subcategory.name,
+      value: subcategory._id,
+    }));
+
+  const PRODUCT_FIELDS: FormField[] = [
+    { key: "name", label: "Name", type: "text", required: true, cols: 1 },
+    { key: "slug", label: "Slug", type: "text", required: true, cols: 1 },
+
+    { key: "brand", label: "Brand", type: "text", required: true, cols: 1 },
+    {
+      key: "colors",
+      label: "Colors",
+      type: "multiselect",
+      required: true,
+      options: colorOptions,
+      placeholder: "Select one or more colors",
+      allowCustom: true,
+      cols: 1,
+    },
+
+    { key: "price", label: "Price", type: "number", required: true, cols: 1 },
+    { key: "salePrice", label: "Sale Price", type: "number", cols: 1 },
+    { key: "stock", label: "Stock", type: "number", required: true, cols: 1 },
+
+    {
+      key: "length",
+      label: "Length",
+      type: "select",
+      required: true,
+      options: [
+        { label: "ANKLE", value: "ANKLE" },
+        { label: "CREW", value: "CREW" },
+        { label: "THERMAL", value: "THERMAL" },
+      ],
+    },
+    {
+      key: "categoryId",
+      label: "Category",
+      type: "select",
+      required: true,
+      options: categoryOptions,
+      placeholder: "Select category",
+      cols: 1,
+    },
+    {
+      key: "categoryTypeIds",
+      label: "Subcategory",
+      type: "multiselect",
+      required: true,
+      options: subcategoryOptions,
+      placeholder:
+        selectedCategoryId
+          ? "Select one or more subcategories"
+          : "Select category first",
+      cols: 1,
+    },
+
+    {
+      key: "gender",
+      label: "Gender",
+      type: "multiselect",
+      required: true,
+      options: [
+        { label: "Men", value: "MENS" },
+        { label: "Women", value: "WOMENS" },
+        { label: "Kids", value: "KIDS" },
+        { label: "Unisex", value: "UNISEX" },
+      ],
+      placeholder: "Select one or more genders",
+    },
+
+    {
+      key: "tags",
+      label: "Tags",
+      type: "multiselect",
+      required: true,
+      options: [
+        { label: "Socks", value: "socks" },
+        { label: "Crew", value: "crew" },
+        { label: "Ankle", value: "ankle" },
+      ],
+      placeholder: "Select one or more tags",
+    },
+
+    {
+      key: "imageUrls",
+      label: "Images",
+      type: "image",
+      multiple: true,
+      cols: 2,
+    },
+
+    {
+      key: "description",
+      label: "Description",
+      type: "textarea",
+      cols: 2,
+    },
+
+    {
+      key: "isFeatured",
+      label: "Featured",
+      type: "checkbox",
+    },
+    {
+      key: "isNewArrival",
+      label: "New Arrival",
+      type: "checkbox",
+    },
+    {
+      key: "isBestseller",
+      label: "Best Seller",
+      type: "checkbox",
+    },
+    {
+      key: "isGiftPack",
+      label: "Gift Pack",
+      type: "checkbox",
+    },
+  ];
+  /* ================= CREATE / UPDATE ================= */
+  const handleSubmit = async (values: Record<string, unknown>) => {
+    const imageValues = Array.isArray(values.imageUrls)
+      ? values.imageUrls
+      : [];
+    const normalizedImageUrls = imageValues.filter(
+      (value): value is string => typeof value === "string"
+    );
+
+    const stockValue = Math.max(0, Number(values.stock || 0));
+    const selectedCategory = String(values.categoryId ?? "");
+    const validSubcategoryIds = new Set(
+      subcategories
+        .filter((subcategory) => !selectedCategory || subcategory.categoryId === selectedCategory)
+        .map((subcategory) => subcategory._id)
+    );
+
+    const categoryTypeIds = Array.isArray(values.categoryTypeIds)
+      ? values.categoryTypeIds.filter(
+        (value): value is string =>
+          typeof value === "string" && validSubcategoryIds.has(value)
+      )
+      : [];
+
+    const colors = Array.isArray(values.colors)
+      ? values.colors.filter(
+        (value): value is string => typeof value === "string"
+      )
+      : [];
+
+    const payload: CreateProductPayload & {
+      categoryTypeIds?: string[];
+      colors?: string[];
+    } = {
+      ...(values as CreateProductPayload),
+      categoryTypeId: categoryTypeIds[0] ?? "",
+      categoryTypeIds,
+      color: colors[0] ?? "",
+      colors,
+      price: Number(values.price),
+      salePrice: Number(values.salePrice || 0),
+      imageUrls:
+        normalizedImageUrls.length > 0
+          ? normalizedImageUrls
+          : (values.imageUrls as string[]),
+      sizes:
+        stockValue > 0
+          ? [
+            {
+              size: "FREE",
+              quantity: stockValue,
+              isActive: true,
+            },
+          ]
+          : [],
+    };
+
+    try {
+      if (editing) {
+        await productService.update(editing._id, payload);
+        toast.success("Product updated");
+      } else {
+        await productService.create(payload);
+        toast.success("Product created");
+      }
+
+      setOpen(false);
+      setEditing(null);
+      await fetchProducts();
+    } catch (error: unknown) {
+      toast.error(
+        (error as { message?: string })?.message || "Failed to save product"
+      );
+      throw error;
+    }
+  };
+
+  /* ================= DELETE ================= */
+  const handleDelete = async () => {
+    if (!deleteItem) return;
+
+    setDeleting(true);
+    try {
+      await productService.delete(deleteItem._id);
+      setDeleteItem(null);
+      fetchProducts();
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  /* ================= COLUMNS ================= */
+  const columns: Column<Product>[] = [
+    // ✅ NAME + SIZE PILLS
+    {
+      key: "name",
+      label: "Name",
+      sortable: true,
+      render: (row) => (
+        <div className="space-y-1">
+          <div className="font-medium">{row.name}</div>
+
+          <div className="flex flex-wrap gap-1">
+            {row.sizes?.map((size) => (
+              <span
+                key={size.size}
+                className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700"
+              >
+                {size.size} ({size.quantity})
+              </span>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+
+    // ✅ BRAND
+    {
+      key: "brand",
+      label: "Brand",
+    },
+
+    // ✅ GENDER PILLS
+    {
+      key: "gender",
+      label: "Gender",
+      render: (row) => (
+        <div className="flex flex-wrap gap-1">
+          {row.gender?.map((g) => (
+            <span
+              key={g}
+              className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700"
+            >
+              {g}
+            </span>
+          ))}
+        </div>
+      ),
+    },
+
+    // ✅ PRICE + SALE PRICE
+    {
+      key: "price",
+      label: "Price",
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="font-medium">
+            ₹{row.salePrice > 0 ? row.salePrice : row.price}
+          </span>
+
+          {row.salePrice > 0 && (
+            <span className="text-xs line-through text-gray-400">
+              ₹{row.price}
+            </span>
+          )}
+        </div>
+      ),
+    },
+
+    // ✅ COLOR PILLS
+    {
+      key: "color",
+      label: "Color",
+      render: (row) => {
+        const extendedRow = row as Product & { colors?: string[] };
+        const rowColors =
+          extendedRow.colors?.length
+            ? extendedRow.colors
+            : row.color
+              ? [row.color]
+              : [];
+
+        return (
+          <div className="flex flex-wrap gap-1">
+            {rowColors.length ? (
+              rowColors.map((color: string) => (
+                <span
+                  key={color}
+                  className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700"
+                >
+                  {color}
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-neutral-400">-</span>
+            )}
+          </div>
+        );
+      },
+    },
+
+    // ✅ STATUS
+    {
+      key: "isActive",
+      label: "Status",
+      render: (row) => (
+        <span
+          className={`px-2 py-0.5 rounded text-xs ${row.isActive
+              ? "bg-green-100 text-green-700"
+              : "bg-gray-100 text-gray-500"
+            }`}
+        >
+          {row.isActive ? "Active" : "Inactive"}
+        </span>
+      ),
+    },
+  ];
+
+  const tableData = data.map((item) => ({
+    ...item,
+    id: item._id,
+  }));
+
+  const initialFormValues: Record<string, unknown> = editing
+    ? {
+      ...editing,
+      colors:
+        (editing as Product & { colors?: string[] }).colors?.length
+          ? (editing as Product & { colors?: string[] }).colors
+          : editing.color
+            ? [editing.color]
+            : [],
+      categoryTypeIds:
+        editing.categoryTypeIds?.length
+          ? editing.categoryTypeIds
+          : editing.categoryTypeId
+            ? [editing.categoryTypeId]
+            : [],
+      stock: editing.sizes?.reduce(
+        (total, sizeEntry) => total + (sizeEntry.quantity || 0),
+        0
+      ),
+    }
+    : {
+      name: "",
+      slug: "",
+      brand: "",
+      colors: [],
+      price: "",
+      salePrice: "",
+      stock: "",
+      categoryId: "",
+      categoryTypeIds: [],
+      length: "",
+      gender: [],
+      tags: [],
+      imageUrls: [],
+      description: "",
+      isFeatured: false,
+      isNewArrival: false,
+      isBestseller: false,
+      isGiftPack: false,
+    };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-900 tracking-tight">
-          Create Product
-        </h1>
-        <p className="text-sm text-neutral-400 mt-0.5">
-          Fill in the details below to add a new product to your catalog.
-        </p>
-      </div>
-
-      <AdminForm
-        title="Product Details"
-        description="All fields marked * are required"
-        fields={PRODUCT_FIELDS}
-        initialValues={{
-          name: "",
-          sku: "",
-          category: "",
-          status: "draft",
-          price: "",
-          stock: "",
-          description: "",
-          featured: false,
-          tags: [],
-          images: [],
-          specSheet: null,
+      <DataTable<Product & { id: string }>
+        data={tableData}
+        title="Products"
+        columns={columns}
+        loading={loading}
+        searchKeys={["name", "brand"]}
+        onSearchChange={setSearchQuery}
+        onAdd={() => {
+          setEditing(null);
+          setSelectedCategoryId("");
+          setOpen(true);
         }}
-        submitLabel="Save Product"
-        onSubmit={async (values) => {
-          const payload = {
-            ...values,
-            price: Number(values.price),
-            stock: Number(values.stock),
-          };
-
-          await new Promise((resolve) => setTimeout(resolve, 1200));
-
-          console.log("Product Submitted:", payload);
-
-          // await productService.create(payload)
+        onEdit={(row) => {
+          setEditing(row);
+          setSelectedCategoryId(row.categoryId ?? "");
+          setOpen(true);
         }}
-        onCancel={() => {
-          console.log("Cancelled");
+        onDelete={(row) => setDeleteItem(row)}
+      />
+
+      {/* ================= CREATE / EDIT MODAL ================= */}
+      <AdminModal
+        isOpen={open}
+        onClose={() => {
+          setOpen(false);
+          setEditing(null);
+          setSelectedCategoryId("");
         }}
+        title={editing ? "Edit Product" : "Create Product"}
+        size="lg"
+      >
+        <AdminForm
+          key={editing?._id ?? "create-product"}
+          fields={PRODUCT_FIELDS}
+          initialValues={initialFormValues}
+          submitLabel={editing ? "Update" : "Create"}
+          onSubmit={handleSubmit}
+          onValuesChange={(nextValues) => {
+            setSelectedCategoryId(String(nextValues.categoryId ?? ""));
+          }}
+          onCancel={() => {
+            setOpen(false);
+            setEditing(null);
+            setSelectedCategoryId("");
+          }}
+        />
+      </AdminModal>
+
+      {/* ================= DELETE MODAL ================= */}
+      <ConfirmModal
+        isOpen={!!deleteItem}
+        onClose={() => setDeleteItem(null)}
+        onConfirm={handleDelete}
+        loading={deleting}
+        title="Delete Product"
+        description={`Are you sure you want to delete "${deleteItem?.name}"?`}
       />
     </div>
   );
 }
+
+export default ProductPage;

@@ -3,13 +3,14 @@
 import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
 import { PRODUCTS_URL } from "@/constants/apis";
-import { ProductByIdData, ProductByIdResponse, ProductFilterMeta, ProductFilterResponse, PublicProductsApiResponse, PublicProductsResponse } from "@/domain/shared/types/product.type";
+import { CreateProductPayload, ProductByIdData, ProductByIdResponse, ProductFilterMeta, ProductFilterResponse, PublicProductsApiResponse, PublicProductsResponse, UpdateProductPayload } from "@/domain/shared/types/product.type";
 
 class ProductService {
   async getPublicProducts({
     gender,
     page = 1,
     limit = 20,
+    search,
     categories,
     subcategories,
     sizes,
@@ -23,6 +24,7 @@ class ProductService {
     gender?: string[];
     page?: number;
     limit?: number;
+    search?: string;
     categories?: string[];
     subcategories?: string[];
     sizes?: string[];
@@ -38,6 +40,7 @@ class ProductService {
 
     params.append("page", String(page));
     params.append("limit", String(limit));
+    if (search?.trim()) params.append("search", search.trim());
     if (sortBy) params.append("sortBy", sortBy);
     if (isBestseller) params.append("isBestseller", "true");
     if (isNewArrival) params.append("isNewArrival", "true");
@@ -117,6 +120,43 @@ class ProductService {
     }
   }
 
+  async update(id: string, payload: UpdateProductPayload) {
+    try {
+      await httpClient.request({
+        url: `${PRODUCTS_URL}/${id}`,
+        method: "PATCH",
+        data: payload,
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "updateProduct");
+    }
+  }
+
+  async delete(id: string) {
+    try {
+      await httpClient.request({
+        url: `${PRODUCTS_URL}/${id}`,
+        method: "DELETE",
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "deleteProduct");
+    }
+  }
+
+  async create(payload: CreateProductPayload): Promise<void> {
+    try {
+      await httpClient.request({
+        url: PRODUCTS_URL,
+        method: "POST",
+        data: payload,
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "createProduct");
+    }
+  }
 }
 
 export const productService = new ProductService();

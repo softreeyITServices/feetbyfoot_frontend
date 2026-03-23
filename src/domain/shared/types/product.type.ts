@@ -14,6 +14,7 @@ export interface Product {
   slug: string;
   brand: string;
   color: string;
+  colors?: string[];
   sizes: ProductSize[];
   price: number;
   salePrice: number;
@@ -21,11 +22,15 @@ export interface Product {
   imageUrls: string[];
   categoryId: string;
   categoryTypeId: string;
+  categoryTypeIds?: string[];
   gender: string[];
   tags: string[];
   isActive: boolean;
   length: string;
   isFeatured: boolean;
+  isNewArrival?: boolean;
+  isBestseller?: boolean;
+  isGiftPack?: boolean;
   ratingAverage: number;
   totalRatings: number;
   isInWishlist: boolean;
@@ -102,3 +107,19 @@ export type ProductByIdData = {
   product: Product;
   categoriesProducts: Product[];
 };
+
+type ProductExcludedFields =
+  | "_id"
+  | "createdAt"
+  | "updatedAt"
+  | "ratingAverage"
+  | "totalRatings"
+  | "reviews"
+  | "isInWishlist";
+
+export type CreateProductPayload = Omit<Product, ProductExcludedFields>;
+
+/**
+ * UPDATE payload (PATCH → partial)
+ */
+export type UpdateProductPayload = Partial<CreateProductPayload>;

@@ -11,6 +11,7 @@ export interface Banner {
 export interface CreateBannerPayload {
   title: string;
   imageUrl: string;
+  redirectUrl: string;
   isActive: boolean;
 }
 

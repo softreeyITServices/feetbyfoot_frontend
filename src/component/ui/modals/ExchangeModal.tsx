@@ -101,7 +101,6 @@ export default function ExchangeModal({
       (!item.exchangeRequests || item.exchangeRequests.length === 0)
   );
 
-  console.log(order)
 
   return (
     <Modal open={open} onClose={handleClose} title="Exchange Item">

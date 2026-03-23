@@ -219,6 +219,11 @@ export default function AdminCategoriesPage() {
         columns={COLUMNS}
         data={rows}
         searchKeys={["name"]}
+        onAdd={() => {
+          setEditing(null);
+          setOpen(true);
+        }}
+
         onEdit={(row) => {
           setEditing(row);
           setOpen(true);

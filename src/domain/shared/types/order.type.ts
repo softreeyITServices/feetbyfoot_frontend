@@ -164,8 +164,8 @@ export interface Order {
 export interface UpdateOrderStatusRequest {
   status: OrderStatus;
   items: {
-    productId: string;
-    itemId: string[];
+    orderId: string;
+    itemId: string;
   }[];
 }
 

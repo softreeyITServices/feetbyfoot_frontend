@@ -1,4 +1,9 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const isBrowser = typeof window !== "undefined";
+
+// Use same-origin API in browser so auth cookies/session stay on the active host.
+export const API_BASE_URL = isBrowser
+  ? "/api"
+  : process.env.NEXT_PUBLIC_API_URL || "/api";
 const EXTERNAL_API_BASE_URL = process.env.API_URL;
 
 
@@ -34,7 +39,18 @@ export const BANNERS_URL = API_BASE_URL + "/banners";
 export const COUPONS_URL = API_BASE_URL + "/coupons";
 export const RATING_URL = API_BASE_URL + "/rating";
 
+// Admin APIs
+export const ADMIN_ORDERS_URL = API_BASE_URL + "/orders/admin";
+export const ADMIN_EXCHANGE_URL = API_BASE_URL + "/orders/admin/exchange";
+export const ADMIN_RETURN_URL = API_BASE_URL + "/orders/admin/return";
+export const ADMIN_ORDER_STATUS_URL = API_BASE_URL + "/orders/admin/status";
+export const ADMIN_EXCHANGES_URL = API_BASE_URL + "/orders/admin/exchanges";
+export const ADMIN_UPLOAD_URL = API_BASE_URL + "/upload";
+export const BLOG_COMMENTS_URL = API_BASE_URL + "/blog-comments";
+// constants/apis.ts
 
+export const BLOGS_URL = API_BASE_URL + "/blogs";
+export const ADMIN_BLOG_COMMENTS_URL = API_BASE_URL + "/blogs-comments";
 
 // External APIs (for server-side use)
 
@@ -66,3 +82,13 @@ export const EX_CONTACT_URL = EXTERNAL_API_BASE_URL + "/contact";
 export const EX_BANNERS_URL = EXTERNAL_API_BASE_URL + "/banners";
 export const EX_COUPONS_URL = EXTERNAL_API_BASE_URL + "/coupons";
 export const EX_RATING_URL = EXTERNAL_API_BASE_URL + "/rating";
+
+
+// External Admin APIs
+export const EX_ADMIN_EXCHANGE_URL = EXTERNAL_API_BASE_URL + "/admin/exchanges";
+export const EX_ADMIN_RETURN_URL = EXTERNAL_API_BASE_URL + "/admin/order/return";
+export const EX_ADMIN_ORDER_STATUS_URL = EXTERNAL_API_BASE_URL + "/admin/order/status";
+export const EX_UPLOAD_URL = EXTERNAL_API_BASE_URL + "/upload";
+export const EX_BLOGS_URL = EXTERNAL_API_BASE_URL + "/admin/blogs";
+export const EX_BLOG_COMMENTS_URL = EXTERNAL_API_BASE_URL + "/blog-comments";
+export const EX_ADMIN_BLOG_COMMENTS_URL = EXTERNAL_API_BASE_URL + "/admin/blog-comments";

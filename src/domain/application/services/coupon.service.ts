@@ -22,7 +22,7 @@ class CouponService {
     try {
       const response =
         await httpClient.request<CreateCouponResponse>({
-          url: `${COUPONS_URL}/create`,
+          url: COUPONS_URL,
           method: "POST",
           data: payload,
         });

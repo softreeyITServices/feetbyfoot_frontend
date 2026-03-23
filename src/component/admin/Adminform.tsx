@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Upload,
   X,
@@ -30,6 +30,7 @@ export type FieldType =
   | "checkbox"
   | "radio"
   | "date"
+  | "color"
   | "file"
   | "image";
 
@@ -50,6 +51,7 @@ export interface FormField {
   hint?: string;
   validate?: (value: unknown) => string | null;
   cols?: 1 | 2;
+  allowCustom?: boolean;
 }
 
 export interface AdminFormProps {
@@ -60,6 +62,7 @@ export interface AdminFormProps {
   onSubmit: (values: Record<string, unknown>) => Promise<void> | void;
   onCancel?: () => void;
   submitLabel?: string;
+  onValuesChange?: (values: Record<string, unknown>) => void;
 }
 
 /* =========================================================
@@ -74,46 +77,136 @@ function fileIcon(file: File) {
   return <File size={14} className="text-neutral-400" />;
 }
 
+function getDisplayFileName(fileUrl: string) {
+  const trimmed = fileUrl.trim();
+  if (!trimmed) return "image";
+
+  const decodeValue = (value: string) => {
+    try {
+      return decodeURIComponent(value.replace(/\+/g, " ")).trim();
+    } catch {
+      return value.trim();
+    }
+  };
+
+  const cleanup = (value: string) =>
+    value.replace(/[?#].*$/, "").replace(/&text=.*$/i, "").trim();
+
+  try {
+    const parsed = new URL(
+      trimmed,
+      typeof window !== "undefined" ? window.location.origin : "http://localhost"
+    );
+
+    const paramName =
+      parsed.searchParams.get("filename") ||
+      parsed.searchParams.get("fileName") ||
+      parsed.searchParams.get("name") ||
+      parsed.searchParams.get("text");
+
+    if (paramName) {
+      const cleanedParamName = cleanup(decodeValue(paramName));
+      if (cleanedParamName) return cleanedParamName;
+    }
+
+    const pathTail = decodeValue(parsed.pathname.split("/").pop() ?? "");
+    const embeddedText = /(?:\?|&)text=([^&#]+)/i.exec(pathTail)?.[1];
+    if (embeddedText) {
+      const cleanedEmbeddedText = cleanup(decodeValue(embeddedText));
+      if (cleanedEmbeddedText) return cleanedEmbeddedText;
+    }
+
+    const cleanedPathTail = cleanup(pathTail);
+    return cleanedPathTail || "image";
+  } catch {
+    const tail = decodeValue(trimmed.split("/").pop() ?? trimmed);
+    const embeddedText = /(?:\?|&)text=([^&#]+)/i.exec(tail)?.[1];
+    if (embeddedText) {
+      const cleanedEmbeddedText = cleanup(decodeValue(embeddedText));
+      if (cleanedEmbeddedText) return cleanedEmbeddedText;
+    }
+
+    const cleanedTail = cleanup(tail);
+    return cleanedTail || "image";
+  }
+}
+
 function FilePreview({
   file,
   onRemove,
+  isBase = false,
+  onSetBase,
 }: {
-  file: File;
+  file: File | string;
   onRemove: () => void;
+  isBase?: boolean;
+  onSetBase?: () => void;
 }) {
-  const isImage = file.type.startsWith("image/");
-  const url = isImage ? URL.createObjectURL(file) : null;
+  const isString = typeof file === "string";
+
+  const isImage = isString
+    ? true
+    : file.type?.startsWith("image/");
+
+  const url = isString
+    ? file
+    : isImage
+      ? URL.createObjectURL(file)
+      : null;
 
   return (
     <div className="flex items-center gap-2.5 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 group">
       {isImage && url ? (
         <Image
           src={url}
-          alt={file.name}
+          alt={isString ? "image" : file.name}
           className="w-8 h-8 rounded-lg object-cover shrink-0"
           width={200}
           height={200}
         />
       ) : (
         <div className="w-8 h-8 bg-neutral-100 rounded-lg flex items-center justify-center shrink-0">
-          {fileIcon(file)}
+          {!isString && fileIcon(file)}
         </div>
       )}
+
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-neutral-700 truncate">
-          {file.name}
+          {isString ? getDisplayFileName(file) : file.name}
         </p>
-        <p className="text-[10px] text-neutral-400">
-          {(file.size / 1024).toFixed(1)} KB
-        </p>
+
+        {!isString && (
+          <p className="text-[10px] text-neutral-400">
+            {(file.size / 1024).toFixed(1)} KB
+          </p>
+        )}
       </div>
-      <button
-        type="button"
-        onClick={onRemove}
-        className="w-5 h-5 rounded-full bg-neutral-200 hover:bg-red-100 hover:text-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-      >
-        <X size={10} />
-      </button>
+
+      <div className="flex items-center gap-1.5">
+        {onSetBase && (
+          isBase ? (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium">
+              Base
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={onSetBase}
+              className="text-[10px] px-1.5 py-0.5 rounded-full bg-neutral-100 text-neutral-600 hover:bg-amber-100 hover:text-amber-700 transition-all"
+            >
+              Set base
+            </button>
+          )
+        )}
+
+        <button
+          type="button"
+          onClick={onRemove}
+          className="w-5 h-5 rounded-full bg-neutral-200 hover:bg-red-100 hover:text-red-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+        >
+          <X size={10} />
+        </button>
+      </div>
     </div>
   );
 }
@@ -129,8 +222,8 @@ function DropZone({
   error,
 }: {
   field: FormField;
-  value: File[];
-  onChange: (files: File[]) => void;
+  value: (File | string)[];
+  onChange: (files: (File | string)[]) => void;
   error?: string;
 }) {
   const [dragging, setDragging] = useState(false);
@@ -214,8 +307,19 @@ function DropZone({
         <div className="mt-2 flex flex-col gap-1.5">
           {value.map((file, i) => (
             <FilePreview
-              key={`${file.name}-${i}`}
+              key={`${typeof file === "string" ? file : file.name}-${i}`}
               file={file}
+              isBase={isImage && i === 0}
+              onSetBase={
+                isImage && i > 0
+                  ? () => {
+                    const next = [...value];
+                    const [selected] = next.splice(i, 1);
+                    next.unshift(selected);
+                    onChange(next);
+                  }
+                  : undefined
+              }
               onRemove={() =>
                 onChange(value.filter((_, idx) => idx !== i))
               }
@@ -223,6 +327,235 @@ function DropZone({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function MultiSelectInput({
+  field,
+  value,
+  onChange,
+  error,
+}: {
+  field: FormField;
+  value: string[];
+  onChange: (v: string[]) => void;
+  error?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null;
+      if (!wrapperRef.current || !target) return;
+      if (!wrapperRef.current.contains(target)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const options = field.options ?? [];
+  const selectedValues = Array.isArray(value) ? value : [];
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredOptions = normalizedQuery
+    ? options.filter(
+      (opt) =>
+        opt.label.toLowerCase().includes(normalizedQuery) ||
+        opt.value.toLowerCase().includes(normalizedQuery)
+    )
+    : options;
+
+  const toggleValue = (optionValue: string) => {
+    if (selectedValues.includes(optionValue)) {
+      onChange(selectedValues.filter((v) => v !== optionValue));
+      return;
+    }
+    onChange([...selectedValues, optionValue]);
+  };
+
+  const toTitleCase = (input: string) =>
+    input
+      .trim()
+      .replace(/\s+/g, " ")
+      .split(" ")
+      .map((word) =>
+        word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ""
+      )
+      .join(" ");
+
+  const addCustomValue = () => {
+    const customValue = toTitleCase(query);
+    if (!customValue) return;
+    const alreadyExists = selectedValues.some(
+      (value) => value.toLowerCase() === customValue.toLowerCase()
+    );
+    if (alreadyExists) {
+      setQuery("");
+      return;
+    }
+    onChange([...selectedValues, customValue]);
+    setQuery("");
+  };
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className={`w-full min-h-9 px-3 py-1.5 text-xs rounded-xl border transition-all text-left
+          ${error
+            ? "border-red-300 bg-red-50/30"
+            : "border-neutral-200 bg-neutral-50 hover:border-amber-300"
+          }`}
+      >
+        {selectedValues.length === 0 ? (
+          <span className="text-neutral-400">
+            {field.placeholder ?? "Select options"}
+          </span>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {selectedValues.map((selected) => {
+              const label =
+                options.find((opt) => opt.value === selected)?.label ?? selected;
+              return (
+                <span
+                  key={selected}
+                  className="inline-flex items-center rounded-full bg-amber-100 text-amber-700 px-2.5 py-1 text-[11px] font-medium"
+                >
+                  {label}
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </button>
+
+      <ChevronDown
+        size={13}
+        className="absolute right-3 top-4 -translate-y-1/2 text-neutral-400 pointer-events-none"
+      />
+
+      {open && (
+        <div className="absolute z-20 mt-1 w-full max-h-52 overflow-auto rounded-xl border border-neutral-200 bg-white shadow-lg p-1">
+          {field.allowCustom && (
+            <div className="px-1 pb-1">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addCustomValue();
+                  }
+                }}
+                placeholder="Type and press Enter to add"
+                className="w-full h-8 px-2 text-xs rounded-lg border border-neutral-200 focus:outline-none focus:border-amber-400"
+              />
+            </div>
+          )}
+
+          {filteredOptions.length === 0 ? (
+            <div className="px-2 py-1.5 text-[11px] text-neutral-400">
+              {field.allowCustom && query.trim()
+                ? `Press Enter to add "${query.trim()}"`
+                : "No options available"}
+            </div>
+          ) : (
+            filteredOptions.map((opt) => {
+              const checked = selectedValues.includes(opt.value);
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => toggleValue(opt.value)}
+                  className={`w-full px-2 py-1.5 rounded-lg text-xs flex items-center gap-2 transition-colors
+                    ${checked
+                      ? "bg-amber-50 text-amber-700"
+                      : "hover:bg-neutral-50 text-neutral-700"
+                    }`}
+                >
+                  <span
+                    className={`h-3.5 w-3.5 rounded border flex items-center justify-center
+                      ${checked
+                        ? "border-amber-500 bg-amber-500 text-white"
+                        : "border-neutral-300"
+                      }`}
+                  >
+                    {checked ? <Check size={10} /> : null}
+                  </span>
+                  {opt.label}
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ColorFieldInput({
+  field,
+  value,
+  onChange,
+  error,
+}: {
+  field: FormField;
+  value: string;
+  onChange: (v: string) => void;
+  error?: string;
+}) {
+  const datalistId = `color-options-${field.key}`;
+  const currentValue = (value ?? "").toString();
+  const pickerValue = currentValue.startsWith("#") ? currentValue : "#000000";
+
+  return (
+    <div className="space-y-2">
+      <div
+        className={`w-full min-h-9 px-3 py-1.5 rounded-xl border flex items-center gap-2 transition-all
+          ${error
+            ? "border-red-300 bg-red-50/30"
+            : "border-neutral-200 bg-neutral-50 focus-within:border-amber-400 focus-within:bg-white"
+          }`}
+      >
+        <span
+          className="h-4 w-4 rounded-full border border-neutral-300 shrink-0"
+          style={{ backgroundColor: currentValue || "transparent" }}
+        />
+
+        <input
+          type="text"
+          value={currentValue}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={field.placeholder ?? "Search or type color name/hex"}
+          list={datalistId}
+          className="w-full bg-transparent text-xs focus:outline-none"
+        />
+
+        <input
+          type="color"
+          value={pickerValue}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-6 w-8 p-0 border-0 bg-transparent cursor-pointer"
+          aria-label="Pick color"
+        />
+      </div>
+
+      {field.options?.length ? (
+        <datalist id={datalistId}>
+          {field.options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </datalist>
+      ) : null}
     </div>
   );
 }
@@ -254,7 +587,7 @@ function FieldInput({
       <DropZone
         field={field}
         value={(value as File[]) ?? []}
-        onChange={onChange as (files: File[]) => void}
+        onChange={onChange as (files: (File | string)[]) => void}
         error={error}
       />
     );
@@ -296,6 +629,18 @@ function FieldInput({
           className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"
         />
       </div>
+    );
+  }
+
+  /* ================= MULTISELECT ================= */
+  if (field.type === "multiselect") {
+    return (
+      <MultiSelectInput
+        field={field}
+        value={(value as string[]) ?? []}
+        onChange={(next) => onChange(next)}
+        error={error}
+      />
     );
   }
 
@@ -351,6 +696,18 @@ function FieldInput({
     );
   }
 
+  /* ================= COLOR ================= */
+  if (field.type === "color") {
+    return (
+      <ColorFieldInput
+        field={field}
+        value={(value as string) ?? ""}
+        onChange={(next) => onChange(next)}
+        error={error}
+      />
+    );
+  }
+
   /* ================= DEFAULT INPUT ================= */
   return (
     <input
@@ -375,6 +732,7 @@ export function AdminForm({
   onSubmit,
   onCancel,
   submitLabel = "Save",
+  onValuesChange,
 }: AdminFormProps) {
   const [values, setValues] =
     useState<Record<string, unknown>>(initialValues);
@@ -384,7 +742,11 @@ export function AdminForm({
   const [submitted, setSubmitted] = useState(false);
 
   const set = (key: string, value: unknown) => {
-    setValues((prev) => ({ ...prev, [key]: value }));
+    setValues((prev) => {
+      const next = { ...prev, [key]: value };
+      onValuesChange?.(next);
+      return next;
+    });
     setErrors((prev) => {
       const next = { ...prev };
       delete next[key];

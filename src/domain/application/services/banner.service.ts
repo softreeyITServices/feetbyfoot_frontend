@@ -124,18 +124,21 @@ class BannerService {
     if (id && !id.match(/^[0-9a-fA-F]{24}$/)) {
       throw new Error("Invalid id");
     }
-
+  
     try {
-      const response = await httpClient.request<{ message: string }>({
+      const response = await httpClient.request<{
+        success: boolean;
+        data: { message: string };
+      }>({
         url: `${BANNERS_URL}/${id}`,
         method: "DELETE",
       });
-
-      if (!response || !response.message) {
+  
+      if (!response || !response.data?.message) {
         throw new Error("Invalid banner delete response");
       }
-
-      return response.message;
+  
+      return response.data.message;
     } catch (error) {
       handleApiError(error, "deleteBanner");
     }

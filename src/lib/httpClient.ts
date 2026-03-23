@@ -8,8 +8,10 @@ class HttpClient {
   private client: AxiosInstance;
 
   constructor() {
+    const baseURL = isBrowser ? "" : process.env.NEXT_PUBLIC_API_URL || "";
+
     this.client = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_URL || "",
+      baseURL,
       timeout: 15000,
       headers: {
         "Content-Type": "application/json",
@@ -51,7 +53,8 @@ class HttpClient {
             errorCode === "RefreshTokenExpired" ||
             errorCode === "DeviceMismatch" ||
             errorCode === "TokenTooOld" ||
-            errorCode === "RefreshLimitExceeded"
+            errorCode === "RefreshLimitExceeded" ||
+            errorCode === "MissingTokens"
           ) {
             const { signOut } = await import("next-auth/react");
             await signOut({
@@ -80,6 +83,11 @@ class HttpClient {
       (response) => response.data,
       async (error) => {
         const status = error.response?.status;
+        const responseMessage = error.response?.data?.message;
+        const normalizedMessage =
+          typeof responseMessage === "string"
+            ? responseMessage
+            : error.message || "Request failed";
 
         const requiresAuth =
           error.config?.headers?.["X-Requires-Auth"] === "true";
@@ -93,10 +101,7 @@ class HttpClient {
         }
 
         return Promise.reject({
-          message:
-            error.response?.data?.message ||
-            error.message ||
-            "Request failed",
+          message: normalizedMessage,
           status,
           data: error.response?.data,
         });
