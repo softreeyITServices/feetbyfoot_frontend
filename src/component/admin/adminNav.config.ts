@@ -2,6 +2,7 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
+  Users,
   BarChart3,
   Settings,
   type LucideIcon,
@@ -46,6 +47,11 @@ export const ADMIN_NAV: AdminNavItem[] = [
       { label: "All Products", href: "/admin/products" },
       { label: "Categories", href: "/admin/categories" },
     ],
+  },
+  {
+    label: "Customers",
+    href: "/admin/customers",
+    icon: Users,
   },
   {
     label: "Banners",

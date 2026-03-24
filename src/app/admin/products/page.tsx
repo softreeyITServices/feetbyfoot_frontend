@@ -15,6 +15,8 @@ import type {
   AdminCategoryType,
 } from "@/domain/shared/types/admin/category";
 
+const ALLOWED_PRODUCT_LENGTHS = ["ANKLE", "CALF", "NO_SHOW", "CREW"] as const;
+
 function ProductPage() {
   const [data, setData] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -149,8 +151,9 @@ function ProductPage() {
       required: true,
       options: [
         { label: "ANKLE", value: "ANKLE" },
+        { label: "CALF", value: "CALF" },
+        { label: "NO_SHOW", value: "NO_SHOW" },
         { label: "CREW", value: "CREW" },
-        { label: "THERMAL", value: "THERMAL" },
       ],
     },
     {
@@ -267,12 +270,19 @@ function ProductPage() {
         (value): value is string => typeof value === "string"
       )
       : [];
+    const length = String(values.length ?? "").trim();
+
+    if (!ALLOWED_PRODUCT_LENGTHS.includes(length as (typeof ALLOWED_PRODUCT_LENGTHS)[number])) {
+      toast.error("Length must be ANKLE, CALF, NO_SHOW, or CREW");
+      return;
+    }
 
     const payload: CreateProductPayload & {
       categoryTypeIds?: string[];
       colors?: string[];
     } = {
       ...(values as CreateProductPayload),
+      length,
       categoryTypeId: categoryTypeIds[0] ?? "",
       categoryTypeIds,
       color: colors[0] ?? "",
@@ -454,6 +464,9 @@ function ProductPage() {
   const initialFormValues: Record<string, unknown> = editing
     ? {
       ...editing,
+      length: ALLOWED_PRODUCT_LENGTHS.includes(editing.length as (typeof ALLOWED_PRODUCT_LENGTHS)[number])
+        ? editing.length
+        : "",
       colors:
         (editing as Product & { colors?: string[] }).colors?.length
           ? (editing as Product & { colors?: string[] }).colors
