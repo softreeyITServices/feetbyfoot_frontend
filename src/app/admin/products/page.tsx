@@ -10,6 +10,7 @@ import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
 import { toast } from "react-hot-toast";
 import { CategoryService } from "@/domain/application/services/admin/category.service";
 import { CategoryTypeService } from "@/domain/application/services/admin/subcategory.service";
+import { uploadService } from "@/domain/application/services/upload.service";
 import type {
   AdminCategory,
   AdminCategoryType,
@@ -249,6 +250,27 @@ function ProductPage() {
     const normalizedImageUrls = imageValues.filter(
       (value): value is string => typeof value === "string"
     );
+    const imageFiles = imageValues.filter(
+      (value): value is File =>
+        typeof File !== "undefined" && value instanceof File
+    );
+
+    let uploadedImageUrls: string[] = [];
+    if (imageFiles.length > 0) {
+      try {
+        for (const file of imageFiles) {
+          const url = await uploadService.uploadFile(file);
+          uploadedImageUrls.push(url);
+        }
+      } catch (error: unknown) {
+        toast.error(
+          (error as { message?: string })?.message || "Image upload failed"
+        );
+        return;
+      }
+    }
+
+    const imageUrls = [...normalizedImageUrls, ...uploadedImageUrls];
 
     const stockValue = Math.max(0, Number(values.stock || 0));
     const selectedCategory = String(values.categoryId ?? "");
@@ -289,10 +311,7 @@ function ProductPage() {
       colors,
       price: Number(values.price),
       salePrice: Number(values.salePrice || 0),
-      imageUrls:
-        normalizedImageUrls.length > 0
-          ? normalizedImageUrls
-          : (values.imageUrls as string[]),
+      imageUrls,
       sizes:
         stockValue > 0
           ? [

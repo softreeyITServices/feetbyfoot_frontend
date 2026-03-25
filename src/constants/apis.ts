@@ -48,6 +48,8 @@ export const ADMIN_EXCHANGES_URL = API_BASE_URL + "/orders/admin/exchanges";
 export const ADMIN_UPLOAD_URL = API_BASE_URL + "/upload";
 export const BLOG_COMMENTS_URL = API_BASE_URL + "/blog-comments";
 export const ADMIN_CUSTOMERS_URL = API_BASE_URL + "/admin/customers";
+export const ADMIN_DASHBOARD_OVERVIEW_URL =
+  API_BASE_URL + "/admin/dashboard/overview";
 // constants/apis.ts
 
 export const BLOGS_URL = API_BASE_URL + "/blogs";
@@ -94,3 +96,5 @@ export const EX_BLOGS_URL = EXTERNAL_API_BASE_URL + "/admin/blogs";
 export const EX_BLOG_COMMENTS_URL = EXTERNAL_API_BASE_URL + "/blog-comments";
 export const EX_ADMIN_BLOG_COMMENTS_URL = EXTERNAL_API_BASE_URL + "/admin/blog-comments";
 export const EX_ADMIN_CUSTOMERS_URL = EXTERNAL_API_BASE_URL + "/admin/customers";
+export const EX_ADMIN_DASHBOARD_OVERVIEW_URL =
+  EXTERNAL_API_BASE_URL + "/admin/dashboard/overview";

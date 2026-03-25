@@ -24,7 +24,13 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import { DashboardService } from "@/domain/application/services/admin/dashboard.service";
+import type {
+  AdminDashboardOverviewResponse,
+  DashboardTrend,
+} from "@/domain/shared/types/admin/dashboard";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -43,22 +49,6 @@ interface ProductData {
   name: string;
   sales: number;
   revenue: number;
-  trend: "up" | "down";
-}
-
-type OrderStatus =
-  | "Delivered"
-  | "Processing"
-  | "Shipped"
-  | "Pending"
-  | "Cancelled";
-
-interface RecentOrder {
-  id: string;
-  customer: string;
-  product: string;
-  amount: number;
-  status: OrderStatus;
 }
 
 interface StatCardProps {
@@ -66,46 +56,10 @@ interface StatCardProps {
   value: string;
   sub: string;
   icon: React.ElementType;
-  trend: "up" | "down";
+  trend: DashboardTrend;
   trendVal: string;
   accent: string;
 }
-
-// ─── Sample Data ───────────────────────────────────────────────────────────
-
-const revenueData: RevenueData[] = [
-  { month: "Aug", revenue: 182000, orders: 340 },
-  { month: "Sep", revenue: 210000, orders: 410 },
-  { month: "Oct", revenue: 195000, orders: 375 },
-  { month: "Nov", revenue: 278000, orders: 520 },
-  { month: "Dec", revenue: 312000, orders: 610 },
-  { month: "Jan", revenue: 265000, orders: 490 },
-  { month: "Feb", revenue: 294000, orders: 545 },
-];
-
-const categoryData: CategoryData[] = [
-  { name: "Running", value: 38 },
-  { name: "Casual", value: 27 },
-  { name: "Formal", value: 18 },
-  { name: "Sports", value: 12 },
-  { name: "Kids", value: 5 },
-];
-
-const topProducts: ProductData[] = [
-  { name: "Nike Air Max 90", sales: 412, revenue: 2060000, trend: "up" },
-  { name: "Adidas Ultraboost 23", sales: 378, revenue: 1890000, trend: "up" },
-  { name: "Puma RS-X3", sales: 291, revenue: 1164000, trend: "down" },
-  { name: "New Balance 574", sales: 264, revenue: 1056000, trend: "up" },
-  { name: "Reebok Classic", sales: 198, revenue: 693000, trend: "down" },
-];
-
-const recentOrders: RecentOrder[] = [
-  { id: "#4521", customer: "Rahul Mehta", product: "Nike Air Max 90", amount: 5999, status: "Delivered" },
-  { id: "#4520", customer: "Priya Sharma", product: "Adidas Ultraboost", amount: 8499, status: "Processing" },
-  { id: "#4519", customer: "Arjun Singh", product: "Puma RS-X3", amount: 4299, status: "Shipped" },
-  { id: "#4518", customer: "Meena Patel", product: "New Balance 574", amount: 4999, status: "Pending" },
-  { id: "#4517", customer: "Karan Malhotra", product: "Reebok Classic", amount: 3499, status: "Cancelled" },
-];
 
 const COLORS: string[] = [
   "#f59e0b",
@@ -115,18 +69,7 @@ const COLORS: string[] = [
   "#ec4899",
 ];
 
-const statusStyles: Record<OrderStatus, string> = {
-  Delivered:
-    "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  Processing:
-    "bg-blue-50 text-blue-700 border border-blue-200",
-  Shipped:
-    "bg-amber-50 text-amber-700 border border-amber-200",
-  Pending:
-    "bg-neutral-100 text-neutral-600 border border-neutral-200",
-  Cancelled:
-    "bg-red-50 text-red-600 border border-red-200",
-};
+const formatNumber = (value: number) => value.toLocaleString();
 
 // ─── Stat Card ─────────────────────────────────────────────────────────────
 
@@ -140,6 +83,7 @@ function StatCard({
   accent,
 }: StatCardProps) {
   const isUp = trend === "up";
+  const isSame = trend === "same";
 
   return (
     <div className="bg-white rounded-2xl border border-neutral-100 p-5 flex flex-col gap-4 hover:shadow-md hover:shadow-neutral-100 transition-shadow">
@@ -162,14 +106,20 @@ function StatCard({
       </div>
 
       <div
-        className={`flex items-center gap-1.5 text-xs font-medium ${isUp ? "text-emerald-600" : "text-red-500"
-          }`}
+        className={`flex items-center gap-1.5 text-xs font-medium ${
+          isSame
+            ? "text-neutral-500"
+            : isUp
+              ? "text-emerald-600"
+              : "text-red-500"
+        }`}
       >
-        {isUp ? (
-          <ArrowUpRight size={13} />
-        ) : (
-          <ArrowDownRight size={13} />
-        )}
+        {!isSame &&
+          (isUp ? (
+            <ArrowUpRight size={13} />
+          ) : (
+            <ArrowDownRight size={13} />
+          ))}
         <span>{trendVal} vs last month</span>
       </div>
     </div>
@@ -199,10 +149,7 @@ const CustomTooltip = ({
         if (typeof entry.value !== "number") return null;
         if (typeof entry.dataKey !== "string") return null;
 
-        const formattedValue =
-          entry.dataKey === "revenue"
-            ? `₹${(entry.value / 1000).toFixed(0)}K`
-            : entry.value;
+        const formattedValue = formatNumber(entry.value);
 
         return (
           <p
@@ -221,6 +168,66 @@ const CustomTooltip = ({
 // ─── Main Dashboard ─────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
+  const [overview, setOverview] = useState<
+    AdminDashboardOverviewResponse | null
+  >(null);
+  const [loading, setLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
+  const loadOverview = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await DashboardService.getOverview();
+      setOverview(res);
+    } catch (error: unknown) {
+      toast.error(
+        (error as { message?: string })?.message ||
+          "Failed to load dashboard overview"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (initialized) return;
+    setInitialized(true);
+    void loadOverview();
+  }, [initialized, loadOverview]);
+
+  const summary = overview?.summary;
+
+  const revenueData: RevenueData[] =
+    overview?.charts.revenueVsOrders.map((p) => ({
+      month: p.monthLabel,
+      revenue: p.revenue,
+      orders: p.orders,
+    })) ?? [];
+
+  const categoryData: CategoryData[] =
+    overview?.charts.salesByCategory.map((c) => ({
+      name: c.categoryName,
+      value: c.percentage,
+    })) ?? [];
+
+  const topProducts: ProductData[] =
+    overview?.charts.topProductsBySales.map((p) => ({
+      name: p.productName,
+      sales: p.totalUnitsSold,
+      revenue: p.totalSalesAmount,
+    })) ?? [];
+
+  const formatTrendVal = (
+    changePercent: number,
+    trend: DashboardTrend
+  ): string => {
+    const safeVal = Number.isFinite(changePercent) ? changePercent : 0;
+
+    if (trend === "same") return `${safeVal.toFixed(2)}%`;
+
+    return `${safeVal >= 0 ? "+" : ""}${safeVal.toFixed(2)}%`;
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -228,7 +235,9 @@ export default function AdminDashboard() {
           Dashboard
         </h1>
         <p className="text-sm text-neutral-400 mt-0.5">
-          Welcome back — heres whats happening today.
+          {loading
+            ? "Loading dashboard..."
+            : "Welcome back — here's what's happening today."}
         </p>
       </div>
 
@@ -236,38 +245,50 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           label="Total Revenue"
-          value="₹29.4L"
-          sub="Feb 2026"
+          value={formatNumber(summary?.totalRevenue.current ?? 0)}
+          sub={`Previous: ${formatNumber(summary?.totalRevenue.previous ?? 0)}`}
           icon={IndianRupee}
-          trend="up"
-          trendVal="+11.3%"
+          trend={summary?.totalRevenue.trend ?? "same"}
+          trendVal={formatTrendVal(
+            summary?.totalRevenue.changePercent ?? 0,
+            summary?.totalRevenue.trend ?? "same"
+          )}
           accent="bg-amber-500"
         />
         <StatCard
           label="Total Orders"
-          value="5,450"
-          sub="545 this month"
+          value={formatNumber(summary?.totalOrders.current ?? 0)}
+          sub={`Previous: ${formatNumber(summary?.totalOrders.previous ?? 0)}`}
           icon={ShoppingBag}
-          trend="up"
-          trendVal="+8.7%"
+          trend={summary?.totalOrders.trend ?? "same"}
+          trendVal={formatTrendVal(
+            summary?.totalOrders.changePercent ?? 0,
+            summary?.totalOrders.trend ?? "same"
+          )}
           accent="bg-blue-500"
         />
         <StatCard
           label="New Customers"
-          value="1,284"
-          sub="Active buyers"
+          value={formatNumber(summary?.newCustomers.current ?? 0)}
+          sub={`Previous: ${formatNumber(summary?.newCustomers.previous ?? 0)}`}
           icon={Users}
-          trend="up"
-          trendVal="+5.2%"
+          trend={summary?.newCustomers.trend ?? "same"}
+          trendVal={formatTrendVal(
+            summary?.newCustomers.changePercent ?? 0,
+            summary?.newCustomers.trend ?? "same"
+          )}
           accent="bg-emerald-500"
         />
         <StatCard
           label="Products Listed"
-          value="342"
-          sub="12 low stock"
+          value={formatNumber(summary?.productsListed.current ?? 0)}
+          sub={`Previous: ${formatNumber(summary?.productsListed.previous ?? 0)}`}
           icon={Package}
-          trend="down"
-          trendVal="-2.1%"
+          trend={summary?.productsListed.trend ?? "same"}
+          trendVal={formatTrendVal(
+            summary?.productsListed.changePercent ?? 0,
+            summary?.productsListed.trend ?? "same"
+          )}
           accent="bg-purple-500"
         />
       </div>
@@ -280,7 +301,7 @@ export default function AdminDashboard() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h2 className="text-sm font-semibold text-neutral-800">Revenue & Orders</h2>
-              <p className="text-xs text-neutral-400 mt-0.5">Last 7 months performance</p>
+              <p className="text-xs text-neutral-400 mt-0.5">Last 6 months performance</p>
             </div>
             <div className="flex items-center gap-2 text-[11px] text-neutral-500">
               <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />Revenue</span>
@@ -313,14 +334,14 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-2xl border border-neutral-100 p-5">
           <div className="mb-5">
             <h2 className="text-sm font-semibold text-neutral-800">Sales by Category</h2>
-            <p className="text-xs text-neutral-400 mt-0.5">Distribution this month</p>
+            <p className="text-xs text-neutral-400 mt-0.5">Distribution over last 6 months</p>
           </div>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={categoryData} cx="50%" cy="50%" innerRadius={50} outerRadius={75}
                 dataKey="value" paddingAngle={3}>
                 {categoryData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i]} />
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip formatter={(v) => `${v}%`} />
@@ -330,7 +351,10 @@ export default function AdminDashboard() {
             {categoryData.map((c, i) => (
               <div key={c.name} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full" style={{ background: COLORS[i] }} />
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ background: COLORS[i % COLORS.length] }}
+                  />
                   <span className="text-neutral-600">{c.name}</span>
                 </div>
                 <span className="font-semibold text-neutral-800">{c.value}%</span>
@@ -344,10 +368,10 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
 
         {/* Top Products Bar Chart */}
-        <div className="xl:col-span-2 bg-white rounded-2xl border border-neutral-100 p-5">
+        <div className="xl:col-span-3 bg-white rounded-2xl border border-neutral-100 p-5">
           <div className="mb-5">
             <h2 className="text-sm font-semibold text-neutral-800">Top Products by Sales</h2>
-            <p className="text-xs text-neutral-400 mt-0.5">Units sold this month</p>
+            <p className="text-xs text-neutral-400 mt-0.5">Units sold over last 6 months</p>
           </div>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={topProducts} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
@@ -358,33 +382,6 @@ export default function AdminDashboard() {
               <Bar dataKey="sales" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={14} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
-
-        {/* Recent Orders mini */}
-        <div className="bg-white rounded-2xl border border-neutral-100 p-5 flex flex-col">
-          <div className="mb-4">
-            <h2 className="text-sm font-semibold text-neutral-800">Recent Orders</h2>
-            <p className="text-xs text-neutral-400 mt-0.5">Latest 5 transactions</p>
-          </div>
-          <div className="flex flex-col gap-3 flex-1">
-            {recentOrders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-neutral-800 truncate">{order.customer}</p>
-                  <p className="text-[10px] text-neutral-400 truncate">{order.product}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-xs font-bold text-neutral-800">₹{order.amount.toLocaleString()}</p>
-                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${statusStyles[order.status]}`}>
-                    {order.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button className="mt-4 w-full text-center text-[11px] text-amber-600 hover:text-amber-700 font-medium pt-3 border-t border-neutral-100 transition-colors">
-            View all orders →
-          </button>
         </div>
       </div>
     </div>
