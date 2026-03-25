@@ -117,40 +117,6 @@ export default function CustomersPage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-          disabled={page <= 1}
-          className="h-8 px-3 text-xs border border-neutral-200 rounded-lg disabled:opacity-50"
-        >
-          Prev
-        </button>
-        <span className="text-xs text-neutral-500">
-          Page {page} of {totalPages}
-        </span>
-        <button
-          onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-          disabled={page >= totalPages}
-          className="h-8 px-3 text-xs border border-neutral-200 rounded-lg disabled:opacity-50"
-        >
-          Next
-        </button>
-        <select
-          value={limit}
-          onChange={(e) => {
-            setLimit(Number(e.target.value));
-            setPage(1);
-          }}
-          className="h-8 px-2 text-xs bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-600"
-        >
-          {[10, 20, 50].map((n) => (
-            <option key={n} value={n}>
-              {n} / page
-            </option>
-          ))}
-        </select>
-      </div>
-
       <DataTable<CustomerRow>
         title="Customer List"
         description={loading ? "Loading customers..." : "Latest customers first"}
@@ -158,6 +124,16 @@ export default function CustomersPage() {
         data={rows}
         searchKeys={["name", "email", "phone"]}
         loading={loading}
+        selectable={false}
+        paginationMode="server"
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        pageSize={limit}
+        onPageSizeChange={(nextSize) => {
+          setLimit(nextSize);
+          setPage(1);
+        }}
         onSearchChange={(query) => {
           setSearchQuery(query);
           setPage(1);

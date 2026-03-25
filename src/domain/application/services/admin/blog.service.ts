@@ -1,6 +1,6 @@
 import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
-import { BLOGS_URL } from "@/constants/apis";
+import { ADMIN_BLOGS_URL } from "@/constants/apis";
 
 /* ================= TYPES ================= */
 
@@ -54,13 +54,29 @@ export class BlogService {
   static async create(payload: BlogPayload): Promise<void> {
     try {
       await httpClient.request({
-        url: BLOGS_URL,
+        url: ADMIN_BLOGS_URL,
         method: "POST",
         data: payload,
         requiresAuth: true, // still needed
       });
     } catch (error) {
       throw handleApiError(error, "createBlog");
+    }
+  }
+
+  /* ---------------- BULK CREATE ---------------- */
+  static async bulkCreate(payload: { blogs: BlogPayload[] }): Promise<unknown> {
+    try {
+      const res = await httpClient.request<{ data: unknown }>({
+        url: `${ADMIN_BLOGS_URL}/bulk`,
+        method: "POST",
+        data: payload,
+        requiresAuth: true,
+      });
+
+      return res.data;
+    } catch (error) {
+      throw handleApiError(error, "bulkCreateBlogs");
     }
   }
 
@@ -76,9 +92,10 @@ export class BlogService {
   ): Promise<BlogListResponse> {
     try {
       const res = await httpClient.request<BlogListResponse>({
-        url: BLOGS_URL,
+        url: ADMIN_BLOGS_URL,
         method: "GET",
         params,
+        requiresAuth: true,
       });
 
       return res.data;
@@ -94,7 +111,7 @@ export class BlogService {
   ): Promise<void> {
     try {
       await httpClient.request({
-        url: `${BLOGS_URL}/${id}`,
+        url: `${ADMIN_BLOGS_URL}/${id}`,
         method: "PATCH",
         data: payload,
         requiresAuth: true,
@@ -108,7 +125,7 @@ export class BlogService {
   static async delete(id: string): Promise<void> {
     try {
       await httpClient.request({
-        url: `${BLOGS_URL}/${id}`,
+        url: `${ADMIN_BLOGS_URL}/${id}`,
         method: "DELETE",
         requiresAuth: true,
       });
