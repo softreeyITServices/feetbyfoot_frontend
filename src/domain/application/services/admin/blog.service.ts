@@ -1,12 +1,13 @@
 import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
-import { ADMIN_BLOGS_URL } from "@/constants/apis";
+import { BLOGS_URL } from "@/constants/apis";
 
 /* ================= TYPES ================= */
 
 export type BlogPayload = {
-  brandId: string;
+  brandId?: string;
   title: string;
+  slug?: string;
   excerpt: string;
   coverImage: {
     url: string;
@@ -37,6 +38,25 @@ export type Blog = {
   createdAt: string;
 };
 
+export type BlogDetails = BlogPayload & {
+  _id: string;
+  slug?: string;
+  coverImage?: {
+    url?: string;
+    publicId?: string;
+  };
+  sections?: {
+    heading: string;
+    content: string;
+    bullets: string[];
+  }[];
+  faqs?: {
+    question: string;
+    answer: string;
+  }[];
+  tags?: string[];
+};
+
 export type BlogListResponse = {
   meta: {
     page: number;
@@ -54,29 +74,13 @@ export class BlogService {
   static async create(payload: BlogPayload): Promise<void> {
     try {
       await httpClient.request({
-        url: ADMIN_BLOGS_URL,
+        url: BLOGS_URL,
         method: "POST",
         data: payload,
         requiresAuth: true, // still needed
       });
     } catch (error) {
       throw handleApiError(error, "createBlog");
-    }
-  }
-
-  /* ---------------- BULK CREATE ---------------- */
-  static async bulkCreate(payload: { blogs: BlogPayload[] }): Promise<unknown> {
-    try {
-      const res = await httpClient.request<{ data: unknown }>({
-        url: `${ADMIN_BLOGS_URL}/bulk`,
-        method: "POST",
-        data: payload,
-        requiresAuth: true,
-      });
-
-      return res.data;
-    } catch (error) {
-      throw handleApiError(error, "bulkCreateBlogs");
     }
   }
 
@@ -92,15 +96,33 @@ export class BlogService {
   ): Promise<BlogListResponse> {
     try {
       const res = await httpClient.request<BlogListResponse>({
-        url: ADMIN_BLOGS_URL,
+        url: BLOGS_URL,
         method: "GET",
         params,
+      });
+
+      return res;
+    } catch (error) {
+      throw handleApiError(error, "getBlogs");
+    }
+  }
+
+  /* ---------------- GET BY ID ---------------- */
+  static async getById(id: string): Promise<BlogDetails> {
+    try {
+      const res = await httpClient.request<{ data: BlogDetails } | BlogDetails>({
+        url: `${BLOGS_URL}/${id}`,
+        method: "GET",
         requiresAuth: true,
       });
 
-      return res.data;
+      if (res && typeof res === "object" && "data" in res) {
+        return (res as { data: BlogDetails }).data;
+      }
+
+      return res as BlogDetails;
     } catch (error) {
-      throw handleApiError(error, "getBlogs");
+      throw handleApiError(error, "getBlogById");
     }
   }
 
@@ -111,7 +133,7 @@ export class BlogService {
   ): Promise<void> {
     try {
       await httpClient.request({
-        url: `${ADMIN_BLOGS_URL}/${id}`,
+        url: `${BLOGS_URL}/${id}`,
         method: "PATCH",
         data: payload,
         requiresAuth: true,
@@ -125,7 +147,7 @@ export class BlogService {
   static async delete(id: string): Promise<void> {
     try {
       await httpClient.request({
-        url: `${ADMIN_BLOGS_URL}/${id}`,
+        url: `${BLOGS_URL}/${id}`,
         method: "DELETE",
         requiresAuth: true,
       });

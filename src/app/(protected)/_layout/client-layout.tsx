@@ -4,6 +4,8 @@ import React from 'react';
 import Navbar from '@/component/common/navbar';
 import Footer from '@/component/common/Footer';
 import AccountSidebar from '@/component/account/AccountSidebar';
+import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,6 +14,11 @@ interface LayoutProps {
 }
 
 export default function ClientLayout({ children, title, subtitle, }: LayoutProps) {
+  const pathname = usePathname();
+  const { data: session } = useSession();
+  const isAdminWishlistRoute =
+    pathname === '/wishlists' &&
+    session?.user?.role?.toLowerCase() === 'admin';
 
   return (
     <>
@@ -26,8 +33,8 @@ export default function ClientLayout({ children, title, subtitle, }: LayoutProps
         </div>
 
         {/* Content */}
-        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10">
-          <AccountSidebar />
+        <div className={isAdminWishlistRoute ? 'grid grid-cols-1' : 'grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10'}>
+          {!isAdminWishlistRoute && <AccountSidebar />}
           {children}
         </div>
       </main>

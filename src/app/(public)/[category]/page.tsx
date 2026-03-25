@@ -96,9 +96,22 @@ export default async function CategoryPage({
   // FIX 1: type as Set<string> and initialise as empty Set (not empty string)
   let wishlistIds = new Set<string>();
   if (token) {
-    const response = await wishlistService.getWishlist(token);
-    const wishlistProducts = response?.data?.products ?? [];
-    wishlistIds = new Set(wishlistProducts.map((item) => item._id));
+    try {
+      const response = await wishlistService.getWishlist(token);
+      const wishlistProducts = response?.data?.products ?? [];
+      wishlistIds = new Set(wishlistProducts.map((item) => item._id));
+    } catch (error) {
+      const status =
+        typeof error === "object" && error !== null && "status" in error
+          ? Number((error as { status?: number }).status)
+          : undefined;
+
+      // Wishlist can be unavailable (e.g. admin role) or not created yet (404).
+      // In those cases render page with empty wishlist instead of throwing.
+      if (status !== 401 && status !== 403 && status !== 404) {
+        throw error;
+      }
+    }
   }
 
   const { products, total, totalPages } = await productService.getPublicProducts({

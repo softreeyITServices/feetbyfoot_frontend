@@ -20,6 +20,7 @@ class ProductService {
     sortBy,
     isBestseller,
     isNewArrival,
+    includeInactive,
   }: {
     gender?: string[];
     page?: number;
@@ -34,6 +35,7 @@ class ProductService {
     sortBy?: string;
     isBestseller?: boolean;
     isNewArrival?: boolean;
+    includeInactive?: boolean;
   }): Promise<PublicProductsResponse> {
 
     const params = new URLSearchParams();
@@ -44,13 +46,13 @@ class ProductService {
     if (sortBy) params.append("sortBy", sortBy);
     if (isBestseller) params.append("isBestseller", "true");
     if (isNewArrival) params.append("isNewArrival", "true");
+    if (includeInactive) params.append("includeInactive", "true");
     gender?.forEach((v) => params.append("gender", v));
     categories?.forEach((v) => params.append("categoryIds", v));
     subcategories?.forEach((v) => params.append("categoryTypeIds", v));
     sizes?.forEach((v) => params.append("sizes", v));
     colors?.forEach((v) => params.append("colors", v));
     packTypes?.forEach((v) => params.append("isGiftPack", String(v)));
-
 
     if (minDiscount) {
       params.append("minDiscount", String(minDiscount));

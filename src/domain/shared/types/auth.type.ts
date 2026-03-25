@@ -6,6 +6,11 @@ export type UserProfile = {
   email: string;
   phone: string;
   role: string;
+  brandId?: string;
+  brand?: {
+    _id?: string;
+    id?: string;
+  };
   createdAt: string;
   updatedAt: string;
 };
@@ -43,6 +48,7 @@ export interface ExtendedUser extends User {
   name: string;
   email: string;
   phone: string;
+  brandId?: string;
   accessToken: string;
   refreshToken: string;
   accessTokenExpiresAt: number;
@@ -58,6 +64,7 @@ export type ExtendedJWT = {
     name: string;
     email: string;
     phone: string;
+    brandId?: string;
   };
   accessToken: string;
   refreshToken: string;

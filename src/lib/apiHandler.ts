@@ -153,7 +153,7 @@ function handleError(error: unknown, path?: string): NextResponse {
         success: false,
         message: error.message,
         code: error.code,
-        ...(typeof error.payload === "object" && error.payload !== null
+        ...(isDev && typeof error.payload === "object" && error.payload !== null
           ? { details: error.payload }
           : {}),
         timestamp,

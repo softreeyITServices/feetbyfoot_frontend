@@ -13,6 +13,7 @@ type Contact = {
   _id: string;
   name: string;
   email: string;
+  phoneNumber: string;
   message: string;
   isResolved: boolean;
   createdAt: string;
@@ -77,6 +78,7 @@ export default function ContactPage() {
   const columns: Column<ContactRow>[] = [
     { key: "name", label: "Name" },
     { key: "email", label: "Email" },
+    { key: "phoneNumber", label: "Phone Number" },
     {
       key: "message",
       label: "Message",

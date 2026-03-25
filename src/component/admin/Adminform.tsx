@@ -62,7 +62,10 @@ export interface AdminFormProps {
   onSubmit: (values: Record<string, unknown>) => Promise<void> | void;
   onCancel?: () => void;
   submitLabel?: string;
-  onValuesChange?: (values: Record<string, unknown>) => void;
+  onValuesChange?: (
+    values: Record<string, unknown>,
+    previousValues: Record<string, unknown>
+  ) => Record<string, unknown> | void;
 }
 
 /* =========================================================
@@ -744,8 +747,8 @@ export function AdminForm({
   const set = (key: string, value: unknown) => {
     setValues((prev) => {
       const next = { ...prev, [key]: value };
-      onValuesChange?.(next);
-      return next;
+      const transformed = onValuesChange?.(next, prev);
+      return transformed ?? next;
     });
     setErrors((prev) => {
       const next = { ...prev };

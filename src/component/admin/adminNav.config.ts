@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
-  Users,
   BarChart3,
   Settings,
   type LucideIcon,
@@ -12,6 +11,7 @@ import {
   MailIcon,
   BookIcon,
   LayoutPanelTopIcon,
+  Users,
 } from "lucide-react";
 
 export interface AdminNavChild {
@@ -82,15 +82,5 @@ export const ADMIN_NAV: AdminNavItem[] = [
     label: "CMS",
     href: "/admin/cms",
     icon: LayoutPanelTopIcon,
-  },
-  {
-    label: "Analytics",
-    href: "/admin/analytics",
-    icon: BarChart3,
-  },
-  {
-    label: "Settings",
-    href: "/admin/settings",
-    icon: Settings,
   },
 ];

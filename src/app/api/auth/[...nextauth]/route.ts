@@ -60,6 +60,28 @@ function extractTokens(payload: unknown): {
   return { accessToken, refreshToken };
 }
 
+function extractBrandId(user: unknown): string | undefined {
+  if (!user || typeof user !== "object") return undefined;
+  const userObj = user as Record<string, unknown>;
+
+  if (typeof userObj.brandId === "string" && userObj.brandId.trim()) {
+    return userObj.brandId;
+  }
+
+  const brand = userObj.brand;
+  if (brand && typeof brand === "object") {
+    const brandObj = brand as Record<string, unknown>;
+    if (typeof brandObj._id === "string" && brandObj._id.trim()) {
+      return brandObj._id;
+    }
+    if (typeof brandObj.id === "string" && brandObj.id.trim()) {
+      return brandObj.id;
+    }
+  }
+
+  return undefined;
+}
+
 export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
@@ -114,6 +136,7 @@ export const authOptions: AuthOptions = {
           );
 
           const user = meResponse.data;
+          const brandId = extractBrandId(user);
 
           return {
             id: user._id,
@@ -121,6 +144,7 @@ export const authOptions: AuthOptions = {
             name: user.name,
             email: user.email,
             phone: user.phone,
+            brandId,
             accessToken,
             refreshToken,
             accessTokenExpiresAt,
@@ -162,6 +186,7 @@ export const authOptions: AuthOptions = {
             name: u.name,
             email: u.email,
             phone: u.phone,
+            brandId: u.brandId,
           },
           accessToken: u.accessToken,
           refreshToken: u.refreshToken,
@@ -236,6 +261,7 @@ export const authOptions: AuthOptions = {
           name: t.user.name,
           email: t.user.email,
           phone: t.user.phone,
+          brandId: t.user.brandId,
         },
         accessToken: t.accessToken,
         error: t.error,

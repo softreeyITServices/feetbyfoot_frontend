@@ -88,13 +88,13 @@ export default function Footer() {
               free giveaways, and once-in-a-lifetime deals
             </p>
 
-            {/* <div className="border-b flex items-center pb-2">
+            <div className="border-b flex items-center pb-2">
               <input
                 placeholder="Enter your email"
                 className="w-full focus:outline-none"
               />
               <span className="text-gray-600"><Mail width={24} height={24} /></span>
-            </div> */}
+            </div>
 
             {/* ICONS */}
             <div className="flex items-center gap-4 mt-4 text-xl text-gray-700 flex-row">

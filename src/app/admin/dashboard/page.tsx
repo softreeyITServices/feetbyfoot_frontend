@@ -294,7 +294,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
 
         {/* Revenue Area Chart */}
         <div className="xl:col-span-2 bg-white rounded-2xl border border-neutral-100 p-5">
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-2xl border border-neutral-100 p-5">
           <div className="mb-5">
             <h2 className="text-sm font-semibold text-neutral-800">Sales by Category</h2>
-            <p className="text-xs text-neutral-400 mt-0.5">Distribution over last 6 months</p>
+            <p className="text-xs text-neutral-400 mt-0.5">Distribution this month</p>
           </div>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
@@ -362,13 +362,7 @@ export default function AdminDashboard() {
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-
-        {/* Top Products Bar Chart */}
-        <div className="xl:col-span-3 bg-white rounded-2xl border border-neutral-100 p-5">
+         <div className="xl:col-span-3 bg-white rounded-2xl border border-neutral-100 p-5">
           <div className="mb-5">
             <h2 className="text-sm font-semibold text-neutral-800">Top Products by Sales</h2>
             <p className="text-xs text-neutral-400 mt-0.5">Units sold over last 6 months</p>

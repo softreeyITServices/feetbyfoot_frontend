@@ -54,7 +54,7 @@ export const ADMIN_DASHBOARD_OVERVIEW_URL =
 
 export const BLOGS_URL = API_BASE_URL + "/blogs";
 export const ADMIN_BLOG_COMMENTS_URL = API_BASE_URL + "/blogs-comments";
-export const ADMIN_BLOGS_URL = API_BASE_URL + "/admin/blogs";
+export const CMS_URL = API_BASE_URL + "/cms";
 
 // External APIs (for server-side use)
 
@@ -70,7 +70,6 @@ export const EX_USER_PROFILE_URL = EXTERNAL_API_BASE_URL + "/auth/me";
 export const EX_PRODUCTS_URL = EXTERNAL_API_BASE_URL + "/products";
 export const EX_CATEGORIES_URL = EXTERNAL_API_BASE_URL + "/categories";
 export const EX_SUB_CATEGORIES_URL = EXTERNAL_API_BASE_URL + "/categoriestype";
-export const EX_BLOGS_PUBLIC_URL = EXTERNAL_API_BASE_URL + "/blogs";
 export const EX_ORDERS_URL = EXTERNAL_API_BASE_URL + "/payments/create-order";
 export const EX_CART_URL = EXTERNAL_API_BASE_URL + "/cart";
 export const EX_WISHLIST_URL = EXTERNAL_API_BASE_URL + "/wishlist";
@@ -90,7 +89,6 @@ export const EX_RATING_URL = EXTERNAL_API_BASE_URL + "/rating";
 
 
 // External Admin APIs
-export const EX_ADMIN_BLOGS_URL = EXTERNAL_API_BASE_URL + "/admin/blogs";
 export const EX_ADMIN_EXCHANGE_URL = EXTERNAL_API_BASE_URL + "/admin/exchanges";
 export const EX_ADMIN_RETURN_URL = EXTERNAL_API_BASE_URL + "/admin/order/return";
 export const EX_ADMIN_ORDER_STATUS_URL = EXTERNAL_API_BASE_URL + "/admin/order/status";
@@ -101,3 +99,4 @@ export const EX_ADMIN_BLOG_COMMENTS_URL = EXTERNAL_API_BASE_URL + "/admin/blog-c
 export const EX_ADMIN_CUSTOMERS_URL = EXTERNAL_API_BASE_URL + "/admin/customers";
 export const EX_ADMIN_DASHBOARD_OVERVIEW_URL =
   EXTERNAL_API_BASE_URL + "/admin/dashboard/overview";
+export const EX_CMS_URL = EXTERNAL_API_BASE_URL + "/cms";

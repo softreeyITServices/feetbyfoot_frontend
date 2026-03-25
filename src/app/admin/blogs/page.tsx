@@ -85,7 +85,7 @@ export default function BlogListPage() {
                   </td>
 
                   <td className="p-4 text-center space-x-4">
-                    <Link href={`/admin/blogs/${blog._id}`} className="text-blue-600">Edit</Link>
+                    <Link href={`/admin/blogs/create?blogId=${blog._id}`} className="text-blue-600">Edit</Link>
                     <button onClick={() => handleDelete(blog._id)} className="text-red-600">Delete</button>
                   </td>
                 </tr>

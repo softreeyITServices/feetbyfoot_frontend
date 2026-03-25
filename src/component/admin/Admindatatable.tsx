@@ -93,7 +93,7 @@ export function DataTable<T extends { id: string | number }>({
           .includes(q)
       )
     );
-  }, [data, search, searchKeys]);
+  }, [data, search, searchKeys, isServerPagination]);
 
   /* ================= SORT ================= */
 
@@ -108,18 +108,16 @@ export function DataTable<T extends { id: string | number }>({
 
       return sortDir === "asc" ? cmp : -cmp;
     });
-  }, [filtered, sortKey, sortDir]);
+  }, [filtered, sortKey, sortDir, isServerPagination]);
 
   /* ================= PAGINATION ================= */
 
   const totalPages = isServerPagination
     ? Math.max(1, totalPagesProp ?? 1)
     : Math.max(1, Math.ceil(sorted.length / pageSize));
-
   const paginated = isServerPagination
     ? sorted
     : sorted.slice((page - 1) * pageSize, page * pageSize);
-
   const effectivePage = isServerPagination ? currentPage ?? page : page;
 
   const handleSort = (key: keyof T) => {
@@ -173,11 +171,8 @@ export function DataTable<T extends { id: string | number }>({
               onChange={(e) => {
                 const nextQuery = e.target.value;
                 setSearch(nextQuery);
-                if (isServerPagination) {
-                  onPageChange?.(1);
-                } else {
-                  setPage(1);
-                }
+                if (isServerPagination) onPageChange?.(1);
+                else setPage(1);
                 onSearchChange?.(nextQuery);
               }}
               placeholder="Search..."
@@ -190,7 +185,6 @@ export function DataTable<T extends { id: string | number }>({
             onChange={(e) => {
               const nextSize = Number(e.target.value);
               setPageSize(nextSize);
-
               if (isServerPagination) {
                 onPageSizeChange?.(nextSize);
                 onPageChange?.(1);

@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { BlogService } from "@/domain/application/services/admin/blog.service";
 import { uploadService } from "@/domain/application/services/upload.service";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 /* ================= TYPES ================= */
 
@@ -59,7 +61,7 @@ function Field({
 }
 
 const inputCls =
-  "w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 outline-none focus:border-[#006574] focus:ring-2 focus:ring-[#006574]/10 transition";
+  "w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 outline-none focus:border-[#006574] focus:ring-2 focus:ring-[#006574]/10 transition disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed";
 
 const textareaCls =
   "w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 placeholder:text-gray-400 outline-none focus:border-[#006574] focus:ring-2 focus:ring-[#006574]/10 transition resize-none";
@@ -67,6 +69,12 @@ const textareaCls =
 /* ================= PAGE ================= */
 
 export default function CreateBlogPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { data: session } = useSession();
+  const blogId = searchParams.get("blogId");
+  const isEditMode = Boolean(blogId);
+
   const [title, setTitle] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [authorName, setAuthorName] = useState("");
@@ -75,6 +83,8 @@ export default function CreateBlogPage() {
   const [cover, setCover] = useState("");
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [loadingBlog, setLoadingBlog] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const [sections, setSections] = useState<Section[]>([
     { heading: "", content: "", bullets: [""] },
@@ -87,6 +97,51 @@ export default function CreateBlogPage() {
 
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
+  const brandId = session?.user?.brandId?.trim() ?? "";
+
+  useEffect(() => {
+    if (!blogId) return;
+
+    const loadBlog = async () => {
+      try {
+        setLoadingBlog(true);
+        const blog = await BlogService.getById(blogId);
+
+        setTitle(blog.title || "");
+        setExcerpt(blog.excerpt || "");
+        setAuthorName(blog.authorName || "");
+        setSlug(blog.slug || "");
+        setSlugManuallyEdited(Boolean(blog.slug));
+        setCover(blog.coverImage?.url || "");
+        setSections(
+          blog.sections && blog.sections.length > 0
+            ? blog.sections
+            : [{ heading: "", content: "", bullets: [""] }]
+        );
+        setFaqs(
+          blog.faqs && blog.faqs.length > 0
+            ? blog.faqs
+            : [{ question: "", answer: "" }]
+        );
+        setTags(blog.tags || []);
+        setSeoTitle(blog.seoTitle || "");
+        setSeoDescription(blog.seoDescription || "");
+      } catch (err: any) {
+        toast.error(err?.message || "Failed to load blog");
+      } finally {
+        setLoadingBlog(false);
+      }
+    };
+
+    loadBlog();
+  }, [blogId]);
+
+  useEffect(() => {
+    if (isEditMode) return;
+    const sessionName = session?.user?.name?.trim();
+    if (!sessionName) return;
+    setAuthorName((prev) => (prev.trim() ? prev : sessionName));
+  }, [isEditMode, session?.user?.name]);
 
   /* ================= UPLOAD ================= */
 
@@ -172,13 +227,24 @@ export default function CreateBlogPage() {
 
   const removeTag = (t: string) => setTags(tags.filter((x) => x !== t));
 
+  const canPublish =
+    Boolean(title.trim()) &&
+    Boolean(slug.trim()) &&
+    Boolean(excerpt.trim()) &&
+    Boolean(authorName.trim()) &&
+    Boolean(cover.trim());
+
   /* ================= SUBMIT ================= */
 
   const handleSubmit = async (isPublished: boolean) => {
+    if (submitting) return;
+
     try {
-      await BlogService.create({
-        brandId: "demo-brand",
+      setSubmitting(true);
+      const payload = {
+        ...(brandId ? { brandId } : {}),
         title,
+        slug,
         excerpt,
         coverImage: { url: cover, publicId: "" },
         sections,
@@ -188,35 +254,54 @@ export default function CreateBlogPage() {
         isPublished,
         seoTitle,
         seoDescription,
-      });
-      toast.success(isPublished ? "Published 🚀" : "Draft saved");
+      };
+
+      if (isEditMode && blogId) {
+        await BlogService.update(blogId, payload);
+        toast.success(isPublished ? "Updated & published 🚀" : "Draft updated");
+      } else {
+        await BlogService.create(payload);
+        toast.success(isPublished ? "Published 🚀" : "Draft saved");
+      }
     } catch {
       toast.error("Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   /* ================= UI ================= */
 
+  if (loadingBlog) {
+    return (
+      <div className="bg-[#f5f6f8] min-h-screen font-sans flex items-center justify-center text-sm text-gray-500">
+        Loading blog data...
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#f5f6f8] min-h-screen font-sans">
 
       {/* ── STICKY HEADER ── */}
-      <header className="sticky top-0 bg-white/80 backdrop-blur border-b border-gray-100 px-8 py-3.5 flex items-center justify-between z-50">
+      <header className="sticky top-14 bg-white/80 backdrop-blur border-b border-gray-100 px-8 py-3.5 flex items-center justify-between z-40">
         <span className="text-sm font-semibold text-gray-500 tracking-wide">
-          New Blog Post
+          {isEditMode ? "Edit Blog Post" : "New Blog Post"}
         </span>
         <div className="flex gap-3">
           <button
-            onClick={() => handleSubmit(false)}
-            className="text-sm px-5 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition font-medium"
+            disabled={submitting}
+            onClick={() => router.push("/admin/blogs")}
+            className="text-sm px-5 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition font-medium disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Save Draft
+            Back to Blogs
           </button>
           <button
+            disabled={submitting || !canPublish}
             onClick={() => handleSubmit(true)}
-            className="text-sm bg-linear-to-br from-[#006574] to-[#008092] text-white px-5 py-2 rounded-xl font-semibold hover:opacity-90 transition shadow-sm"
+            className="text-sm bg-yellow-400 text-black px-5 py-2 rounded-xl font-semibold hover:bg-yellow-500 transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Publish
+            {submitting ? "Saving..." : isEditMode ? "Update & Publish" : "Publish"}
           </button>
         </div>
       </header>
@@ -313,6 +398,7 @@ export default function CreateBlogPage() {
               placeholder="Jane Doe"
               value={authorName}
               onChange={(e) => setAuthorName(e.target.value)}
+              disabled
               className={inputCls}
             />
           </Field>
@@ -514,16 +600,18 @@ export default function CreateBlogPage() {
         {/* ACTION FOOTER */}
         <div className="flex justify-end gap-3 pt-4">
           <button
-            onClick={() => handleSubmit(false)}
-            className="text-sm px-6 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition font-medium"
+            disabled={submitting}
+            onClick={() => router.push("/admin/blogs")}
+            className="text-sm px-6 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition font-medium disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Save Draft
+            Back to Blogs
           </button>
           <button
+            disabled={submitting || !canPublish}
             onClick={() => handleSubmit(true)}
-            className="text-sm bg-linear-to-br from-[#006574] to-[#008092] text-white px-6 py-2.5 rounded-xl font-semibold hover:opacity-90 transition shadow-sm"
+            className="text-sm bg-yellow-400 text-black px-6 py-2.5 rounded-xl font-semibold hover:bg-yellow-500 transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Publish
+            {submitting ? "Saving..." : isEditMode ? "Update & Publish" : "Publish"}
           </button>
         </div>
       </div>

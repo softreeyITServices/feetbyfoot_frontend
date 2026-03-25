@@ -48,4 +48,3 @@ export interface AdminDashboardOverviewResponse {
   summary: AdminDashboardSummary;
   charts: AdminDashboardCharts;
 }
-

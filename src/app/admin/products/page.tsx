@@ -6,17 +6,24 @@ import { AdminModal } from "@/component/admin/AdminModal";
 import { AdminForm, FormField } from "@/component/admin/Adminform";
 import { CreateProductPayload, Product } from "@/domain/shared/types/product.type";
 import { productService } from "@/domain/application/services/product.service";
+import { uploadService } from "@/domain/application/services/upload.service";
 import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
 import { toast } from "react-hot-toast";
 import { CategoryService } from "@/domain/application/services/admin/category.service";
 import { CategoryTypeService } from "@/domain/application/services/admin/subcategory.service";
-import { uploadService } from "@/domain/application/services/upload.service";
 import type {
   AdminCategory,
   AdminCategoryType,
 } from "@/domain/shared/types/admin/category";
 
 const ALLOWED_PRODUCT_LENGTHS = ["ANKLE", "CALF", "NO_SHOW", "CREW"] as const;
+const toSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 
 function ProductPage() {
   const [data, setData] = useState<Product[]>([]);
@@ -40,6 +47,7 @@ function ProductPage() {
         page: 1,
         limit: 100,
         search,
+        includeInactive: true,
       });
       setData(res.products); // adjust if needed
     } finally {
@@ -241,36 +249,18 @@ function ProductPage() {
       label: "Gift Pack",
       type: "checkbox",
     },
+    {
+      key: "isActive",
+      label: "Active",
+      type: "checkbox",
+      placeholder: "Product is active",
+    },
   ];
   /* ================= CREATE / UPDATE ================= */
   const handleSubmit = async (values: Record<string, unknown>) => {
     const imageValues = Array.isArray(values.imageUrls)
       ? values.imageUrls
       : [];
-    const normalizedImageUrls = imageValues.filter(
-      (value): value is string => typeof value === "string"
-    );
-    const imageFiles = imageValues.filter(
-      (value): value is File =>
-        typeof File !== "undefined" && value instanceof File
-    );
-
-    let uploadedImageUrls: string[] = [];
-    if (imageFiles.length > 0) {
-      try {
-        for (const file of imageFiles) {
-          const url = await uploadService.uploadFile(file);
-          uploadedImageUrls.push(url);
-        }
-      } catch (error: unknown) {
-        toast.error(
-          (error as { message?: string })?.message || "Image upload failed"
-        );
-        return;
-      }
-    }
-
-    const imageUrls = [...normalizedImageUrls, ...uploadedImageUrls];
 
     const stockValue = Math.max(0, Number(values.stock || 0));
     const selectedCategory = String(values.categoryId ?? "");
@@ -299,11 +289,41 @@ function ProductPage() {
       return;
     }
 
+    const name = String(values.name ?? "").trim();
+    const autoSlug = toSlug(name);
+    const enteredSlug = String(values.slug ?? "").trim();
+    const slug = enteredSlug || autoSlug;
+
+    if (!slug) {
+      toast.error("Product name is required to generate slug");
+      return;
+    }
+
+    const imageUrls = await Promise.all(
+      imageValues
+        .filter(
+          (value): value is string | File =>
+            typeof value === "string" || value instanceof File
+        )
+        .map(async (value) => {
+          if (typeof value === "string") return value.trim();
+          return uploadService.uploadFile(value);
+        })
+    );
+
+    const normalizedImageUrls = imageUrls.filter((url) => url.length > 0);
+
+    if (normalizedImageUrls.length === 0) {
+      toast.error("At least one product image is required");
+      return;
+    }
+
     const payload: CreateProductPayload & {
       categoryTypeIds?: string[];
       colors?: string[];
     } = {
       ...(values as CreateProductPayload),
+      slug,
       length,
       categoryTypeId: categoryTypeIds[0] ?? "",
       categoryTypeIds,
@@ -311,7 +331,7 @@ function ProductPage() {
       colors,
       price: Number(values.price),
       salePrice: Number(values.salePrice || 0),
-      imageUrls,
+      imageUrls: normalizedImageUrls,
       sizes:
         stockValue > 0
           ? [
@@ -522,6 +542,7 @@ function ProductPage() {
       isNewArrival: false,
       isBestseller: false,
       isGiftPack: false,
+      isActive: true,
     };
 
   return (
@@ -563,8 +584,34 @@ function ProductPage() {
           initialValues={initialFormValues}
           submitLabel={editing ? "Update" : "Create"}
           onSubmit={handleSubmit}
-          onValuesChange={(nextValues) => {
-            setSelectedCategoryId(String(nextValues.categoryId ?? ""));
+          onValuesChange={(nextValues, previousValues) => {
+            const nextCategoryId = String(nextValues.categoryId ?? "");
+            setTimeout(() => {
+              setSelectedCategoryId((prev) =>
+                prev === nextCategoryId ? prev : nextCategoryId
+              );
+            }, 0);
+
+            if (editing) return nextValues;
+
+            const nextName = String(nextValues.name ?? "");
+            const nextSlug = String(nextValues.slug ?? "");
+            const previousName = String(previousValues.name ?? "");
+            const previousSlug = String(previousValues.slug ?? "");
+            const previousAutoSlug = toSlug(previousName);
+
+            if (
+              nextName !== previousName &&
+              nextSlug === previousSlug &&
+              (previousSlug === "" || previousSlug === previousAutoSlug)
+            ) {
+              return {
+                ...nextValues,
+                slug: toSlug(nextName),
+              };
+            }
+
+            return nextValues;
           }}
           onCancel={() => {
             setOpen(false);
