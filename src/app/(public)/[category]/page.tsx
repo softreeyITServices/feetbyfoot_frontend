@@ -35,11 +35,11 @@ const CATEGORY_CONFIG = {
     title: "Gift Socks",
     description: "Perfect sock gifts for every occasion",
   },
-  brand: {
-    label: "Brand",
-    title: "Brand",
-    description: "Explore Feet By Foot products by brand",
-  },
+  // brand: {
+  //   label: "Brand",
+  //   title: "Brand",
+  //   description: "Explore Feet By Foot products by brand",
+  // },
 } as const;
 
 type CategoryKey = keyof typeof CATEGORY_CONFIG;

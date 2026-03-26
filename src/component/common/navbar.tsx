@@ -18,7 +18,7 @@ const menuItems = [
   { label: "KIDS", href: "/kids" },
   { label: "GIFTS", href: "/gifts" },
   { label: "OUTLET", href: "/outlet" },
-  { label: "BRAND", href: "/brand" },
+  // { label: "BRAND", href: "/brand" },
   { label: "CONTACT", href: "/contactus" },
 ];
 
