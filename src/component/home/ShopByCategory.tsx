@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Container from "../ui/Container";
 import { UpRightArrowIcon } from "@/icons/UpRightArrowIcon";
+import Link from "next/link";
 
 export default function ShopByCategory() {
   return (
@@ -25,9 +26,12 @@ export default function ShopByCategory() {
                 height={450}
                 className="w-80 h-120 object-cover rounded-xl"
               />
-              <button className="absolute bottom-4 left-4 bg-yellow-400 p-1 rounded text-[13px] font-semibold flex flex-row gap-2 justify-center items-center">
-                <span className="text-lg">Kids Socks</span> <UpRightArrowIcon width={24} height={24} />
-              </button>
+              <Link href="/kids">
+
+                <button className="absolute bottom-4 left-4 bg-yellow-400 p-1 rounded text-[13px] font-semibold flex flex-row gap-2 justify-center items-center">
+                  <span className="text-lg">Kids Socks</span> <UpRightArrowIcon width={24} height={24} />
+                </button>
+              </Link>
             </div>
           </div>
 
@@ -43,9 +47,11 @@ export default function ShopByCategory() {
                 height={450}
                 className="w-80 h-120 object-cover rounded-xl"
               />
-              <button className="absolute bottom-4 left-4 bg-yellow-400 p-1 rounded text-[13px] font-semibold flex flex-row gap-2 justify-center items-center">
-                <span className="text-lg">Socks Gift Packs</span> <UpRightArrowIcon width={24} height={24} />
-              </button>
+              <Link href="/gifts">
+                <button className="absolute bottom-4 left-4 bg-yellow-400 p-1 rounded text-[13px] font-semibold flex flex-row gap-2 justify-center items-center">
+                  <span className="text-lg">Socks Gift Packs</span> <UpRightArrowIcon width={24} height={24} />
+                </button>
+              </Link>
             </div>
 
             {/* Women Floral Socks (Tall) */}
@@ -57,9 +63,12 @@ export default function ShopByCategory() {
                 height={450}
                 className="w-80 h-120 object-cover rounded-xl"
               />
-              <button className="absolute bottom-4 left-4 bg-yellow-400 p-1 rounded text-[13px] font-semibold flex flex-row gap-2 justify-center items-center">
-                <span className="text-lg">Women Food & Florals Socks</span> <UpRightArrowIcon width={24} height={24} />
-              </button>
+              <Link href="/womens">
+
+                <button className="absolute bottom-4 left-4 bg-yellow-400 p-1 rounded text-[13px] font-semibold flex flex-row gap-2 justify-center items-center">
+                  <span className="text-lg">Women Food & Florals Socks</span> <UpRightArrowIcon width={24} height={24} />
+                </button>
+              </Link>
             </div>
 
           </div>
@@ -79,9 +88,11 @@ export default function ShopByCategory() {
                 height={450}
                 className="w-80 h-120 object-cover rounded-xl"
               />
-              <button className="absolute bottom-4 left-4 bg-yellow-400 p-1 rounded text-[13px] font-semibold flex flex-row gap-2 justify-center items-center">
-                <span className="text-lg">Men Funky Socks</span> <UpRightArrowIcon width={24} height={24} />
-              </button>
+              <Link href="/mens">
+                <button className="absolute bottom-4 left-4 bg-yellow-400 p-1 rounded text-[13px] font-semibold flex flex-row gap-2 justify-center items-center">
+                  <span className="text-lg">Men Funky Socks</span> <UpRightArrowIcon width={24} height={24} />
+                </button>
+              </Link>
             </div>
 
           </div>

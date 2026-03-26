@@ -13,7 +13,7 @@ export const categories: {
     {
       label: "Pick Combos",
       image: "/assets/images/grid_img_2.png",
-      href: "/pick-combos",
+      href: "/gifts",
     },
     {
       label: "Kids",
