@@ -1,6 +1,7 @@
 import { httpClient } from "@/lib/httpClient";
+import { normalizeCoverImageUrl } from "@/lib/safeImageSrc";
 import { handleApiError } from "@/lib/serviceErrorHandler";
-import { BLOGS_URL, BLOG_COMMENTS_URL } from "@/constants/apis";
+import { BLOGS_URL, BLOGS_URL_USER } from "@/constants/apis";
 
 /* ================= TYPES ================= */
 
@@ -122,16 +123,15 @@ export class BlogService {
     if (!id || !title) return null;
 
     const coverImageRaw = BlogService.asObject(obj.coverImage);
-    const coverImage = coverImageRaw
-      ? {
-          url:
-            typeof coverImageRaw.url === "string" && coverImageRaw.url.trim()
-              ? coverImageRaw.url
-              : undefined,
-          publicId:
-            typeof coverImageRaw.publicId === "string" ? coverImageRaw.publicId : undefined,
-        }
-      : undefined;
+    let coverImage: Blog["coverImage"];
+    if (coverImageRaw) {
+      const url = normalizeCoverImageUrl(coverImageRaw.url);
+      const publicId =
+        typeof coverImageRaw.publicId === "string" ? coverImageRaw.publicId : undefined;
+      if (url || publicId) {
+        coverImage = { ...(url ? { url } : {}), ...(publicId ? { publicId } : {}) };
+      }
+    }
 
     return {
       _id: id,
@@ -205,7 +205,12 @@ export class BlogService {
     const obj = BlogService.asObject(input);
     if (!obj) return null;
 
-    const comment = typeof obj.comment === "string" ? obj.comment : "";
+    const comment =
+      typeof obj.comment === "string"
+        ? obj.comment
+        : typeof obj.message === "string"
+          ? obj.message
+          : "";
     const name = typeof obj.name === "string" ? obj.name : "";
     const email = typeof obj.email === "string" ? obj.email : "";
 
@@ -236,7 +241,54 @@ export class BlogService {
     }
   }
 
-  /* ---------------- GET ALL ---------------- */
+  /**
+   * Shared list parsing for both admin (`/api/admin/blogs` → external `/admin/blogs`)
+   * and public (`/api/blogs` → external `/blogs`).
+   */
+  private static async fetchBlogList(
+    url: string,
+    params?: {
+      tag?: string;
+      isPublished?: boolean;
+      search?: string;
+      page?: number;
+      limit?: number;
+    },
+    options?: { requiresAuth?: boolean; skipAuth?: boolean }
+  ): Promise<BlogListResponse> {
+    const res = await httpClient.request<unknown>({
+      url,
+      method: "GET",
+      params,
+      ...(options?.requiresAuth ? { requiresAuth: true } : {}),
+      ...(options?.skipAuth ? { skipAuth: true } : {}),
+    });
+
+    const unwrapped = BlogService.unwrapData<unknown>(res);
+    const obj = BlogService.asObject(unwrapped);
+
+    const rawItems = obj && Array.isArray(obj.items)
+      ? obj.items
+      : Array.isArray(unwrapped)
+        ? unwrapped
+        : [];
+
+    const items = rawItems
+      .map((item) => BlogService.normalizeBlog(item))
+      .filter((blog): blog is Blog => Boolean(blog));
+
+    const metaRaw = obj ? BlogService.asObject(obj.meta) : null;
+    const meta = {
+      page: typeof metaRaw?.page === "number" ? metaRaw.page : params?.page ?? 1,
+      limit: typeof metaRaw?.limit === "number" ? metaRaw.limit : params?.limit ?? items.length,
+      total: typeof metaRaw?.total === "number" ? metaRaw.total : items.length,
+      pages: typeof metaRaw?.pages === "number" ? metaRaw.pages : 1,
+    };
+
+    return { meta, items };
+  }
+
+  /* ---------------- GET ALL (ADMIN) ---------------- */
   static async getAll(
     params?: {
       tag?: string;
@@ -247,34 +299,9 @@ export class BlogService {
     }
   ): Promise<BlogListResponse> {
     try {
-      const res = await httpClient.request<unknown>({
-        url: BLOGS_URL,
-        method: "GET",
-        params,
+      return await BlogService.fetchBlogList(BLOGS_URL, params, {
+        requiresAuth: true,
       });
-
-      const unwrapped = BlogService.unwrapData<unknown>(res);
-      const obj = BlogService.asObject(unwrapped);
-
-      const rawItems = obj && Array.isArray(obj.items)
-        ? obj.items
-        : Array.isArray(unwrapped)
-          ? unwrapped
-          : [];
-
-      const items = rawItems
-        .map((item) => BlogService.normalizeBlog(item))
-        .filter((blog): blog is Blog => Boolean(blog));
-
-      const metaRaw = obj ? BlogService.asObject(obj.meta) : null;
-      const meta = {
-        page: typeof metaRaw?.page === "number" ? metaRaw.page : params?.page ?? 1,
-        limit: typeof metaRaw?.limit === "number" ? metaRaw.limit : params?.limit ?? items.length,
-        total: typeof metaRaw?.total === "number" ? metaRaw.total : items.length,
-        pages: typeof metaRaw?.pages === "number" ? metaRaw.pages : 1,
-      };
-
-      return { meta, items };
     } catch (error) {
       throw handleApiError(error, "getBlogs");
     }
@@ -306,10 +333,15 @@ export class BlogService {
     page?: number;
     limit?: number;
   }): Promise<BlogListResponse> {
-    return BlogService.getAll({
-      ...params,
-      isPublished: true,
-    });
+    try {
+      return await BlogService.fetchBlogList(
+        BLOGS_URL_USER,
+        { ...params, isPublished: true },
+        { skipAuth: true }
+      );
+    } catch (error) {
+      throw handleApiError(error, "getPublicBlogs");
+    }
   }
 
   /* ---------------- GET PUBLIC BLOG ---------------- */
@@ -319,8 +351,9 @@ export class BlogService {
 
     try {
       const res = await httpClient.request<unknown>({
-        url: `${BLOGS_URL}/${normalizedIdentifier}`,
+        url: `${BLOGS_URL_USER}/${normalizedIdentifier}`,
         method: "GET",
+        skipAuth: true,
       });
       const normalized = BlogService.normalizeBlogDetails(
         BlogService.unwrapData<unknown>(res)
@@ -347,8 +380,9 @@ export class BlogService {
 
     try {
       const detailRes = await httpClient.request<unknown>({
-        url: `${BLOGS_URL}/${matched._id}`,
+        url: `${BLOGS_URL_USER}/${matched._id}`,
         method: "GET",
+        skipAuth: true,
       });
 
       return (
@@ -364,8 +398,9 @@ export class BlogService {
   static async getCommentsByBlogId(blogId: string): Promise<BlogComment[]> {
     try {
       const res = await httpClient.request<unknown>({
-        url: `${BLOGS_URL}/${blogId}/comments`,
+        url: `${BLOGS_URL_USER}/${blogId}/comments`,
         method: "GET",
+        skipAuth: true,
       });
 
       const unwrapped = BlogService.unwrapData<unknown>(res);
@@ -395,10 +430,26 @@ export class BlogService {
     comment: string;
   }): Promise<void> {
     try {
+      const { getSession } = await import("next-auth/react");
+      const session = await getSession();
+      const accessToken = (session as { accessToken?: string } | null)
+        ?.accessToken;
+
+      const headers: Record<string, string> = {};
+      if (typeof accessToken === "string" && accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+
       await httpClient.request({
-        url: BLOG_COMMENTS_URL,
+        url: `${BLOGS_URL_USER}/${payload.blogId}/comments`,
         method: "POST",
-        data: payload,
+        data: {
+          name: payload.name,
+          email: payload.email,
+          comment: payload.comment,
+        },
+        skipAuth: true,
+        ...(Object.keys(headers).length > 0 ? { headers } : {}),
       });
     } catch (error) {
       throw handleApiError(error, "createBlogComment");

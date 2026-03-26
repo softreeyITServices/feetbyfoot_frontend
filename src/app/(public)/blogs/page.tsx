@@ -1,8 +1,9 @@
- "use client";
+"use client";
 
 import Footer from "@/component/common/Footer";
 import Navbar from "@/component/common/navbar";
 import { BlogService, type Blog } from "@/domain/application/services/admin/blog.service";
+import { safeNextImageSrc } from "@/lib/safeImageSrc";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -56,7 +57,7 @@ export default function BlogsPage() {
         id: blog._id,
         title: blog.title,
         href: `/blogs/${blog.slug || blog._id}`,
-        imageSrc: blog.coverImage?.url?.trim() || FALLBACK_IMAGE,
+        imageSrc: safeNextImageSrc(blog.coverImage?.url, FALLBACK_IMAGE),
         imageAlt: blog.title || "Blog cover image",
       })),
     [blogs]

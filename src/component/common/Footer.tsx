@@ -69,9 +69,9 @@ export default function Footer() {
             <h4 className="font-semibold mb-3 text-gray-900 text-lg">Quick Links</h4>
             <ul className="space-y-2 text-gray-700">
               <li>Shop</li>
-              <li>My Cart</li>
-              <li>Checkout</li>
-              <li>My Account</li>
+              <li><Link href="/cart">My Cart</Link></li>
+              <li><Link href="/payments">Checkout</Link></li>
+              <li><Link href="/account">My Account</Link></li>
               <li>My Wishlist</li>
             </ul>
           </div>

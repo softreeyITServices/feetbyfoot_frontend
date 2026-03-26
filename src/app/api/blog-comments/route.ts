@@ -5,19 +5,48 @@ import {
   ExternalApiError,
 } from "@/lib/apiHandler";
 import { httpClient } from "@/lib/httpClient";
-import { ADMIN_BLOG_COMMENTS_URL, BLOG_COMMENTS_URL } from "@/constants/apis";
+import {
+  EX_ADMIN_BLOG_COMMENTS_URL,
+  EX_BLOG_COMMENTS_URL,
+} from "@/constants/apis";
 import { isHttpClientError } from "@/lib/httpClientError";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-/* ---------------- CREATE COMMENT ---------------- */
+/* ---------------- CREATE COMMENT (alias: body includes blogId; prefer POST /api/blogs/[id]/comments) ---------------- */
 export const POST = apiHandler(async (req: NextRequest) => {
   try {
-    const body = await req.json();
+    const body = (await req.json()) as Record<string, unknown>;
+    const blogId = body?.blogId;
+    if (typeof blogId !== "string" || !blogId.trim()) {
+      return NextResponse.json(
+        { message: "Missing or invalid blogId" },
+        { status: 400 }
+      );
+    }
 
+    const name = body?.name;
+    const email = body?.email;
+    const message =
+      typeof body?.comment === "string"
+        ? body.comment
+        : typeof body?.message === "string"
+          ? body.message
+          : "";
+
+    const authorization = req.headers.get("authorization");
     const response = await httpClient.request({
-      url: BLOG_COMMENTS_URL,
+      url: EX_BLOG_COMMENTS_URL,
       method: "POST",
-      data: body,
+      data: {
+        blogId: blogId.trim(),
+        name,
+        email,
+        message,
+      },
+      skipAuth: true,
+      ...(authorization
+        ? { headers: { Authorization: authorization } }
+        : {}),
     });
 
     return createSuccessResponse(response, 201);
@@ -33,7 +62,7 @@ export const POST = apiHandler(async (req: NextRequest) => {
   }
 });
 
-/* ---------------- GET ADMIN COMMENTS ---------------- */
+/* ---------------- GET ADMIN COMMENTS (same proxy as /api/blog-comments/admin; external enforces auth) ---------------- */
 export const GET = apiHandler(async (req: NextRequest) => {
   try {
     const authorization = req.headers.get("authorization");
@@ -49,11 +78,11 @@ export const GET = apiHandler(async (req: NextRequest) => {
     };
 
     const response = await httpClient.request({
-      url: ADMIN_BLOG_COMMENTS_URL,
+      url: EX_ADMIN_BLOG_COMMENTS_URL,
       method: "GET",
       params: query,
       headers: {
-        Authorization: authorization || "",
+        Authorization: authorization ?? "",
       },
     });
 

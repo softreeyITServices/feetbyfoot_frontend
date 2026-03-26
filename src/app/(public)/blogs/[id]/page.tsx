@@ -7,6 +7,7 @@ import {
   type BlogComment,
   type BlogDetails,
 } from "@/domain/application/services/admin/blog.service";
+import { safeNextImageSrc } from "@/lib/safeImageSrc";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import React from "react";
@@ -148,7 +149,7 @@ export default function BlogDetailPage() {
 
           {/* Hero Image */}
           <HeroImage
-            src={blog.coverImage?.url?.trim() || FALLBACK_IMAGE}
+            src={safeNextImageSrc(blog.coverImage?.url, FALLBACK_IMAGE)}
             alt={blog.title || "Blog image"}
           />
 

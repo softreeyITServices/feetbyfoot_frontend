@@ -1,4 +1,4 @@
-// src/app/api/blogs/[id]/route.ts
+// Public blog by id/slug — read-only; admin mutations live under /api/admin/blogs/[id].
 import {
   apiHandler,
   createSuccessResponse,
@@ -7,16 +7,17 @@ import {
 import { httpClient } from "@/lib/httpClient";
 import { isHttpClientError } from "@/lib/httpClientError";
 import { EX_BLOGS_URL } from "@/constants/apis";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { ApiContext } from "@/domain/shared/types/apiResponse.type";
 
-/* ---------------- GET BLOG BY ID ---------------- */
+/* ---------------- GET BLOG BY ID (PUBLIC) ---------------- */
 export const GET = apiHandler(
   async (_req: NextRequest, context: ApiContext<unknown>) => {
     try {
       const response = await httpClient.request({
         url: `${EX_BLOGS_URL}/${context.params?.id}`,
         method: "GET",
+        skipAuth: true,
       });
 
       return createSuccessResponse(response, 200);
@@ -32,79 +33,4 @@ export const GET = apiHandler(
     }
   },
   { allowedMethods: ["GET"] }
-);
-
-/* ---------------- UPDATE BLOG ---------------- */
-export const PATCH = apiHandler(
-  async (req: NextRequest, context: ApiContext<unknown>) => {
-    try {
-      const authorization = req.headers.get("authorization");
-
-      if (!authorization) {
-        return NextResponse.json(
-          { message: "Missing Authorization header" },
-          { status: 401 }
-        );
-      }
-
-      const body = await req.json();
-
-      const response = await httpClient.request({
-        url: `${EX_BLOGS_URL}/${context.params?.id}`,
-        method: "PATCH",
-        data: body,
-        headers: {
-          Authorization: authorization,
-        },
-      });
-
-      return createSuccessResponse(response, 200);
-    } catch (error: unknown) {
-      if (isHttpClientError(error)) {
-        throw new ExternalApiError(
-          error.data?.message ?? "Failed to update blog",
-          error.status,
-          error.data
-        );
-      }
-      throw error;
-    }
-  },
-  { allowedMethods: ["PATCH"] }
-);
-
-/* ---------------- DELETE BLOG ---------------- */
-export const DELETE = apiHandler(
-  async (req: NextRequest, context: ApiContext<unknown>) => {
-    try {
-      const authorization = req.headers.get("authorization");
-
-      if (!authorization) {
-        return NextResponse.json(
-          { message: "Missing Authorization header" },
-          { status: 401 }
-        );
-      }
-
-      const response = await httpClient.request({
-        url: `${EX_BLOGS_URL}/${context.params?.id}`,
-        method: "DELETE",
-        headers: {
-          Authorization: authorization,
-        },
-      });
-
-      return createSuccessResponse(response, 200);
-    } catch (error: unknown) {
-      if (isHttpClientError(error)) {
-        throw new ExternalApiError(
-          error.data?.message ?? "Failed to delete blog",
-          error.status,
-          error.data
-        );
-      }
-      throw error;
-    }
-  },
-  { allowedMethods: ["DELETE"] }
 );
