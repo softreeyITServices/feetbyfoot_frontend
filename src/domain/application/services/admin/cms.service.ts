@@ -59,7 +59,7 @@ export class CmsService {
   static async getByName(name: string): Promise<CmsItem> {
     try {
       const res = await httpClient.request<unknown>({
-        url: `${CMS_URL}/${name}`,
+        url: `${CMS_URL}/by-name/${name}`,
         method: "GET",
       });
 
@@ -75,16 +75,30 @@ export class CmsService {
     }
   }
 
-  /* ---------------- DELETE ---------------- */
-static async delete(id: string): Promise<void> {
-  try {
-    await httpClient.request({
-      url: `${CMS_URL}/${id}`,
-      method: "DELETE",
-      requiresAuth: true,
-    });
-  } catch (error) {
-    throw handleApiError(error, "deleteCms");
+  /* ---------------- UPDATE ---------------- */
+  static async update(id: string, payload: Partial<CmsPayload>): Promise<void> {
+    try {
+      await httpClient.request({
+        url: `${CMS_URL}/${id}`,
+        method: "PATCH",
+        data: payload,
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "updateCms");
+    }
   }
-}
+
+  /* ---------------- DELETE ---------------- */
+  static async delete(id: string): Promise<void> {
+    try {
+      await httpClient.request({
+        url: `${CMS_URL}/${id}`,
+        method: "DELETE",
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "deleteCms");
+    }
+  }
 }

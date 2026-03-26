@@ -1,4 +1,3 @@
-// src/app/api/blogs/[id]/route.ts
 import {
   apiHandler,
   createSuccessResponse,
@@ -6,24 +5,36 @@ import {
 } from "@/lib/apiHandler";
 import { httpClient } from "@/lib/httpClient";
 import { isHttpClientError } from "@/lib/httpClientError";
-import { EX_BLOGS_URL } from "@/constants/apis";
+import { EX_CMS_URL } from "@/constants/apis";
 import { NextRequest, NextResponse } from "next/server";
 import { ApiContext } from "@/domain/shared/types/apiResponse.type";
 
-/* ---------------- GET BLOG BY ID ---------------- */
+/* ---------------- GET CMS BY ID ---------------- */
 export const GET = apiHandler(
-  async (_req: NextRequest, context: ApiContext<unknown>) => {
+  async (req: NextRequest, context: ApiContext<unknown>) => {
     try {
+      const authorization = req.headers.get("authorization");
+
+      if (!authorization) {
+        return NextResponse.json(
+          { message: "Missing Authorization header" },
+          { status: 401 }
+        );
+      }
+
       const response = await httpClient.request({
-        url: `${EX_BLOGS_URL}/${context.params?.id}`,
+        url: `${EX_CMS_URL}/${context.params?.id}`,
         method: "GET",
+        headers: {
+          Authorization: authorization,
+        },
       });
 
       return createSuccessResponse(response, 200);
     } catch (error: unknown) {
       if (isHttpClientError(error)) {
         throw new ExternalApiError(
-          error.data?.message ?? "Failed to fetch blog",
+          error.data?.message ?? "Failed to fetch CMS",
           error.status,
           error.data
         );
@@ -34,7 +45,7 @@ export const GET = apiHandler(
   { allowedMethods: ["GET"] }
 );
 
-/* ---------------- UPDATE BLOG ---------------- */
+/* ---------------- UPDATE CMS ---------------- */
 export const PATCH = apiHandler(
   async (req: NextRequest, context: ApiContext<unknown>) => {
     try {
@@ -50,7 +61,7 @@ export const PATCH = apiHandler(
       const body = await req.json();
 
       const response = await httpClient.request({
-        url: `${EX_BLOGS_URL}/${context.params?.id}`,
+        url: `${EX_CMS_URL}/${context.params?.id}`,
         method: "PATCH",
         data: body,
         headers: {
@@ -62,7 +73,7 @@ export const PATCH = apiHandler(
     } catch (error: unknown) {
       if (isHttpClientError(error)) {
         throw new ExternalApiError(
-          error.data?.message ?? "Failed to update blog",
+          error.data?.message ?? "Failed to update CMS",
           error.status,
           error.data
         );
@@ -73,7 +84,7 @@ export const PATCH = apiHandler(
   { allowedMethods: ["PATCH"] }
 );
 
-/* ---------------- DELETE BLOG ---------------- */
+/* ---------------- DELETE CMS ---------------- */
 export const DELETE = apiHandler(
   async (req: NextRequest, context: ApiContext<unknown>) => {
     try {
@@ -87,7 +98,7 @@ export const DELETE = apiHandler(
       }
 
       const response = await httpClient.request({
-        url: `${EX_BLOGS_URL}/${context.params?.id}`,
+        url: `${EX_CMS_URL}/${context.params?.id}`,
         method: "DELETE",
         headers: {
           Authorization: authorization,
@@ -98,7 +109,7 @@ export const DELETE = apiHandler(
     } catch (error: unknown) {
       if (isHttpClientError(error)) {
         throw new ExternalApiError(
-          error.data?.message ?? "Failed to delete blog",
+          error.data?.message ?? "Failed to delete CMS",
           error.status,
           error.data
         );

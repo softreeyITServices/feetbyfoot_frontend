@@ -21,6 +21,7 @@ export default function CmsCreateEditPage() {
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [cmsId, setCmsId] = useState<string>("");
 
   const [form, setForm] = useState({
     name: "",
@@ -46,6 +47,7 @@ export default function CmsCreateEditPage() {
     try {
       setLoading(true);
       const res = await CmsService.getByName(nameParam);
+      setCmsId(res._id);
       setForm({
         name: res.name,
         title: res.title,
@@ -92,12 +94,18 @@ export default function CmsCreateEditPage() {
     }
     try {
       setSaving(true);
-      await CmsService.create({
+      const payload = {
         name: form.name,
         title: form.title,
         content: form.content,
         faq: form.faq,
-      });
+      };
+
+      if (isEdit && cmsId) {
+        await CmsService.update(cmsId, payload);
+      } else {
+        await CmsService.create(payload);
+      }
       toast.success("Saved successfully");
       router.push("/admin/cms");
     } catch {

@@ -1,5 +1,3 @@
-// src/app/api/v1/cms/[name]/route.ts
-
 import {
   apiHandler,
   createSuccessResponse,

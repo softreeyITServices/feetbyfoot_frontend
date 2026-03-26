@@ -170,7 +170,7 @@ export default async function CategoryPage({
       <section className="max-w-7xl mx-auto px-4 mt-10">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
           {/* Filters */}
-          <aside className="hidden lg:block">
+          <aside className="hidden lg:block sticky top-32 h-fit">
             <FiltersSidebar />
           </aside>
 

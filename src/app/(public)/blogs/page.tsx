@@ -1,7 +1,11 @@
+ "use client";
+
 import Footer from "@/component/common/Footer";
 import Navbar from "@/component/common/navbar";
+import { BlogService, type Blog } from "@/domain/application/services/admin/blog.service";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 type BlogCard = {
   id: string;
@@ -11,40 +15,53 @@ type BlogCard = {
   imageAlt: string;
 };
 
-const BLOGS: BlogCard[] = [
-  {
-    id: "mens-socks-daily-use",
-    title: "How to Choose the Right Men's Socks for Daily Use? | Feetbyfoot",
-    href: "/blogs/mens-socks-daily-use",
-    imageSrc: "/assets/images/mens_socks_daily_use.png",
-    imageAlt: "How to choose the right men's socks for daily use",
-  },
-  {
-    id: "winter-socks-women",
-    title:
-      "Winter Socks for Women — The Ultimate Feetbyfoot Guide to Warm, Cozy Feet",
-    href: "/blogs/winter-socks-women",
-    imageSrc: "/assets/images/socks_for_women.png",
-    imageAlt: "Winter socks for women guide",
-  },
-  {
-    id: "guide-womens-socks-winter",
-    title:
-      "Your Complete Guide to Choosing the Best Socks for Women This Winter",
-    href: "/blogs/guide-womens-socks-winter",
-    imageSrc: "/assets/images/ultimate_guide.png",
-    imageAlt: "Ultimate guide to socks for women",
-  },
-  {
-    id: "best-socks-for-men",
-    title: "Elevate Your Style with Feetbyfoot: The Ultimate Guide to the Best Socks for Men",
-    href: "/blogs/best-socks-for-men",
-    imageSrc: "/assets/images/the_best_socks.png",
-    imageAlt: "The best socks for men",
-  },
-];
+const FALLBACK_IMAGE = "/assets/images/Frame 44.png";
 
 export default function BlogsPage() {
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadBlogs = async () => {
+      try {
+        setLoading(true);
+        setHasError(false);
+        const res = await BlogService.getPublicList({ page: 1, limit: 30 });
+        if (!isMounted) return;
+        setBlogs(res.items ?? []);
+      } catch {
+        if (!isMounted) return;
+        setHasError(true);
+        setBlogs([]);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadBlogs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const cards = useMemo<BlogCard[]>(
+    () =>
+      blogs.map((blog) => ({
+        id: blog._id,
+        title: blog.title,
+        href: `/blogs/${blog.slug || blog._id}`,
+        imageSrc: blog.coverImage?.url?.trim() || FALLBACK_IMAGE,
+        imageAlt: blog.title || "Blog cover image",
+      })),
+    [blogs]
+  );
+
   return (
     <>
       <Navbar />
@@ -65,31 +82,43 @@ export default function BlogsPage() {
           {/* Grid (3 on first row, then next starts like screenshot) */}
           <section className="mt-8">
             <div className="grid grid-cols-1 gap-x-10 gap-y-8 sm:grid-cols-3">
-              {BLOGS.map((b) => (
-                <BlogTile key={b.id} blog={b} />
-              ))}
+              {loading ? (
+                <p className="text-[12px] text-neutral-500">Loading blogs...</p>
+              ) : hasError ? (
+                <p className="text-[12px] text-neutral-500">
+                  Unable to load blogs right now.
+                </p>
+              ) : cards.length === 0 ? (
+                <p className="text-[12px] text-neutral-500">No blogs available.</p>
+              ) : (
+                cards.map((b) => <BlogTile key={b.id} blog={b} />)
+              )}
             </div>
           </section>
         </div>
       </main>
       <Footer />
     </>
-
   );
 }
 
 function BlogTile({ blog }: { blog: BlogCard }) {
+  const [imageSrc, setImageSrc] = useState(
+    blog.imageSrc?.trim() ? blog.imageSrc : FALLBACK_IMAGE
+  );
+
   return (
     <article className="w-full">
       <Link href={blog.href} className="block">
         <div className="overflow-hidden bg-white">
           <Image
-            src={blog.imageSrc}
+            src={imageSrc}
             alt={blog.imageAlt}
             width={900}
             height={600}
             className="h-auto w-full object-cover"
-            priority={blog.id === "mens-socks-daily-use"}
+            priority={false}
+            onError={() => setImageSrc(FALLBACK_IMAGE)}
           />
         </div>
 
@@ -106,8 +135,6 @@ function BlogTile({ blog }: { blog: BlogCard }) {
         >
           {blog.title}
         </h2>
-
-
       </Link>
     </article>
   );
