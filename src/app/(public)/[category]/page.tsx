@@ -28,11 +28,17 @@ const CATEGORY_CONFIG = {
     label: "Kids",
     title: "Kids Socks",
     description: "Shop premium kids socks at Feet By Foot",
+    gender: "KIDS",
   },
   gifts: {
     label: "Gifts",
     title: "Gift Socks",
     description: "Perfect sock gifts for every occasion",
+  },
+  brand: {
+    label: "Brand",
+    title: "Brand",
+    description: "Explore Feet By Foot products by brand",
   },
 } as const;
 
@@ -115,7 +121,14 @@ export default async function CategoryPage({
   }
 
   const { products, total, totalPages } = await productService.getPublicProducts({
-    gender: toArray(resolvedSearchParams.gender),
+    // If the URL doesn't explicitly include gender, default to the route's config.gender.
+    // This prevents /mens, /womens, /kids from all showing the same unfiltered product list.
+    gender:
+      resolvedSearchParams.gender !== undefined
+        ? toArray(resolvedSearchParams.gender)
+        : config.gender
+          ? [config.gender]
+          : [],
     page,
     limit: perpage,
     sortBy,
@@ -136,6 +149,12 @@ export default async function CategoryPage({
       if (k === "page") continue;
       if (Array.isArray(v)) v.forEach((val) => qs.append(k, val));
       else if (v !== undefined) qs.set(k, v);
+    }
+
+    // Preserve the default gender filter in pagination links,
+    // so clicking "page 2" doesn't drop the /mens:/womens:/kids filter.
+    if (resolvedSearchParams.gender === undefined && config.gender) {
+      qs.set("gender", config.gender);
     }
     qs.set("page", String(pageNum));
     return `?${qs.toString()}`;

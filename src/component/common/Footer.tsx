@@ -72,7 +72,7 @@ export default function Footer() {
               <li><Link href="/cart">My Cart</Link></li>
               <li><Link href="/payments">Checkout</Link></li>
               <li><Link href="/account">My Account</Link></li>
-              <li>My Wishlist</li>
+              <li><Link href="/wishlists">My Wishlist</Link></li>
             </ul>
           </div>
         </div>
