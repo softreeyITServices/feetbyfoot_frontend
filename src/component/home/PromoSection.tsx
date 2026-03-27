@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
+import Link from "next/link";
 
 // import "swiper/css";
 // import "swiper/css/pagination";
@@ -64,12 +65,12 @@ export default function PromoCarousel() {
                 Women’s Winter <br /> Socks
               </h2>
 
-              <a
-                href="#"
+              <Link
+                href="/shop?isNewArrival=true"
                 className="inline-flex items-center gap-2 text-sm font-semibold underline underline-offset-4 w-fit"
               >
                 Shop Now ↗
-              </a>
+              </Link>
 
               <span className="collection-outline text-[55px] md:text-[65px]">
                 COLLECTION
@@ -102,12 +103,12 @@ export default function PromoCarousel() {
                   <span className="font-normal">70% Off</span>
                 </h2>
 
-                <a
-                  href="#"
+                <Link
+                  href="/shop"
                   className="inline-flex items-center gap-2 text-sm font-semibold underline underline-offset-4 w-fit"
                 >
                   Shop Now ↗
-                </a>
+                </Link>
               </div>
               {/* Vertical SOCKS text */}
 

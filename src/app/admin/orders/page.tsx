@@ -18,6 +18,7 @@ import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
 type OrderRow = Order & {
   id: string;
   actions?: unknown;
+  paymentUpdate?: boolean;
 };
 
 type PendingStatusChange = {
@@ -151,6 +152,7 @@ function OrderPage() {
       const transformed: OrderRow[] = (res.data || []).map((order) => ({
         ...order,
         id: order._id,
+        paymentUpdate: order.paymentStatus === PaymentStatus.PAID,
       }));
 
       setOrders(transformed);

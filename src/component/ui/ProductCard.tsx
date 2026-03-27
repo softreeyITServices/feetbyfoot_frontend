@@ -123,13 +123,13 @@ function ProductCard({
         </button>
       }
 
-      <div className={`${home ? "" : "w-66.25 h-66.25"}`}>
+      <div className="w-full aspect-4/5 overflow-hidden rounded-lg bg-gray-50">
         <Image
           src={imageSrc}
           alt={altText}
           width={400}
           height={450}
-          className="w-full object-cover"
+          className="h-full w-full object-cover"
         />
       </div>
 

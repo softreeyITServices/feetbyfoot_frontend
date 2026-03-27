@@ -19,15 +19,24 @@ export default async function ShopPage({
 }: {
   searchParams: {
     page?: string;
+    search?: string;
     gender?: string | string[];
     category?: string | string[];
+    categoryIds?: string | string[];
     subcategory?: string | string[];
+    categoryTypeIds?: string | string[];
     size?: string | string[];
+    sizes?: string | string[];
     color?: string | string[];
+    colors?: string | string[];
     length?: string | string[];
     discount?: string;
+    minDiscount?: string;
     packType?: string | string[];
     sortBy?: string;
+    isBestseller?: string;
+    isNewArrival?: string;
+    isGiftPack?: string;
   };
 }) {
   const resolvedSearchParams = await searchParams;
@@ -39,6 +48,33 @@ export default async function ShopPage({
     if (!val) return [];
     return Array.isArray(val) ? val : [val];
   };
+  const mergeUnique = (first: string[], second: string[]) =>
+    Array.from(new Set([...first, ...second]));
+
+  const genderFilters = toArray(resolvedSearchParams.gender);
+  const categoryFilters = mergeUnique(
+    toArray(resolvedSearchParams.category),
+    toArray(resolvedSearchParams.categoryIds)
+  );
+  const subcategoryFilters = mergeUnique(
+    toArray(resolvedSearchParams.subcategory),
+    toArray(resolvedSearchParams.categoryTypeIds)
+  );
+  const sizeFilters = mergeUnique(
+    toArray(resolvedSearchParams.size),
+    toArray(resolvedSearchParams.sizes)
+  );
+  const colorFilters = mergeUnique(
+    toArray(resolvedSearchParams.color),
+    toArray(resolvedSearchParams.colors)
+  );
+
+  const isBestseller = resolvedSearchParams.isBestseller === "true";
+  const isNewArrival = resolvedSearchParams.isNewArrival === "true";
+  const isGiftPack = resolvedSearchParams.isGiftPack === "true";
+  const packTypeFilters = toArray(resolvedSearchParams.packType).map((v) => v === "true");
+  const effectivePackTypes =
+    packTypeFilters.length > 0 ? packTypeFilters : isGiftPack ? [true] : [];
 
   const session = await getServerSession(authOptions);
   const token = session?.accessToken ?? null;
@@ -62,18 +98,23 @@ export default async function ShopPage({
   }
 
   const { products, total, totalPages } = await productService.getPublicProducts({
-    gender: toArray(resolvedSearchParams.gender),
+    gender: genderFilters,
     page,
     limit: perpage,
+    search: resolvedSearchParams.search?.trim(),
     sortBy,
-    categories: toArray(resolvedSearchParams.category),
-    subcategories: toArray(resolvedSearchParams.subcategory),
-    sizes: toArray(resolvedSearchParams.size),
-    colors: toArray(resolvedSearchParams.color),
-    minDiscount: resolvedSearchParams.discount
+    categories: categoryFilters,
+    subcategories: subcategoryFilters,
+    sizes: sizeFilters,
+    colors: colorFilters,
+    minDiscount: resolvedSearchParams.minDiscount
+      ? Number(resolvedSearchParams.minDiscount)
+      : resolvedSearchParams.discount
       ? Number(resolvedSearchParams.discount)
       : undefined,
-    packTypes: toArray(resolvedSearchParams.packType).map((v) => v === "true"),
+    packTypes: effectivePackTypes,
+    isBestseller,
+    isNewArrival,
   });
 
   const buildPageHref = (pageNum: number) => {

@@ -7,7 +7,7 @@ export const categories: {
   left: {
     label: "New Arrivals",
     image: "/assets/images/grid_img_1.png",
-    href: "/new-arrivals",
+    href: "/shop?isNewArrival=true",
   },
   right: [
     {

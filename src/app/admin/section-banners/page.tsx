@@ -33,6 +33,21 @@ type FormType = {
   isActive: boolean;
 };
 
+const defaultForm: FormType = {
+  sectionKey: "HOME",
+  image: "",
+  isActive: true,
+};
+
+const SECTION_OPTIONS = [
+  "HOME",
+  "MENS",
+  "WOMENS",
+  "KIDS",
+  "GIFTS",
+  "OUTLET",
+];
+
 /* ================= ACTION DROPDOWN ================= */
 
 function ActionDropdown({
@@ -130,11 +145,7 @@ export default function SectionBannerPage() {
   const [uploading, setUploading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const [form, setForm] = useState<FormType>({
-    sectionKey: "HOME",
-    image: "",
-    isActive: true,
-  });
+  const [form, setForm] = useState<FormType>(defaultForm);
 
   /* ================= FETCH ================= */
 
@@ -144,7 +155,7 @@ export default function SectionBannerPage() {
 
       const res = await SectionBannerService.getAdminAll();
 
-      setData(res.map(x => ({ ...x, id: x._id })));
+      setData((Array.isArray(res) ? res : []).map((x) => ({ ...x, id: x._id })));
 
     } catch (e: any) {
 
@@ -174,6 +185,7 @@ export default function SectionBannerPage() {
       toast.success("Created");
 
       setPending(null);
+      setForm(defaultForm);
 
       fetchData();
 
@@ -197,6 +209,7 @@ export default function SectionBannerPage() {
       toast.success("Updated");
 
       setPending(null);
+      setForm(defaultForm);
 
       fetchData();
 
@@ -265,6 +278,7 @@ export default function SectionBannerPage() {
       render: row => (
         <img
           src={row.image}
+          alt={`${row.sectionKey} banner`}
           className="w-24 h-14 object-cover rounded-lg border"
         />
       ),
@@ -299,7 +313,11 @@ export default function SectionBannerPage() {
           row={row}
           onDelete={() => setPending({ type: "DELETE", row })}
           onEdit={() => {
-            setForm(row);
+            setForm({
+              sectionKey: row.sectionKey,
+              image: row.image,
+              isActive: row.isActive,
+            });
             setPending({ type: "EDIT", row });
           }}
           onToggle={() => handleToggle(row)}
@@ -327,7 +345,10 @@ export default function SectionBannerPage() {
 
         <button
           className="px-4 py-2 bg-black text-white text-xs rounded-lg"
-          onClick={() => setPending({ type: "CREATE" })}
+          onClick={() => {
+            setForm(defaultForm);
+            setPending({ type: "CREATE" });
+          }}
         >
           + Add Banner
         </button>
@@ -348,7 +369,10 @@ export default function SectionBannerPage() {
           pending?.type === "CREATE" ||
           pending?.type === "EDIT"
         }
-        onClose={() => setPending(null)}
+        onClose={() => {
+          setPending(null);
+          setForm(defaultForm);
+        }}
         title={
           pending?.type === "EDIT"
             ? "Edit Banner"
@@ -359,7 +383,10 @@ export default function SectionBannerPage() {
           <div className="flex gap-2">
 
             <button
-              onClick={() => setPending(null)}
+              onClick={() => {
+                setPending(null);
+                setForm(defaultForm);
+              }}
               className="px-4 py-2 text-xs border rounded-lg"
             >
               Cancel
@@ -371,9 +398,10 @@ export default function SectionBannerPage() {
                   ? handleUpdate
                   : handleCreate
               }
-              className="px-4 py-2 text-xs bg-black text-white rounded-lg"
+              disabled={uploading || !form.image}
+              className="px-4 py-2 text-xs bg-black text-white rounded-lg disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Save
+              {uploading ? "Uploading..." : "Save"}
             </button>
 
           </div>
@@ -381,76 +409,108 @@ export default function SectionBannerPage() {
         }
       >
 
-        <div className="space-y-4">
+        <form
+          className="space-y-5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (pending?.type === "EDIT") {
+              void handleUpdate();
+              return;
+            }
+            void handleCreate();
+          }}
+        >
 
           {/* SECTION */}
 
-          <select
-            className="w-full border px-3 py-2 rounded-lg"
-            value={form.sectionKey}
-            onChange={e =>
-              setForm({
-                ...form,
-                sectionKey: e.target.value,
-              })
-            }
-          >
-            <option value="HOME">HOME</option>
-            <option value="MEN">MEN</option>
-            <option value="WOMEN">WOMEN</option>
-            <option value="KIDS">KIDS</option>
-          </select>
+          <div className="space-y-1.5">
+            <label htmlFor="sectionKey" className="text-xs font-semibold tracking-wide text-neutral-600">
+              Section
+            </label>
+            <select
+              id="sectionKey"
+              className="w-full border border-neutral-200 bg-white px-3 py-2.5 rounded-lg text-sm outline-none focus:border-neutral-400"
+              value={form.sectionKey}
+              onChange={e =>
+                setForm({
+                  ...form,
+                  sectionKey: e.target.value,
+                })
+              }
+            >
+              {SECTION_OPTIONS.map((section) => (
+                <option key={section} value={section}>
+                  {section}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* IMAGE */}
 
-          <div>
-
-            <label className="text-xs">
-              Upload Image
+          <div className="space-y-2">
+            <label htmlFor="bannerImage" className="text-xs font-semibold tracking-wide text-neutral-600">
+              Banner image
             </label>
+            <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-4">
+              <input
+                id="bannerImage"
+                type="file"
+                accept="image/*"
+                className="block w-full text-xs text-neutral-600 file:mr-3 file:rounded-lg file:border-0 file:bg-black file:px-3 file:py-2 file:text-xs file:font-medium file:text-white hover:file:bg-neutral-800"
+                onChange={async e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
 
-            <input
-              type="file"
-              onChange={async e => {
-
-                const file = e.target.files?.[0];
-
-                if (!file) return;
-
-                try {
-
-                  setUploading(true);
-
-                  const url =
-                    await uploadService.uploadFile(file);
-
-                  setForm({
-                    ...form,
-                    image: url,
-                  });
-
-                } finally {
-
-                  setUploading(false);
-
-                }
-              }}
-            />
+                  try {
+                    setUploading(true);
+                    const url = await uploadService.uploadFile(file);
+                    setForm({
+                      ...form,
+                      image: url,
+                    });
+                    toast.success("Image uploaded");
+                  } catch (error: any) {
+                    toast.error(error?.message || "Image upload failed");
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+              />
+              <p className="mt-2 text-[11px] text-neutral-500">
+                Upload JPG, PNG, or WEBP. The URL is saved automatically after upload.
+              </p>
+            </div>
 
             {form.image && (
-              <img
-                src={form.image}
-                className="w-full h-40 object-cover rounded-lg mt-2"
-              />
+              <div className="rounded-xl border border-neutral-200 p-3 bg-white space-y-2">
+                <p className="text-[11px] font-medium text-neutral-500">
+                  Preview
+                </p>
+                <img
+                  src={form.image}
+                  alt="Section banner preview"
+                  className="w-full h-44 object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  className="text-xs text-red-600 hover:text-red-700"
+                  onClick={() => setForm({ ...form, image: "" })}
+                >
+                  Remove image
+                </button>
+              </div>
             )}
-
           </div>
 
           {/* ACTIVE */}
 
-          <div className="flex justify-between bg-neutral-50 p-3 rounded-lg">
+          <div className="flex items-center justify-between bg-neutral-50 p-3 rounded-lg border border-neutral-200">
 
-            <span>Status</span>
+            <div>
+              <p className="text-sm font-medium">Status</p>
+              <p className="text-xs text-neutral-500">Enable this banner for the selected section.</p>
+            </div>
 
             <input
               type="checkbox"
@@ -465,7 +525,7 @@ export default function SectionBannerPage() {
 
           </div>
 
-        </div>
+        </form>
 
       </AdminModal>
 

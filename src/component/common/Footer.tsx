@@ -58,9 +58,8 @@ export default function Footer() {
               <li><Link href="/refundreturnpolicy">Returns & Refunds</Link></li>
               <li><Link href="/contactus">Contact Us</Link></li>
               <li><Link href="/changesorders">Changes to Orders</Link></li>
-              <li>FAQs</li>
+              <li><Link href="/faqs">FAQs</Link></li>
               <li><Link href="/sizeguide">Size Guide</Link></li>
-              <li>Track Your Order</li>
             </ul>
           </div>
 

@@ -1,11 +1,12 @@
 import { UpRightArrowIcon } from "@/icons/UpRightArrowIcon";
 import { CategoryItem } from "@/domain/shared/types/category";
 import Image from "next/image";
+import Link from "next/link";
 
 
 export default function CategoryCard({ label, image, href }: CategoryItem) {
   return (
-    <a href={href} className="flex-1 relative group overflow-hidden rounded-2xl">
+    <Link href={href} className="flex-1 relative group overflow-hidden rounded-2xl">
       <Image
         src={image}
         alt={label}
@@ -21,6 +22,6 @@ export default function CategoryCard({ label, image, href }: CategoryItem) {
 
       {/* Subtle bottom gradient for modern UI */}
       <div className="absolute inset-0 bg-linear-to-t from-black/10 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"></div>
-    </a>
+    </Link>
   );
 }

@@ -10,6 +10,12 @@ import type {
 import { SECTION_BANNERS_URL } from "@/constants/apis";
 
 export class SectionBannerService {
+  private static unwrapData<T>(input: unknown): T {
+    if (input && typeof input === "object" && "data" in (input as Record<string, unknown>)) {
+      return SectionBannerService.unwrapData<T>((input as { data: unknown }).data);
+    }
+    return input as T;
+  }
 
   /* ---------------- CREATE ---------------- */
   static async create(payload: SectionBannerPayload): Promise<void> {
@@ -34,7 +40,8 @@ export class SectionBannerService {
         requiresAuth: true,
       });
 
-      return res.data;
+      const data = SectionBannerService.unwrapData<unknown>(res);
+      return Array.isArray(data) ? (data as SectionBanner[]) : [];
     } catch (error) {
       throw handleApiError(error, "getAdminSectionBanners");
     }
@@ -50,7 +57,8 @@ export class SectionBannerService {
         method: "GET",
       });
 
-      return res.data;
+      const data = SectionBannerService.unwrapData<unknown>(res);
+      return Array.isArray(data) ? (data as SectionBanner[]) : [];
     } catch (error) {
       throw handleApiError(error, "getPublicSectionBanners");
     }
@@ -68,7 +76,8 @@ export class SectionBannerService {
         method: "GET",
       });
 
-      return res.data;
+      const data = SectionBannerService.unwrapData<unknown>(res);
+      return Array.isArray(data) ? (data as SectionBanner[]) : [];
     } catch (error) {
       throw handleApiError(error, "getSectionBannerByKey");
     }

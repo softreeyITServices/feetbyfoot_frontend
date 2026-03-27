@@ -94,18 +94,18 @@ export default function FiltersSidebar() {
         </button>
       </div>
 
-      {/* <FilterSection title="Gender">
+      <FilterSection title="Gender">
         {filters.genders.map((gender) => (
           <label key={gender} className="flex items-center gap-2">
             <input
               type="checkbox"
-              checked={isSelected('gender', gender)}
-              onChange={() => toggleQuery('gender', gender)}
+              checked={isSelected("gender", gender)}
+              onChange={() => toggleQuery("gender", gender)}
             />
             {gender}
           </label>
         ))}
-      </FilterSection> */}
+      </FilterSection>
 
       <FilterSection title="Product Category">
         {filters.categories.map((category) => (
