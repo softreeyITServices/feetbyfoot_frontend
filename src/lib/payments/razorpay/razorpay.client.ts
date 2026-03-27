@@ -1,6 +1,8 @@
 import { ORDERS_URL, PAYMENT_VERIFY } from "@/constants/apis";
 import { httpClient } from "@/lib/httpClient";
 
+export type CheckoutPaymentMethod = "ONLINE" | "COD";
+
 interface StartCheckoutParams {
   addressId?: string;
   discount?: number;
@@ -12,6 +14,44 @@ interface RazorpayOrder {
   totalAmount: number;
   currency: string;
 }
+
+interface CodOrderResponse {
+  orderId?: string;
+  data?: {
+    orderId?: string;
+    _id?: string;
+  };
+}
+
+const extractOrderId = (response: CodOrderResponse): string | null => {
+  if (response?.orderId) return response.orderId;
+  if (response?.data?.orderId) return response.data.orderId;
+  if (response?.data?._id) return response.data._id;
+  return null;
+};
+
+export const placeCodOrder = async ({
+  addressId,
+  discount,
+}: {
+  addressId?: string;
+  discount?: number;
+}) => {
+  const orderPayload = {
+    address_id: addressId,
+    paymentMethod: "COD" as CheckoutPaymentMethod,
+    discountAmount: discount,
+  };
+
+  const response = await httpClient.request<CodOrderResponse>({
+    url: ORDERS_URL,
+    method: "POST",
+    requiresAuth: true,
+    data: orderPayload,
+  });
+
+  return extractOrderId(response);
+};
 
 export const startRazorpayCheckout = async ({
   addressId,
@@ -25,8 +65,8 @@ export const startRazorpayCheckout = async ({
     const orderPayload = {
       address_id: addressId,
       paymentMethod: "ONLINE",
-      discountAmount: discount
-    }
+      discountAmount: discount,
+    };
 
     // ✅ Step 1: Create Razorpay Order (NOT app order)
     const data = await httpClient.request<RazorpayOrder>({
@@ -57,7 +97,7 @@ export const startRazorpayCheckout = async ({
               address_id: addressId,
             },
           });
-          onSuccess?.()
+          onSuccess?.();
           const orderId = verifyResponse.orderId;
           window.location.href = `/order/success?orderId=${orderId}`;
 

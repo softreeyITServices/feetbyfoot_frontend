@@ -29,7 +29,13 @@ export async function POST(req: Request) {
       address_id
     }
 
-    await httpClient.request({
+    const verifyResponse = await httpClient.request<{
+      orderId?: string;
+      data?: {
+        orderId?: string;
+        _id?: string;
+      };
+    }>({
       url: EX_PAYMENT_VERIFY,
       method: "POST",
       data: JSON.stringify(payloadVerify),
@@ -38,8 +44,14 @@ export async function POST(req: Request) {
       },
     });
 
+    const orderId =
+      verifyResponse?.orderId ??
+      verifyResponse?.data?.orderId ??
+      verifyResponse?.data?._id;
+
     return NextResponse.json({
       message: "Payment verified successfully",
+      orderId,
     });
   } catch (error) {
     console.error("Verify error:", JSON.stringify(error));

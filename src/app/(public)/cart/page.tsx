@@ -11,7 +11,11 @@ import {
   updateQuantity,
 } from "@/store/slices/cart.slice";
 import { useSession } from "next-auth/react";
-import { startRazorpayCheckout } from "@/lib/payments/razorpay/razorpay.client";
+import {
+  CheckoutPaymentMethod,
+  placeCodOrder,
+  startRazorpayCheckout,
+} from "@/lib/payments/razorpay/razorpay.client";
 import { cartService } from "@/domain/application/services/cart.service";
 import { useRouter } from "next/navigation";
 import { AddressService } from "@/domain/application/services/address.service";
@@ -49,6 +53,8 @@ export default function CartBody() {
   const [couponId, setCouponId] = useState<string | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] =
+    useState<CheckoutPaymentMethod>("ONLINE");
 
   /* ---------------- PRICE HELPER ---------------- */
   const getPrice = (price: string | number): number => {
@@ -218,6 +224,23 @@ export default function CartBody() {
 
       if (!sameAsShipping && !selectedBillingId) {
         alert("Please select a billing address");
+        return;
+      }
+
+      if (paymentMethod === "COD") {
+        const orderId = await placeCodOrder({
+          addressId: selectedShippingId,
+          discount,
+        });
+
+        dispatch(clearCart());
+
+        if (orderId) {
+          router.push(`/order/success?orderId=${orderId}`);
+          return;
+        }
+
+        router.push("/order/success");
         return;
       }
 
@@ -511,6 +534,8 @@ export default function CartBody() {
             subtotal={subtotal}
             discount={discount}
             handlePayment={handlePayment}
+            paymentMethod={paymentMethod}
+            onPaymentMethodChange={setPaymentMethod}
           />
         </div>
       </main>

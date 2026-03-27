@@ -57,6 +57,7 @@ export const BLOGS_URL_USER = API_BASE_URL + "/blogs";
 
 export const ADMIN_BLOG_COMMENTS_URL = API_BASE_URL + "/blogs-comments";
 export const CMS_URL = API_BASE_URL + "/cms";
+export const SECTION_BANNERS_URL = API_BASE_URL + "/section-banners";
 
 // External APIs (for server-side use)
 
@@ -105,3 +106,4 @@ export const EX_ADMIN_CUSTOMERS_URL = EXTERNAL_API_BASE_URL + "/admin/customers"
 export const EX_ADMIN_DASHBOARD_OVERVIEW_URL =
   EXTERNAL_API_BASE_URL + "/admin/dashboard/overview";
 export const EX_CMS_URL = EXTERNAL_API_BASE_URL + "/cms";
+export const EX_SECTION_BANNERS_URL = EXTERNAL_API_BASE_URL + "/section-banners";

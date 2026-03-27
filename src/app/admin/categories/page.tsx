@@ -51,13 +51,13 @@ export default function AdminCategoriesPage() {
         countMap[s.categoryId] = (countMap[s.categoryId] || 0) + 1;
       });
 
-      const mapped: CategoryRow[] = categories.map((item) => ({
+      const mapped: CategoryRow[] = categories && categories.length > 0 ? categories.map((item) => ({
         id: item._id,
         name: item.name,
         isActive: Boolean(item.isActive),
         createdAt: item.createdAt,
         subcategoryCount: countMap[item._id] || 0,
-      }));
+      })) : [];
 
       setRows(mapped);
     } catch (error: unknown) {

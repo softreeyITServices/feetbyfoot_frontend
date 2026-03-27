@@ -4,6 +4,7 @@ import { Menu, LogOut } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { ConfirmModal } from "../modal/ConfirmModal";
 import { signOut, useSession } from "next-auth/react";
+import Image from "next/image";
 
 interface AdminHeaderProps {
   collapsed: boolean;
@@ -71,10 +72,8 @@ export default function AdminHeader({ onToggle }: AdminHeaderProps) {
 
           <div className="flex items-center gap-2">
 
-            <div className="w-6 h-6 rounded bg-amber-500 flex items-center justify-center">
-              <span className="text-white text-[10px] font-bold">
-                F
-              </span>
+            <div className="w-6 h-6 rounded flex items-center justify-center">
+              <Image src={`/assets/images/logo.png`} width={40} height={40} alt=""/>
             </div>
 
             <span className="text-sm font-semibold text-neutral-900">

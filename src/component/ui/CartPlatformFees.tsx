@@ -3,17 +3,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { PlatformFee } from "@/domain/shared/types/platform-fee.type";
 import { platformFeesService } from "@/domain/application/services/platformFees.service";
+import { CheckoutPaymentMethod } from "@/lib/payments/razorpay/razorpay.client";
 
 type Props = {
   subtotal: number;
   discount?: number;
   handlePayment: () => void;
+  paymentMethod: CheckoutPaymentMethod;
+  onPaymentMethodChange: (method: CheckoutPaymentMethod) => void;
 };
 
 export default function CartPlatformFees({
   subtotal,
   discount = 0,
   handlePayment,
+  paymentMethod,
+  onPaymentMethodChange,
 }: Props) {
   const [fees, setFees] = useState<PlatformFee[]>([]);
   const [loading, setLoading] = useState(false);
@@ -115,11 +120,35 @@ export default function CartPlatformFees({
         </p>
       </div>
 
+      <div className="border-t mt-6 pt-4">
+        <p className="text-sm font-medium mb-3">Payment Method</p>
+        <label className="flex items-center gap-2 text-sm mb-2 cursor-pointer">
+          <input
+            type="radio"
+            name="payment-method"
+            value="ONLINE"
+            checked={paymentMethod === "ONLINE"}
+            onChange={() => onPaymentMethodChange("ONLINE")}
+          />
+          Pay now (Online)
+        </label>
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="radio"
+            name="payment-method"
+            value="COD"
+            checked={paymentMethod === "COD"}
+            onChange={() => onPaymentMethodChange("COD")}
+          />
+          Cash on Delivery (COD)
+        </label>
+      </div>
+
       <button
         className={`w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded mt-6 font-medium ${finalTotal > 0 ? 'pointer-events-auto': 'pointer-events-none'}`}
         onClick={() => handlePayment()}
       >
-        Place Order
+        {paymentMethod === "COD" ? "Place COD Order" : "Pay Now"}
       </button>
     </div>
   );

@@ -200,6 +200,11 @@ function OrderPage() {
       render: (row) => <>₹{row.totalAmount}</>,
     },
     {
+      key: "paymentMethod",
+      label: "Payment Method",
+      render: (row) => <>{row.paymentMethod}</>,
+    },
+    {
       key: "paymentStatus",
       label: "Payment",
       render: (row) => (

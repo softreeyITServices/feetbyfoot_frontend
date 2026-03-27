@@ -55,8 +55,11 @@ export const ADMIN_NAV: AdminNavItem[] = [
   },
   {
     label: "Banners",
-    href: "/admin/banners",
     icon: ImageIcon,
+    children: [
+      { label: "All Banners", href: "/admin/banners" },
+      { label: "Section Banners", href: "/admin/section-banners" },
+    ],
   },
   {
     label: "Platforms Fees",
