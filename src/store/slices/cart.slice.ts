@@ -40,18 +40,26 @@ export const addToCartAsync = createAsyncThunk(
       price: string | number;
     }
   ) => {
+    const normalizedSize = payload.size?.trim();
+    if (!normalizedSize) {
+      throw new Error("Size selection is required before adding to cart.");
+    }
+
     const session = await getSession();
     const isAuth = !!session?.accessToken;
 
     if (isAuth) {
       await cartService.addItem({
         productId: payload.id,
-        size: payload.size,
+        size: normalizedSize,
         quantity: payload.quantity,
       });
     }
 
-    return payload;
+    return {
+      ...payload,
+      size: normalizedSize,
+    };
   }
 );
 
@@ -75,16 +83,24 @@ const cartSlice = createSlice({
     },
 
     addToCart(state, action: PayloadAction<CartItem>) {
+      const normalizedSize = action.payload.size?.trim();
+      if (!normalizedSize) {
+        return;
+      }
+
       const existing = state.items.find(
         item =>
           item.id === action.payload.id &&
-          item.size === action.payload.size
+          item.size === normalizedSize
       );
 
       if (existing) {
         existing.quantity += action.payload.quantity;
       } else {
-        state.items.push(action.payload);
+        state.items.push({
+          ...action.payload,
+          size: normalizedSize,
+        });
       }
 
       if (!state.isAuthenticatedMode) {

@@ -10,6 +10,8 @@ import {
   Check,
   AlertCircle,
   ChevronDown,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -32,7 +34,8 @@ export type FieldType =
   | "date"
   | "color"
   | "file"
-  | "image";
+  | "image"
+  | "sizes";
 
 export interface FieldOption {
   label: string;
@@ -563,6 +566,130 @@ function ColorFieldInput({
   );
 }
 
+type SizeRow = {
+  size: string;
+  quantity: number;
+  isActive: boolean;
+};
+
+function SizesFieldInput({
+  value,
+  onChange,
+  error,
+}: {
+  value: unknown;
+  onChange: (v: SizeRow[]) => void;
+  error?: string;
+}) {
+  const rows: SizeRow[] = Array.isArray(value)
+    ? value
+      .filter((item): item is Partial<SizeRow> => !!item && typeof item === "object")
+      .map((item) => ({
+        size: String(item.size ?? "").toUpperCase(),
+        quantity: Number(item.quantity ?? 0),
+        isActive: Boolean(item.isActive ?? true),
+      }))
+    : [];
+
+  const nextRows = rows.length > 0 ? rows : [{ size: "", quantity: 0, isActive: true }];
+
+  const updateRow = (index: number, patch: Partial<SizeRow>) => {
+    const updated = nextRows.map((row, idx) =>
+      idx === index ? { ...row, ...patch } : row
+    );
+    onChange(updated);
+  };
+
+  const addRow = () => {
+    onChange([...nextRows, { size: "", quantity: 0, isActive: true }]);
+  };
+
+  const removeRow = (index: number) => {
+    const updated = nextRows.filter((_, idx) => idx !== index);
+    onChange(updated.length > 0 ? updated : [{ size: "", quantity: 0, isActive: true }]);
+  };
+
+  return (
+    <div
+      className={`rounded-xl border p-3 space-y-3 ${error ? "border-red-300 bg-red-50/20" : "border-neutral-200 bg-neutral-50/70"
+        }`}
+    >
+      {nextRows.map((row, index) => (
+        <div
+          key={`size-row-${index}`}
+          className="grid grid-cols-12 gap-2 items-end"
+        >
+          <div className="col-span-12 sm:col-span-4">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+              Size
+            </label>
+            <input
+              type="text"
+              value={row.size}
+              onChange={(e) =>
+                updateRow(index, { size: e.target.value.toUpperCase() })
+              }
+              placeholder="M / L / FREE"
+              className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400"
+            />
+          </div>
+
+          <div className="col-span-12 sm:col-span-3">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+              Quantity
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={Number.isFinite(row.quantity) ? row.quantity : 0}
+              onChange={(e) =>
+                updateRow(index, { quantity: Math.max(0, Number(e.target.value || 0)) })
+              }
+              placeholder="0"
+              className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400"
+            />
+          </div>
+
+          <div className="col-span-8 sm:col-span-3">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+              Status
+            </label>
+            <label className="h-9 px-3 rounded-lg border border-neutral-200 bg-white flex items-center gap-2 text-xs text-neutral-700">
+              <input
+                type="checkbox"
+                checked={row.isActive}
+                onChange={(e) => updateRow(index, { isActive: e.target.checked })}
+                className="h-4 w-4 rounded border-neutral-300 accent-amber-500"
+              />
+              Active
+            </label>
+          </div>
+
+          <div className="col-span-4 sm:col-span-2">
+            <button
+              type="button"
+              onClick={() => removeRow(index)}
+              className="h-9 w-full rounded-lg border border-neutral-200 bg-white hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-neutral-600 transition-all flex items-center justify-center"
+              aria-label={`Remove size row ${index + 1}`}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={addRow}
+        className="h-8 px-3 rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-600 hover:border-amber-300 hover:text-amber-700 transition-all inline-flex items-center gap-1.5"
+      >
+        <Plus size={13} />
+        Add size
+      </button>
+    </div>
+  );
+}
+
 /* =========================================================
    FIELD INPUT
 ========================================================= */
@@ -705,6 +832,17 @@ function FieldInput({
       <ColorFieldInput
         field={field}
         value={(value as string) ?? ""}
+        onChange={(next) => onChange(next)}
+        error={error}
+      />
+    );
+  }
+
+  /* ================= SIZES ================= */
+  if (field.type === "sizes") {
+    return (
+      <SizesFieldInput
+        value={value}
         onChange={(next) => onChange(next)}
         error={error}
       />

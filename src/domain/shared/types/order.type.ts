@@ -163,6 +163,7 @@ export interface Order {
 
 export interface UpdateOrderStatusRequest {
   status: OrderStatus;
+  paymentStatus?: PaymentStatus;
   items: {
     orderId: string;
     itemId: string;

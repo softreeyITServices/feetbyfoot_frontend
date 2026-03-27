@@ -395,12 +395,10 @@ export default function SectionBannerPage() {
               })
             }
           >
-            <option value="MENS">MENS</option>
-            <option value="WOMENS">WOMENS</option>
+            <option value="HOME">HOME</option>
+            <option value="MEN">MEN</option>
+            <option value="WOMEN">WOMEN</option>
             <option value="KIDS">KIDS</option>
-            <option value="GIFTS">GIFTS</option>
-            <option value="OUTLET">OUTLET</option>
-
           </select>
 
           {/* IMAGE */}

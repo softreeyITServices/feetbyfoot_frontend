@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import { authService } from "@/domain/application/services/auth.service";
@@ -10,6 +10,7 @@ import { validate, ValidType } from "@/lib/emailPhoneValidator";
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [identifier, setIdentifier] = useState("");
   const [otp, setOtp] = useState("");
@@ -19,6 +20,12 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [authType, setAuthType] = useState<ValidType | null>(null);
+
+  const getSafeRedirectPath = (value: string | null): string => {
+    if (!value) return "/account";
+    if (!value.startsWith("/") || value.startsWith("//")) return "/account";
+    return value;
+  };
 
   // Countdown timer
   useEffect(() => {
@@ -137,9 +144,10 @@ export default function LoginForm() {
 
       if (result?.ok) {
         setSuccess("Login successful! Redirecting...");
+        const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
 
         setTimeout(() => {
-          router.push("/account");
+          router.push(redirectPath);
           router.refresh();
         }, 1000);
       }

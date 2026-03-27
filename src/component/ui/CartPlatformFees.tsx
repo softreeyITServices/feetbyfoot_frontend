@@ -11,6 +11,7 @@ type Props = {
   handlePayment: () => void;
   paymentMethod: CheckoutPaymentMethod;
   onPaymentMethodChange: (method: CheckoutPaymentMethod) => void;
+  isCheckoutInProgress?: boolean;
 };
 
 export default function CartPlatformFees({
@@ -19,9 +20,11 @@ export default function CartPlatformFees({
   handlePayment,
   paymentMethod,
   onPaymentMethodChange,
+  isCheckoutInProgress = false,
 }: Props) {
   const [fees, setFees] = useState<PlatformFee[]>([]);
   const [loading, setLoading] = useState(false);
+  const hasCartItems = subtotal > 0;
 
   /* ---------------- FETCH ACTIVE PLATFORM FEES ---------------- */
   useEffect(() => {
@@ -40,6 +43,8 @@ export default function CartPlatformFees({
 
   /* ---------------- CALCULATE FEES ---------------- */
   const calculatedFees = useMemo(() => {
+    if (!hasCartItems) return [];
+
     return fees.map((fee) => {
       let amount = 0;
 
@@ -56,7 +61,7 @@ export default function CartPlatformFees({
 
       return { ...fee, calculatedAmount: amount };
     });
-  }, [fees, subtotal]);
+  }, [fees, subtotal, hasCartItems]);
 
   const totalPlatformFees = useMemo(() => {
     return calculatedFees.reduce(
@@ -80,29 +85,31 @@ export default function CartPlatformFees({
       </div>
 
       {/* Platform Fees */}
-      <div className="border-t pt-4 border-gray-300">
-        <p className="text-sm font-medium mb-3">
-          Platform Charges
-        </p>
-
-        {loading && (
-          <p className="text-xs text-gray-500">
-            Loading fees...
+      {hasCartItems && (
+        <div className="border-t pt-4 border-gray-300">
+          <p className="text-sm font-medium mb-3">
+            Platform Charges
           </p>
-        )}
 
-        {calculatedFees.map((fee) => (
-          <div
-            key={fee._id}
-            className="flex justify-between text-sm mb-2"
-          >
-            <span>{fee.name}</span>
-            <span>
-              ₹{fee.calculatedAmount.toFixed(2)}
-            </span>
-          </div>
-        ))}
-      </div>
+          {loading && (
+            <p className="text-xs text-gray-500">
+              Loading fees...
+            </p>
+          )}
+
+          {calculatedFees.map((fee) => (
+            <div
+              key={fee._id}
+              className="flex justify-between text-sm mb-2"
+            >
+              <span>{fee.name}</span>
+              <span>
+                ₹{fee.calculatedAmount.toFixed(2)}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Discount */}
       {discount > 0 && (
@@ -128,6 +135,7 @@ export default function CartPlatformFees({
             name="payment-method"
             value="ONLINE"
             checked={paymentMethod === "ONLINE"}
+            disabled={isCheckoutInProgress}
             onChange={() => onPaymentMethodChange("ONLINE")}
           />
           Pay now (Online)
@@ -138,6 +146,7 @@ export default function CartPlatformFees({
             name="payment-method"
             value="COD"
             checked={paymentMethod === "COD"}
+            disabled={isCheckoutInProgress}
             onChange={() => onPaymentMethodChange("COD")}
           />
           Cash on Delivery (COD)
@@ -145,10 +154,15 @@ export default function CartPlatformFees({
       </div>
 
       <button
-        className={`w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded mt-6 font-medium ${finalTotal > 0 ? 'pointer-events-auto': 'pointer-events-none'}`}
+        className={`w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded mt-6 font-medium disabled:opacity-60 disabled:cursor-not-allowed ${finalTotal > 0 ? "pointer-events-auto" : "pointer-events-none"}`}
         onClick={() => handlePayment()}
+        disabled={isCheckoutInProgress || finalTotal <= 0}
       >
-        {paymentMethod === "COD" ? "Place COD Order" : "Pay Now"}
+        {isCheckoutInProgress
+          ? "Processing..."
+          : paymentMethod === "COD"
+            ? "Place COD Order"
+            : "Pay Now"}
       </button>
     </div>
   );

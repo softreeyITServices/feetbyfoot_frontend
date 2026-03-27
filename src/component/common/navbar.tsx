@@ -17,7 +17,7 @@ const menuItems = [
   { label: "WOMENS", href: "/womens" },
   { label: "KIDS", href: "/kids" },
   { label: "GIFTS", href: "/gifts" },
-  { label: "OUTLET", href: "/outlet" },
+  { label: "OUTLET", href: "/shop" },
   // { label: "BRAND", href: "/brand" },
   { label: "CONTACT", href: "/contactus" },
 ];

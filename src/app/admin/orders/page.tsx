@@ -25,6 +25,11 @@ type PendingStatusChange = {
   status: OrderStatus;
 };
 
+type PendingPaymentChange = {
+  order: OrderRow;
+  paymentStatus: PaymentStatus;
+};
+
 /* ================= STATUS STYLE ================= */
 
 const STATUS_STYLE: Record<string, string> = {
@@ -122,6 +127,8 @@ function OrderPage() {
   const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null);
   const [pendingStatusChange, setPendingStatusChange] =
     useState<PendingStatusChange | null>(null);
+  const [pendingPaymentChange, setPendingPaymentChange] =
+    useState<PendingPaymentChange | null>(null);
 
   const [filters, setFilters] = useState({
     paymentStatus: "",
@@ -180,9 +187,38 @@ function OrderPage() {
     }
   };
 
+  const handlePaymentStatusChange = async (
+    order: OrderRow,
+    paymentStatus: PaymentStatus
+  ) => {
+    try {
+      const payload: UpdateOrderStatusRequest = {
+        status: order.orderStatus,
+        paymentStatus,
+        items: order.items.map((item) => ({
+          orderId: order._id,
+          itemId: item._id,
+        })),
+      };
+
+      await ordersService.updateOrderStatus(payload);
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const requestStatusChange = (order: OrderRow, status: OrderStatus) => {
     if (order.orderStatus === status) return;
     setPendingStatusChange({ order, status });
+  };
+
+  const requestPaymentChange = (
+    order: OrderRow,
+    paymentStatus: PaymentStatus
+  ) => {
+    if (order.paymentStatus === paymentStatus) return;
+    setPendingPaymentChange({ order, paymentStatus });
   };
 
   /* ================= COLUMNS ================= */
@@ -213,6 +249,25 @@ function OrderPage() {
         >
           {row.paymentStatus}
         </span>
+      ),
+    },
+    {
+      key: "paymentUpdate",
+      label: "Payment Done",
+      render: (row) => (
+        <label className="inline-flex items-center gap-2 text-xs cursor-pointer">
+          <input
+            type="checkbox"
+            checked={row.paymentStatus === PaymentStatus.PAID}
+            disabled={row.paymentStatus === PaymentStatus.PAID}
+            onChange={(e) =>
+              requestPaymentChange(row, PaymentStatus.PAID)
+            }
+          />
+          <span>
+            {row.paymentStatus === PaymentStatus.PAID ? "Paid" : "Unpaid"}
+          </span>
+        </label>
       ),
     },
     {
@@ -381,6 +436,28 @@ function OrderPage() {
             : ""
         }
         confirmText="Update Status"
+        cancelText="Cancel"
+        variant="default"
+        loadingText="Updating..."
+      />
+
+      <ConfirmModal
+        isOpen={!!pendingPaymentChange}
+        onClose={() => setPendingPaymentChange(null)}
+        onConfirm={async () => {
+          if (!pendingPaymentChange) return;
+          await handlePaymentStatusChange(
+            pendingPaymentChange.order,
+            pendingPaymentChange.paymentStatus
+          );
+        }}
+        title="Confirm payment update"
+        description={
+          pendingPaymentChange
+            ? `Change payment status for order ${pendingPaymentChange.order.orderNumber} to ${pendingPaymentChange.paymentStatus}?`
+            : ""
+        }
+        confirmText="Update Payment"
         cancelText="Cancel"
         variant="default"
         loadingText="Updating..."

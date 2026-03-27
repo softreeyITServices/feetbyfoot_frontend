@@ -55,6 +55,7 @@ export default function CartBody() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] =
     useState<CheckoutPaymentMethod>("ONLINE");
+  const [isCheckoutInProgress, setIsCheckoutInProgress] = useState(false);
 
   /* ---------------- PRICE HELPER ---------------- */
   const getPrice = (price: string | number): number => {
@@ -179,6 +180,11 @@ export default function CartBody() {
     quantity: number,
     itemId?: string
   ) => {
+    if (quantity <= 1) {
+      await handleRemove(id, size, itemId);
+      return;
+    }
+
     await handleDecreaseCart({
       id,
       size,
@@ -210,6 +216,7 @@ export default function CartBody() {
   /* ---------------- PAYMENT ---------------- */
   const handlePayment = async () => {
     try {
+      if (isCheckoutInProgress) return;
       if (status === "loading") return;
 
       if (!session) {
@@ -228,6 +235,7 @@ export default function CartBody() {
       }
 
       if (paymentMethod === "COD") {
+        setIsCheckoutInProgress(true);
         const orderId = await placeCodOrder({
           addressId: selectedShippingId,
           discount,
@@ -241,20 +249,25 @@ export default function CartBody() {
         }
 
         router.push("/order/success");
+        setIsCheckoutInProgress(false);
         return;
       }
 
+      setIsCheckoutInProgress(true);
       await startRazorpayCheckout({
         addressId: selectedShippingId,
         discount,
         onSuccess: async () => {
           dispatch(clearCart());
+          setIsCheckoutInProgress(false);
         },
         onFailure: () => {
-          alert("Payment Failed");
+          setIsCheckoutInProgress(false);
+          alert("Payment cancelled or failed");
         },
       });
     } catch (error) {
+      setIsCheckoutInProgress(false);
       console.error("Checkout error:", error);
     }
   };
@@ -277,99 +290,101 @@ export default function CartBody() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* LEFT SIDE */}
           <div className="lg:col-span-2">
-            <div className="p-0">
-              <div className="grid grid-cols-[2fr_1fr_1fr_1fr] text-xs text-gray-500 uppercase border-b pb-3 border-gray-300">
-                <div>Product</div>
-                <div className="text-center">Price</div>
-                <div className="text-center">Quantity</div>
-                <div className="text-right">Subtotal</div>
+            {items.length === 0 ? (
+              <div className="p-6 border border-gray-200 rounded-md bg-gray-50">
+                <p className="text-gray-500">Your cart is empty</p>
               </div>
-
-              {items.length === 0 && (
-                <p className="py-6 text-gray-500">Your cart is empty</p>
-              )}
-
-              {items.map(item => (
-                <div
-                  key={`${item.id}-${item.size}`}
-                  className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center py-6 border-b border-gray-300"
-                >
-                  {/* Product */}
-                  <div className="flex gap-4">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      width={80}
-                      height={80}
-                      className="rounded"
-                    />
-                    <div>
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-gray-500">
-                        Size: {item.size}
-                      </p>
-                      <button
-                        onClick={() =>
-                          handleRemove(item.id, item.size, item.itemId)
-                        }
-                        className="text-red-500 text-sm mt-1"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Price */}
-                  <div className="text-center">
-                    ₹{getPrice(item.price).toFixed(2)}
-                  </div>
-
-                  {/* Quantity */}
-                  <div className="flex justify-center">
-                    <div className="flex border border-gray-300 rounded">
-                      <button
-                        className="px-3 py-1"
-                        onClick={() =>
-                          handleDecrease(
-                            item.id,
-                            item.size,
-                            item.quantity,
-                            item.itemId
-                          )
-                        }
-                      >
-                        −
-                      </button>
-                      <span className="px-4 py-1 border-x border-gray-300">
-                        {item.quantity}
-                      </span>
-                      <button
-                        className="px-3 py-1"
-                        onClick={() =>
-                          handleIncrease(
-                            item.id,
-                            item.size,
-                            item.quantity,
-                            item.itemId
-                          )
-                        }
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Subtotal */}
-                  <div className="text-right font-medium">
-                    ₹
-                    {(
-                      getPrice(item.price) *
-                      item.quantity
-                    ).toFixed(2)}
-                  </div>
+            ) : (
+              <div className="p-0">
+                <div className="grid grid-cols-[2fr_1fr_1fr_1fr] text-xs text-gray-500 uppercase border-b pb-3 border-gray-300">
+                  <div>Product</div>
+                  <div className="text-center">Price</div>
+                  <div className="text-center">Quantity</div>
+                  <div className="text-right">Subtotal</div>
                 </div>
-              ))}
-            </div>
+
+                {items.map(item => (
+                  <div
+                    key={`${item.id}-${item.size}`}
+                    className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center py-6 border-b border-gray-300"
+                  >
+                    {/* Product */}
+                    <div className="flex gap-4">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        width={80}
+                        height={80}
+                        className="rounded"
+                      />
+                      <div>
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-sm text-gray-500">
+                          Size: {item.size}
+                        </p>
+                        <button
+                          onClick={() =>
+                            handleRemove(item.id, item.size, item.itemId)
+                          }
+                          className="text-red-500 text-sm mt-1"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Price */}
+                    <div className="text-center">
+                      ₹{getPrice(item.price).toFixed(2)}
+                    </div>
+
+                    {/* Quantity */}
+                    <div className="flex justify-center">
+                      <div className="flex border border-gray-300 rounded">
+                        <button
+                          className="px-3 py-1"
+                          onClick={() =>
+                            handleDecrease(
+                              item.id,
+                              item.size,
+                              item.quantity,
+                              item.itemId
+                            )
+                          }
+                        >
+                          −
+                        </button>
+                        <span className="px-4 py-1 border-x border-gray-300">
+                          {item.quantity}
+                        </span>
+                        <button
+                          className="px-3 py-1"
+                          onClick={() =>
+                            handleIncrease(
+                              item.id,
+                              item.size,
+                              item.quantity,
+                              item.itemId
+                            )
+                          }
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Subtotal */}
+                    <div className="text-right font-medium">
+                      ₹
+                      {(
+                        getPrice(item.price) *
+                        item.quantity
+                      ).toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             {session && items.length > 0 && (
               <div className="mt-6 p-4">
                 <h3 className="text-sm font-medium mb-3">
@@ -530,13 +545,16 @@ export default function CartBody() {
           </div>
 
           {/* RIGHT SIDE */}
-          <CartPlatformFees
-            subtotal={subtotal}
-            discount={discount}
-            handlePayment={handlePayment}
-            paymentMethod={paymentMethod}
-            onPaymentMethodChange={setPaymentMethod}
-          />
+          {items.length > 0 && (
+            <CartPlatformFees
+              subtotal={subtotal}
+              discount={discount}
+              handlePayment={handlePayment}
+              paymentMethod={paymentMethod}
+              onPaymentMethodChange={setPaymentMethod}
+              isCheckoutInProgress={isCheckoutInProgress}
+            />
+          )}
         </div>
       </main>
 

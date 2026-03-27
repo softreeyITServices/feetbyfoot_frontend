@@ -17,6 +17,29 @@ import type {
 } from "@/domain/shared/types/admin/category";
 
 const ALLOWED_PRODUCT_LENGTHS = ["ANKLE", "CALF", "NO_SHOW", "CREW"] as const;
+
+type ProductSizeInput = {
+  size: string;
+  quantity: number;
+  isActive: boolean;
+};
+
+const normalizeProductSizes = (value: unknown): ProductSizeInput[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter(
+      (item): item is Partial<ProductSizeInput> =>
+        !!item && typeof item === "object"
+    )
+    .map((item) => ({
+      size: String(item.size ?? "").trim().toUpperCase(),
+      quantity: Math.max(0, Number(item.quantity ?? 0)),
+      isActive: Boolean(item.isActive ?? true),
+    }))
+    .filter((item) => item.size.length > 0 && item.quantity > 0);
+};
+
 const toSlug = (value: string) =>
   value
     .toLowerCase()
@@ -151,7 +174,14 @@ function ProductPage() {
 
     { key: "price", label: "Price", type: "number", required: true, cols: 1 },
     { key: "salePrice", label: "Sale Price", type: "number", cols: 1 },
-    { key: "stock", label: "Stock", type: "number", required: true, cols: 1 },
+    {
+      key: "currency",
+      label: "Currency",
+      type: "select",
+      required: true,
+      options: [{ label: "INR", value: "INR" }],
+      cols: 1,
+    },
 
     {
       key: "length",
@@ -215,6 +245,21 @@ function ProductPage() {
     },
 
     {
+      key: "sizes",
+      label: "Sizes",
+      type: "sizes",
+      required: true,
+      cols: 2,
+      validate: (value) => {
+        const normalizedSizes = normalizeProductSizes(value);
+        if (normalizedSizes.length === 0) {
+          return "Add at least one valid size with quantity greater than 0";
+        }
+        return null;
+      },
+    },
+
+    {
       key: "imageUrls",
       label: "Images",
       type: "image",
@@ -262,7 +307,6 @@ function ProductPage() {
       ? values.imageUrls
       : [];
 
-    const stockValue = Math.max(0, Number(values.stock || 0));
     const selectedCategory = String(values.categoryId ?? "");
     const validSubcategoryIds = new Set(
       subcategories
@@ -283,9 +327,15 @@ function ProductPage() {
       )
       : [];
     const length = String(values.length ?? "").trim();
+    const sizes = normalizeProductSizes(values.sizes);
 
     if (!ALLOWED_PRODUCT_LENGTHS.includes(length as (typeof ALLOWED_PRODUCT_LENGTHS)[number])) {
       toast.error("Length must be ANKLE, CALF, NO_SHOW, or CREW");
+      return;
+    }
+
+    if (sizes.length === 0) {
+      toast.error("Add at least one valid size with quantity greater than 0");
       return;
     }
 
@@ -331,17 +381,9 @@ function ProductPage() {
       colors,
       price: Number(values.price),
       salePrice: Number(values.salePrice || 0),
+      currency: String(values.currency ?? "INR"),
       imageUrls: normalizedImageUrls,
-      sizes:
-        stockValue > 0
-          ? [
-            {
-              size: "FREE",
-              quantity: stockValue,
-              isActive: true,
-            },
-          ]
-          : [],
+      sizes,
     };
 
     try {
@@ -518,10 +560,12 @@ function ProductPage() {
           : editing.categoryTypeId
             ? [editing.categoryTypeId]
             : [],
-      stock: editing.sizes?.reduce(
-        (total, sizeEntry) => total + (sizeEntry.quantity || 0),
-        0
-      ),
+      sizes:
+        editing.sizes?.map((sizeEntry) => ({
+          size: sizeEntry.size ?? "",
+          quantity: sizeEntry.quantity ?? 0,
+          isActive: sizeEntry.isActive ?? true,
+        })) ?? [{ size: "", quantity: 0, isActive: true }],
     }
     : {
       name: "",
@@ -530,10 +574,11 @@ function ProductPage() {
       colors: [],
       price: "",
       salePrice: "",
-      stock: "",
+      currency: "INR",
       categoryId: "",
       categoryTypeIds: [],
       length: "",
+      sizes: [{ size: "", quantity: 0, isActive: true }],
       gender: [],
       tags: [],
       imageUrls: [],

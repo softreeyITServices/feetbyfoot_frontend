@@ -13,6 +13,12 @@ interface RazorpayOrder {
   razorpayOrderId: string;
   totalAmount: number;
   currency: string;
+  orderId?: string;
+  _id?: string;
+  data?: {
+    orderId?: string;
+    _id?: string;
+  };
 }
 
 interface CodOrderResponse {
@@ -28,6 +34,25 @@ const extractOrderId = (response: CodOrderResponse): string | null => {
   if (response?.data?.orderId) return response.data.orderId;
   if (response?.data?._id) return response.data._id;
   return null;
+};
+
+const extractCreatedOrderId = (response: RazorpayOrder): string | null => {
+  if (response?.orderId) return response.orderId;
+  if (response?._id) return response._id;
+  if (response?.data?.orderId) return response.data.orderId;
+  if (response?.data?._id) return response.data._id;
+  return null;
+};
+
+const cancelPendingOrder = async (orderId: string) => {
+  await httpClient.request({
+    url: `/api/orders/${orderId}/cancel`,
+    method: "PATCH",
+    requiresAuth: true,
+    data: {
+      reason: "Payment cancelled by user",
+    },
+  });
 };
 
 export const placeCodOrder = async ({
@@ -75,6 +100,7 @@ export const startRazorpayCheckout = async ({
       requiresAuth: true,
       data: orderPayload,
     });
+    const createdOrderId = extractCreatedOrderId(data);
 
     const options: RazorpayOptions = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
@@ -109,8 +135,16 @@ export const startRazorpayCheckout = async ({
       },
 
       modal: {
-        ondismiss: () => {
-          onFailure?.();
+        ondismiss: async () => {
+          try {
+            if (createdOrderId) {
+              await cancelPendingOrder(createdOrderId);
+            }
+          } catch (cancelError) {
+            console.error("Failed to cancel pending online order", cancelError);
+          } finally {
+            onFailure?.();
+          }
         },
       },
     };
