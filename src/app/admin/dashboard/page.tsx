@@ -132,7 +132,7 @@ const CustomTooltip = ({
   active,
   payload,
   label,
-}: TooltipContentProps<number, string>) => {
+}: TooltipContentProps<any, any>) => {
   if (!active || !payload || payload.length === 0) {
     return null;
   }
