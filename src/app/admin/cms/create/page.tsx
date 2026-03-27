@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Editor } from "@tinymce/tinymce-react";
 import { CmsService } from "@/domain/application/services/admin/cms.service";
@@ -13,7 +13,7 @@ type FAQ = {
   description: string;
 };
 
-export default function CmsCreateEditPage() {
+function CmsCreateEditPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -383,6 +383,22 @@ export default function CmsCreateEditPage() {
         </aside>
       </div>
     </div>
+  );
+}
+
+export default function CmsCreateEditPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={styles.loadingWrapper}>
+          <div style={styles.loadingDot} />
+          <span style={styles.loadingText}>Loading page…</span>
+          <style>{keyframes}</style>
+        </div>
+      }
+    >
+      <CmsCreateEditPageContent />
+    </Suspense>
   );
 }
 

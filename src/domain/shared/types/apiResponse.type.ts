@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodSchema } from "zod";
 
-export type ApiHandler<T = unknown> = (
+export type ApiHandler<
+  T = unknown,
+  P = Record<string, string>
+> = (
   req: NextRequest,
-  context: ApiContext<T>
+  context: ApiContext<T, P>
 ) => Promise<NextResponse> | NextResponse;
 
 export interface ApiHandlerOptions<T> {

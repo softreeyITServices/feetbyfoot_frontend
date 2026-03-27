@@ -89,6 +89,7 @@ export default async function CategoryPage({
   const page = Number(resolvedSearchParams.page ?? 1);
   const perpage = 20;
   const sortBy = resolvedSearchParams.sortBy ?? "default";
+  const defaultGender = "gender" in config ? config.gender : undefined;
 
   // Helper: always return string[] from a searchParam value
   const toArray = (val: string | string[] | undefined): string[] => {
@@ -126,8 +127,8 @@ export default async function CategoryPage({
     gender:
       resolvedSearchParams.gender !== undefined
         ? toArray(resolvedSearchParams.gender)
-        : config.gender
-          ? [config.gender]
+        : defaultGender
+          ? [defaultGender]
           : [],
     page,
     limit: perpage,
@@ -153,8 +154,8 @@ export default async function CategoryPage({
 
     // Preserve the default gender filter in pagination links,
     // so clicking "page 2" doesn't drop the /mens:/womens:/kids filter.
-    if (resolvedSearchParams.gender === undefined && config.gender) {
-      qs.set("gender", config.gender);
+    if (resolvedSearchParams.gender === undefined && defaultGender) {
+      qs.set("gender", defaultGender);
     }
     qs.set("page", String(pageNum));
     return `?${qs.toString()}`;

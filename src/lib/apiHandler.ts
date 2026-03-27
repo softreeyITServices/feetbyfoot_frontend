@@ -12,8 +12,11 @@ import { MAX_BODY_SIZE, REQUEST_TIMEOUT } from "@/constants/basic";
    API HANDLER
 ====================================================== */
 
-export function apiHandler<T = unknown>(
-  handler: ApiHandler<T>,
+export function apiHandler<
+  T = unknown,
+  P = Record<string, string>
+>(
+  handler: ApiHandler<T, P>,
   options?: ApiHandlerOptions<T>
 ) {
   return async (req: NextRequest, context: { params: Promise<Record<string, string>> }): Promise<NextResponse> => {
@@ -38,7 +41,12 @@ export function apiHandler<T = unknown>(
           ? await context.params
           : context?.params;
 
-      const handlerPromise = executeHandler(req, handler, options, resolvedParams);
+      const handlerPromise = executeHandler(
+        req,
+        handler,
+        options,
+        resolvedParams as P
+      );
 
       const response = await Promise.race([
         handlerPromise,
@@ -70,11 +78,14 @@ export function apiHandler<T = unknown>(
    EXECUTE HANDLER
 ====================================================== */
 
-async function executeHandler<T>(
+async function executeHandler<
+  T,
+  P = Record<string, string>
+>(
   req: NextRequest,
-  handler: ApiHandler<T>,
+  handler: ApiHandler<T, P>,
   options: ApiHandlerOptions<T> | undefined,
-  params?: Record<string, string>
+  params?: P
 ): Promise<NextResponse> {
   let validatedData: T | null = null;
 

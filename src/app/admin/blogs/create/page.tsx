@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { BlogService } from "@/domain/application/services/admin/blog.service";
 import { uploadService } from "@/domain/application/services/upload.service";
@@ -68,7 +68,7 @@ const textareaCls =
 
 /* ================= PAGE ================= */
 
-export default function CreateBlogPage() {
+function CreateBlogPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
@@ -616,5 +616,19 @@ export default function CreateBlogPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CreateBlogPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-[#f5f6f8] min-h-screen font-sans flex items-center justify-center text-sm text-gray-500">
+          Loading blog editor...
+        </div>
+      }
+    >
+      <CreateBlogPageContent />
+    </Suspense>
   );
 }

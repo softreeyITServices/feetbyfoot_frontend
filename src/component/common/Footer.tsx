@@ -98,19 +98,19 @@ export default function Footer() {
 
             {/* ICONS */}
             <div className="flex items-center gap-4 mt-4 text-xl text-gray-700 flex-row">
-              <Link href="https://www.facebook.com" target="_blank" >
+              <Link href="https://www.facebook.com/feetbyfoot" target="_blank" >
                 <FacebookIcon width={24} height={24} />
               </Link>
-              <Link href="https://www.youtube.com" target="_blank" >
+              <Link href="https://www.youtube.com/@FeetbyFoot" target="_blank" >
                 <YoutubeIcon width={24} height={24} />
               </Link>
-              <Link href="https://www.twitter.com" target="_blank">
+              <Link href="https://x.com/FeetByfoot" target="_blank">
                 <TwitterIcon width={24} height={24} />
               </Link>
-              <Link href="https://www.linkedin.com" target="_blank">
+              <Link href="https://www.linkedin.com/company/feet-by-foot" target="_blank">
                 <LinkedinIcon width={24} height={24} />
               </Link>
-              <Link href="https://www.instagram.com" target="_blank">
+              <Link href="https://www.instagram.com/feetbyfoot.socks/" target="_blank">
                 <InstagramIcon width={24} height={24} />
               </Link>
 
