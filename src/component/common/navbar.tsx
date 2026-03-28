@@ -192,7 +192,7 @@ export default function Navbar() {
               className="md:hidden"
               onClick={() => router.push("/shop")}
             >
-              <SearchIcon width={20} height={20} fill="#000" />
+              {/* <SearchIcon width={20} height={20} fill="#000" /> */}
             </button>
           </div>
         </div>

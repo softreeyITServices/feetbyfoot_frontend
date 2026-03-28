@@ -1000,7 +1000,7 @@ export default function AdminMenuCreationPage() {
             <button
               type="button"
               onClick={handleAddCustomItem}
-              className="w-full md:w-auto px-4 py-2 text-xs bg-black text-white rounded-lg"
+              className="w-[80] md:w-auto px-4 py-2 text-xs bg-black text-white rounded-lg"
             >
               Add Custom Item
             </button>
