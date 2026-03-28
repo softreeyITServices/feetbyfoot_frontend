@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { DownCaretIcon } from '@/icons/DownCaretIcon'
 import { UpCaretIcon } from '@/icons/UpCaretIcon'
 import { productService } from '@/domain/application/services/product.service'
@@ -40,9 +40,16 @@ function FilterSection({ title, children }: FilterSectionProps) {
   )
 }
 
+function isShopRoute(pathname: string | null): boolean {
+  if (!pathname) return false
+  return pathname === '/shop' || pathname.startsWith('/shop/')
+}
+
 export default function FiltersSidebar() {
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
+  const showGenderFilter = isShopRoute(pathname)
 
   const [filters, setFilters] = useState<ProductFilterMeta | null>(null)
 
@@ -94,18 +101,20 @@ export default function FiltersSidebar() {
         </button>
       </div>
 
-      <FilterSection title="Gender">
-        {filters.genders.map((gender) => (
-          <label key={gender} className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={isSelected("gender", gender)}
-              onChange={() => toggleQuery("gender", gender)}
-            />
-            {gender}
-          </label>
-        ))}
-      </FilterSection>
+      {showGenderFilter && (
+        <FilterSection title="Gender">
+          {filters.genders.map((gender) => (
+            <label key={gender} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isSelected("gender", gender)}
+                onChange={() => toggleQuery("gender", gender)}
+              />
+              {gender}
+            </label>
+          ))}
+        </FilterSection>
+      )}
 
       <FilterSection title="Product Category">
         {filters.categories.map((category) => (

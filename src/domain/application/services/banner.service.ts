@@ -1,6 +1,6 @@
 import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
-import { EX_BANNERS_URL } from "@/constants/apis";
+import { BANNERS_URL } from "@/constants/apis";
 import {
   Banner,
   BannerListResponse,
@@ -13,7 +13,7 @@ class BannerService {
   async createBanner(payload: CreateBannerPayload): Promise<Banner> {
     try {
       const response = await httpClient.request<BannerResponse>({
-        url: `${EX_BANNERS_URL}`,
+        url: `${BANNERS_URL}`,
         method: "POST",
         data: payload,
       });
@@ -31,7 +31,7 @@ class BannerService {
   async getAllBanners(): Promise<Banner[]> {
     try {
       const response = await httpClient.request<BannerListResponse>({
-        url: `${EX_BANNERS_URL}`,
+        url: `${BANNERS_URL}`,
         method: "GET",
       });
 
@@ -52,7 +52,7 @@ class BannerService {
   async getActiveBanners(): Promise<Banner[]> {
     try {
       const response = await httpClient.request<BannerListResponse>({
-        url: `${EX_BANNERS_URL}/active`,
+        url: `${BANNERS_URL}/active`,
         method: "GET",
         skipAuth: true,
       });
@@ -81,7 +81,7 @@ class BannerService {
 
     try {
       const response = await httpClient.request<BannerResponse>({
-        url: `${EX_BANNERS_URL}/${id}`,
+        url: `${BANNERS_URL}/${id}`,
         method: "GET",
       });
 
@@ -105,7 +105,7 @@ class BannerService {
 
     try {
       const response = await httpClient.request<BannerResponse>({
-        url: `${EX_BANNERS_URL}/${id}`,
+        url: `${BANNERS_URL}/${id}`,
         method: "PUT",
         data: payload,
       });
@@ -130,7 +130,7 @@ class BannerService {
         success: boolean;
         data: { message: string };
       }>({
-        url: `${EX_BANNERS_URL}/${id}`,
+        url: `${BANNERS_URL}/${id}`,
         method: "DELETE",
       });
   

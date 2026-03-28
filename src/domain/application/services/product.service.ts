@@ -3,10 +3,10 @@
 import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
 import {
+  PRODUCTS_ADMIN_LIST_URL,
   PRODUCTS_MENUS_URL,
   PRODUCTS_PUBLIC_MEGA_MENU_URL,
   PRODUCTS_URL,
-  EX_PRODUCTS_URL,
   productsMenuByIdUrl,
   productsPublicMegaMenuByIdUrl,
 } from "@/constants/apis";
@@ -117,19 +117,47 @@ class ProductService {
     }
 
     const response = await httpClient.request<PublicProductsApiResponse>({
-      url: `${EX_PRODUCTS_URL}/public?${params.toString()}`, // ✅ FIX
+      url: `${PRODUCTS_URL}?${params.toString()}`, // ✅ FIX
       method: "GET",
       skipAuth: true,
     });
 
-    const data = response ?? {};
+    const data = response.data ?? [];
 
-    if (!data || !Array.isArray((data as any).products)) {
+    if (!data || !Array.isArray(data.products)) {
       throw new Error("Invalid products response");
     }
-    return data as any;
+    return data;
   }
 
+  /** Admin list (`GET .../products/admin/list` → backend `api/v1/products/admin/list`). */
+  async getAdminProductsList({
+    page = 1,
+    limit = 20,
+    search,
+  }: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }): Promise<PublicProductsResponse> {
+    const params = new URLSearchParams();
+    params.append("page", String(page));
+    params.append("limit", String(limit));
+    if (search?.trim()) params.append("search", search.trim());
+
+    const response = await httpClient.request<PublicProductsApiResponse>({
+      url: `${PRODUCTS_ADMIN_LIST_URL}?${params.toString()}`,
+      method: "GET",
+      requiresAuth: true,
+    });
+
+    const data = response.data ?? [];
+
+    if (!data || !Array.isArray(data.products)) {
+      throw new Error("Invalid products response");
+    }
+    return data;
+  }
 
   /**
    * Public default mega menu (`GET .../products/public/mega-menu`).
@@ -251,7 +279,7 @@ class ProductService {
   async getProductFilters(): Promise<ProductFilterMeta> {
     try {
       const response = await httpClient.request<ProductFilterResponse>({
-        url: `${EX_PRODUCTS_URL}/filters/meta`,
+        url: `${PRODUCTS_URL}/filters`,
         method: "GET",
         skipAuth: true,
       });
@@ -265,7 +293,7 @@ class ProductService {
         throw new Error("Invalid filter meta response");
       }
 
-      return data as any;
+      return data;
     } catch (error) {
       handleApiError(error, "getProductFilters");
     }
@@ -279,7 +307,7 @@ class ProductService {
     }
     try {
       const response = await httpClient.request<ProductByIdResponse>({
-        url: `${EX_PRODUCTS_URL}/${id}`,
+        url: `${PRODUCTS_URL}/${id}`,
         method: "GET",
         skipAuth: true,
       });
@@ -300,7 +328,7 @@ class ProductService {
   async update(id: string, payload: UpdateProductPayload) {
     try {
       await httpClient.request({
-        url: `${EX_PRODUCTS_URL}/${id}`,
+        url: `${PRODUCTS_URL}/${id}`,
         method: "PATCH",
         data: payload,
         requiresAuth: true,
@@ -313,7 +341,7 @@ class ProductService {
   async delete(id: string) {
     try {
       await httpClient.request({
-        url: `${EX_PRODUCTS_URL}/${id}`,
+        url: `${PRODUCTS_URL}/${id}`,
         method: "DELETE",
         requiresAuth: true,
       });
@@ -325,7 +353,7 @@ class ProductService {
   async create(payload: CreateProductPayload): Promise<void> {
     try {
       await httpClient.request({
-        url: EX_PRODUCTS_URL,
+        url: PRODUCTS_URL,
         method: "POST",
         data: payload,
         requiresAuth: true,

@@ -123,13 +123,13 @@ function ProductCard({
         </button>
       }
 
-      <div className="w-full aspect-4/5 overflow-hidden rounded-lg bg-gray-50">
+      <div className="relative aspect-4/5 w-full shrink-0 overflow-hidden rounded-lg bg-gray-50">
         <Image
           src={imageSrc}
           alt={altText}
-          width={400}
-          height={450}
-          className="h-full w-full object-cover"
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover object-center"
         />
       </div>
 

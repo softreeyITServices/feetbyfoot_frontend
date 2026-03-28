@@ -66,11 +66,10 @@ function ProductPage() {
   const fetchProducts = async (search = "") => {
     setLoading(true);
     try {
-      const res = await productService.getPublicProducts({
+      const res = await productService.getAdminProductsList({
         page: 1,
         limit: 100,
         search,
-        includeInactive: true,
       });
       setData(res.products); // adjust if needed
     } finally {

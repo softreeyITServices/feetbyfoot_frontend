@@ -21,6 +21,8 @@ export const UPDATE_PROFILE_URL = API_BASE_URL + "/auth/profile";
 export const DASHBOARD_URL = API_BASE_URL + "/dashboard"
 
 export const PRODUCTS_URL = API_BASE_URL + "/products";
+/** Admin product list → proxies to `GET .../products/admin/list` on backend */
+export const PRODUCTS_ADMIN_LIST_URL = API_BASE_URL + "/products/admin/list";
 /** Storefront default mega menu → proxies to `GET .../products/public/mega-menu` */
 export const PRODUCTS_PUBLIC_MEGA_MENU_URL =
   API_BASE_URL + "/products/public/mega-menu";

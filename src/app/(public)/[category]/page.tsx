@@ -9,6 +9,7 @@ import SortDropdown from "@/component/ui/SortDropdown";
 import { wishlistService } from "@/domain/application/services/wishlist.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { SectionBannerService } from "@/domain/application/services/admin/sectionBanner.service";
 
 
 const CATEGORY_CONFIG = {
@@ -17,23 +18,27 @@ const CATEGORY_CONFIG = {
     title: "Mens Socks",
     description: "Shop premium mens socks at Feet By Foot",
     gender: "MENS",
+    sectionBannerKey: "MENS",
   },
   womens: {
     label: "Womens",
     title: "Womens Socks",
     description: "Shop premium womens socks at Feet By Foot",
     gender: "WOMENS",
+    sectionBannerKey: "WOMENS",
   },
   kids: {
     label: "Kids",
     title: "Kids Socks",
     description: "Shop premium kids socks at Feet By Foot",
     gender: "KIDS",
+    sectionBannerKey: "KIDS",
   },
   gifts: {
     label: "Gifts",
     title: "Gift Socks",
     description: "Perfect sock gifts for every occasion",
+    sectionBannerKey: "GIFTS",
   },
   // brand: {
   //   label: "Brand",
@@ -41,6 +46,38 @@ const CATEGORY_CONFIG = {
   //   description: "Explore Feet By Foot products by brand",
   // },
 } as const;
+
+/** Same box for API banners and static fallback (4:1 hero strip). */
+const CATEGORY_BANNER_WIDTH = 1200;
+const CATEGORY_BANNER_HEIGHT = 300;
+
+function CategoryBannerPicture({
+  src,
+  alt,
+  unoptimized = false,
+}: {
+  src: string;
+  alt: string;
+  unoptimized?: boolean;
+}) {
+  return (
+    <div
+      className="relative w-full overflow-hidden rounded-xl"
+      style={{
+        aspectRatio: `${CATEGORY_BANNER_WIDTH} / ${CATEGORY_BANNER_HEIGHT}`,
+      }}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        className="object-cover object-center"
+        sizes="(max-width: 1280px) 100vw, 1200px"
+        unoptimized={unoptimized}
+      />
+    </div>
+  );
+}
 
 type CategoryKey = keyof typeof CATEGORY_CONFIG;
 
@@ -161,6 +198,20 @@ export default async function CategoryPage({
     return `?${qs.toString()}`;
   };
 
+  const FALLBACK_BANNER_SRC = "/assets/images/mens-category-banner.png";
+
+  let sectionBanners: { _id: string; image: string; isActive: boolean }[] = [];
+  if ("sectionBannerKey" in config) {
+    try {
+      const list = await SectionBannerService.getBySectionKey(
+        config.sectionBannerKey
+      );
+      sectionBanners = list.filter((b) => b.isActive);
+    } catch {
+      sectionBanners = [];
+    }
+  }
+
   return (
     <main className="w-full">
       {/* Heading */}
@@ -173,17 +224,25 @@ export default async function CategoryPage({
         </p>
       </div>
 
-      {/* Banner */}
+      {/* Banner: section banners from admin when present, else static fallback */}
       <section className="max-w-7xl mx-auto px-4 mt-6">
-        <div className="overflow-hidden rounded-xl">
-          <Image
-            src="/assets/images/mens-category-banner.png"
+        {sectionBanners.length > 0 ? (
+          <div className="flex flex-col gap-4">
+            {sectionBanners.map((b) => (
+              <CategoryBannerPicture
+                key={b._id}
+                src={b.image}
+                alt={`${config.label} category banner`}
+                unoptimized
+              />
+            ))}
+          </div>
+        ) : (
+          <CategoryBannerPicture
+            src={FALLBACK_BANNER_SRC}
             alt={`${config.label} Category Banner`}
-            width={1200}
-            height={300}
-            className="w-full h-auto object-cover"
           />
-        </div>
+        )}
       </section>
 
       {/* Content */}

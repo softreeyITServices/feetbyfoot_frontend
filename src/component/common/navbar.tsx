@@ -11,17 +11,9 @@ import { openCart, closeCart } from "@/store/slices/ui.slice";
 import { WishlistIcon } from "@/icons/WishlistIcon";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { productService } from "@/domain/application/services/product.service";
 import type { MenuCategory, MenuGroup, MenuSubcategory } from "@/domain/shared/types/product.type";
-
-const FALLBACK_MENU_ITEMS = [
-  { label: "MENS", href: "/mens" },
-  { label: "WOMENS", href: "/womens" },
-  { label: "KIDS", href: "/kids" },
-  { label: "GIFTS", href: "/gifts" },
-  { label: "OUTLET", href: "/shop" },
-  { label: "CONTACT", href: "/contactus" },
-];
 
 function groupPrimaryHref(g: MenuGroup): string {
   if (g.href) return g.href;
@@ -72,8 +64,123 @@ function isGroupPathActive(pathname: string, g: MenuGroup): boolean {
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 
-function isFallbackActive(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(`${href}/`);
+function DesktopNavSkeleton() {
+  return (
+    <div
+      className="flex items-center gap-2"
+      aria-label="Loading navigation"
+    >
+      {[1, 2, 3, 4, 5].map((i) => (
+        <span
+          key={i}
+          className="h-7 w-12 lg:w-14 rounded bg-neutral-200 animate-pulse"
+        />
+      ))}
+    </div>
+  );
+}
+
+function DesktopMegaNav({
+  pathname,
+  megaGroups,
+}: {
+  pathname: string;
+  megaGroups: MenuGroup[];
+}) {
+  return (
+    <>
+      {megaGroups.map((g) => {
+        const categories = g.categories ?? [];
+        const hasFlyout = categories.length > 0;
+        const primary = groupPrimaryHref(g);
+        const groupActive = isGroupPathActive(pathname, g);
+
+        if (!hasFlyout) {
+          return (
+            <Link
+              key={g.id}
+              href={primary}
+              className={`text-sm font-bold px-2 lg:px-3 py-1 whitespace-nowrap rounded ${
+                groupActive
+                  ? "bg-yellow-400 text-black"
+                  : "text-gray-700 hover:text-black"
+              }`}
+            >
+              {g.name}
+            </Link>
+          );
+        }
+
+        return (
+          <div key={g.id} className="relative group">
+            <Link
+              href={primary}
+              className={`text-sm font-bold px-2 lg:px-3 py-1 inline-flex items-center gap-0.5 whitespace-nowrap rounded ${
+                groupActive
+                  ? "bg-yellow-400 text-black"
+                  : "text-gray-700 hover:text-black"
+              }`}
+            >
+              {g.name}
+              <ChevronDown
+                className="h-3 w-3 opacity-70 group-hover:rotate-180 transition-transform shrink-0"
+                aria-hidden
+              />
+            </Link>
+            <div
+              className="absolute left-0 top-full pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-[60]"
+              role="region"
+              aria-label={`${g.name} categories`}
+            >
+              <div className="bg-white border border-neutral-200 shadow-lg rounded-lg p-4 max-h-[min(70vh,480px)] overflow-y-auto min-w-[min(90vw,720px)] max-w-[90vw]">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {categories.map((c) => {
+                    const subs = c.subcategories ?? [];
+                    const catLink = categoryHref(g, c);
+                    return (
+                      <div key={c.id} className="min-w-0">
+                        <Link
+                          href={catLink}
+                          className="text-xs font-bold text-black hover:underline block mb-2"
+                        >
+                          {c.name}
+                        </Link>
+                        {c.image ? (
+                          <Link
+                            href={catLink}
+                            className="block mb-2 rounded overflow-hidden bg-neutral-100 max-h-20"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element -- menu image URLs come from CMS / various hosts */}
+                            <img
+                              src={c.image}
+                              alt=""
+                              className="w-full h-20 object-cover"
+                            />
+                          </Link>
+                        ) : null}
+                        <ul className="space-y-1">
+                          {subs.map((s) => (
+                            <li key={s.id}>
+                              <Link
+                                href={subcategoryHref(g, c, s)}
+                                className="text-xs text-gray-600 hover:text-black line-clamp-2"
+                              >
+                                {s.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </>
+  );
 }
 
 export default function Navbar() {
@@ -84,7 +191,8 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const searchRef = useRef<HTMLFormElement | null>(null);
-  const [megaGroups, setMegaGroups] = useState<MenuGroup[] | null>(null);
+  const [megaMenuReady, setMegaMenuReady] = useState(false);
+  const [megaGroups, setMegaGroups] = useState<MenuGroup[]>([]);
 
   const cartItems = useAppSelector((state) => state.cart.items);
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -96,12 +204,14 @@ export default function Navbar() {
         const doc = await productService.getMegaMenu();
         if (cancelled) return;
         if (doc.position === "footer") {
-          setMegaGroups(null);
+          setMegaGroups([]);
           return;
         }
-        setMegaGroups(doc.groups?.length ? doc.groups : null);
+        setMegaGroups(doc.groups?.length ? doc.groups : []);
       } catch {
-        if (!cancelled) setMegaGroups(null);
+        if (!cancelled) setMegaGroups([]);
+      } finally {
+        if (!cancelled) setMegaMenuReady(true);
       }
     })();
     return () => {
@@ -152,7 +262,57 @@ export default function Navbar() {
     setSearchOpen(false);
   };
 
-  const useApiNav = Boolean(megaGroups && megaGroups.length > 0);
+  const hasMegaNav = megaMenuReady && megaGroups.length > 0;
+
+  let desktopNavBody: React.ReactNode;
+  if (!megaMenuReady) {
+    desktopNavBody = <DesktopNavSkeleton />;
+  } else if (hasMegaNav) {
+    desktopNavBody = (
+      <DesktopMegaNav pathname={pathname} megaGroups={megaGroups} />
+    );
+  } else {
+    desktopNavBody = null;
+  }
+
+  let mobileNavBody: React.ReactNode;
+  if (megaMenuReady && hasMegaNav) {
+    mobileNavBody = (
+      <nav className="flex md:hidden items-center gap-2 overflow-x-auto max-w-[45%] sm:max-w-[55%] scrollbar-thin pb-0.5">
+        {megaGroups.map((g) => {
+          const primary = groupPrimaryHref(g);
+          const groupActive = isGroupPathActive(pathname, g);
+          return (
+            <Link
+              key={g.id}
+              href={primary}
+              className={`text-[11px] font-bold px-2 py-1 shrink-0 rounded whitespace-nowrap ${
+                groupActive ? "bg-yellow-400 text-black" : "text-gray-700"
+              }`}
+            >
+              {g.name}
+            </Link>
+          );
+        })}
+      </nav>
+    );
+  } else if (!megaMenuReady) {
+    mobileNavBody = (
+      <div
+        className="flex md:hidden items-center gap-1.5 max-w-[40%] overflow-hidden"
+        aria-label="Loading navigation"
+      >
+        {[1, 2, 3].map((i) => (
+          <span
+            key={i}
+            className="h-6 w-10 shrink-0 rounded bg-neutral-200 animate-pulse"
+          />
+        ))}
+      </div>
+    );
+  } else {
+    mobileNavBody = null;
+  }
 
   return (
     <>
@@ -167,141 +327,14 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* Desktop: mega menu or fallback */}
-          <nav className="hidden md:flex items-center gap-1 lg:gap-2 min-w-0 justify-center flex-1">
-            {useApiNav && megaGroups
-              ? megaGroups.map((g) => {
-                  const categories = g.categories ?? [];
-                  const hasFlyout = categories.length > 0;
-                  const primary = groupPrimaryHref(g);
-                  const groupActive = isGroupPathActive(pathname, g);
-
-                  if (!hasFlyout) {
-                    return (
-                      <Link
-                        key={g.id}
-                        href={primary}
-                        className={`text-sm font-bold px-2 lg:px-3 py-1 whitespace-nowrap rounded ${
-                          groupActive
-                            ? "bg-yellow-400 text-black"
-                            : "text-gray-700 hover:text-black"
-                        }`}
-                      >
-                        {g.name}
-                      </Link>
-                    );
-                  }
-
-                  return (
-                    <div key={g.id} className="relative group">
-                      <Link
-                        href={primary}
-                        className={`text-sm font-bold px-2 lg:px-3 py-1 inline-flex items-center gap-0.5 whitespace-nowrap rounded ${
-                          groupActive
-                            ? "bg-yellow-400 text-black"
-                            : "text-gray-700 hover:text-black"
-                        }`}
-                      >
-                        {g.name}
-                        <span
-                          className="text-[10px] opacity-70 group-hover:rotate-180 transition-transform"
-                          aria-hidden
-                        >
-                          ▾
-                        </span>
-                      </Link>
-                      <div
-                        className="absolute left-0 top-full pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-[60]"
-                        role="region"
-                        aria-label={`${g.name} categories`}
-                      >
-                        <div className="bg-white border border-neutral-200 shadow-lg rounded-lg p-4 max-h-[min(70vh,480px)] overflow-y-auto min-w-[min(90vw,720px)] max-w-[90vw]">
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {categories.map((c) => {
-                              const subs = c.subcategories ?? [];
-                              const catLink = categoryHref(g, c);
-                              return (
-                                <div key={c.id} className="min-w-0">
-                                  <Link
-                                    href={catLink}
-                                    className="text-xs font-bold text-black hover:underline block mb-2"
-                                  >
-                                    {c.name}
-                                  </Link>
-                                  {c.image ? (
-                                    <Link
-                                      href={catLink}
-                                      className="block mb-2 rounded overflow-hidden bg-neutral-100 max-h-20"
-                                    >
-                                      {/* eslint-disable-next-line @next/next/no-img-element -- menu image URLs come from CMS / various hosts */}
-                                      <img
-                                        src={c.image}
-                                        alt=""
-                                        className="w-full h-20 object-cover"
-                                      />
-                                    </Link>
-                                  ) : null}
-                                  <ul className="space-y-1">
-                                    {subs.map((s) => (
-                                      <li key={s.id}>
-                                        <Link
-                                          href={subcategoryHref(g, c, s)}
-                                          className="text-xs text-gray-600 hover:text-black line-clamp-2"
-                                        >
-                                          {s.name}
-                                        </Link>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              : FALLBACK_MENU_ITEMS.map((item) => {
-                  const isActive = isFallbackActive(pathname, item.href);
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`text-sm font-bold px-3 py-1 whitespace-nowrap rounded ${
-                        isActive
-                          ? "bg-yellow-400 text-black"
-                          : "text-gray-700 hover:text-black"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
+          <nav
+            className="hidden md:flex items-center gap-1 lg:gap-2 min-w-0 justify-center flex-1 min-h-8"
+            aria-busy={!megaMenuReady}
+          >
+            {desktopNavBody}
           </nav>
 
-          {/* Mobile: primary group links (no flyout) */}
-          {useApiNav && megaGroups ? (
-            <nav className="flex md:hidden items-center gap-2 overflow-x-auto max-w-[45%] sm:max-w-[55%] scrollbar-thin pb-0.5">
-              {megaGroups.map((g) => {
-                const primary = groupPrimaryHref(g);
-                const groupActive = isGroupPathActive(pathname, g);
-                return (
-                  <Link
-                    key={g.id}
-                    href={primary}
-                    className={`text-[11px] font-bold px-2 py-1 shrink-0 rounded whitespace-nowrap ${
-                      groupActive
-                        ? "bg-yellow-400 text-black"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    {g.name}
-                  </Link>
-                );
-              })}
-            </nav>
-          ) : null}
+          {mobileNavBody}
 
           <div className="flex items-center gap-3 shrink-0">
             <form
