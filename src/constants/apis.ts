@@ -21,6 +21,20 @@ export const UPDATE_PROFILE_URL = API_BASE_URL + "/auth/profile";
 export const DASHBOARD_URL = API_BASE_URL + "/dashboard"
 
 export const PRODUCTS_URL = API_BASE_URL + "/products";
+/** Storefront default mega menu → proxies to `GET .../products/public/mega-menu` */
+export const PRODUCTS_PUBLIC_MEGA_MENU_URL =
+  API_BASE_URL + "/products/public/mega-menu";
+
+export function productsPublicMegaMenuByIdUrl(menuId: string): string {
+  return `${API_BASE_URL}/products/public/mega-menu/${menuId}`;
+}
+
+/** Admin menus CRUD → proxies to backend `/products/menus` */
+export const PRODUCTS_MENUS_URL = API_BASE_URL + "/products/menus";
+
+export function productsMenuByIdUrl(menuId: string): string {
+  return `${API_BASE_URL}/products/menus/${menuId}`;
+}
 export const CATEGORIES_URL = API_BASE_URL + "/categories";
 export const SUB_CATEGORIES_URL = API_BASE_URL + "/categories/subcategories";
 export const ORDERS_URL = API_BASE_URL + "/payments/create-order";
@@ -71,6 +85,20 @@ export const EX_VERIFY_OTP_URL = EXTERNAL_API_BASE_URL + "/auth/verify-otp";
 export const EX_USER_PROFILE_URL = EXTERNAL_API_BASE_URL + "/auth/me";
 
 export const EX_PRODUCTS_URL = EXTERNAL_API_BASE_URL + "/products";
+/** Backend storefront mega menu (default). */
+export const EX_PRODUCTS_PUBLIC_MEGA_MENU_URL =
+  EXTERNAL_API_BASE_URL + "/products/public/mega-menu";
+
+export function exProductsPublicMegaMenuByIdUrl(menuId: string): string {
+  return `${EXTERNAL_API_BASE_URL}/products/public/mega-menu/${menuId}`;
+}
+
+/** Backend admin menus: list, create, get by id, patch by id. */
+export const EX_PRODUCTS_MENUS_URL = EXTERNAL_API_BASE_URL + "/products/menus";
+
+export function exProductsMenuByIdUrl(menuId: string): string {
+  return `${EXTERNAL_API_BASE_URL}/products/menus/${menuId}`;
+}
 export const EX_CATEGORIES_URL = EXTERNAL_API_BASE_URL + "/categories";
 export const EX_SUB_CATEGORIES_URL = EXTERNAL_API_BASE_URL + "/categoriestype";
 export const EX_ORDERS_URL = EXTERNAL_API_BASE_URL + "/payments/create-order";

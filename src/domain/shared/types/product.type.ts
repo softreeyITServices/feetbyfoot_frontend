@@ -123,3 +123,91 @@ export type CreateProductPayload = Omit<Product, ProductExcludedFields>;
  * UPDATE payload (PATCH → partial)
  */
 export type UpdateProductPayload = Partial<CreateProductPayload>;
+
+/** Mega menu — shared with backend DTOs (see BE mega-menu API doc). */
+export type MenuSubcategory = {
+  id: string;
+  name: string;
+  href?: string;
+  slug?: string;
+  showSlug?: boolean;
+};
+
+export type MenuCategory = {
+  id: string;
+  name: string;
+  href?: string;
+  fromCatalog?: boolean;
+  image?: string;
+  subcategories?: MenuSubcategory[];
+};
+
+export type MenuGroup = {
+  id: string;
+  name: string;
+  href?: string;
+  storefrontPath?: string;
+  categories?: MenuCategory[];
+};
+
+/** Full menu document (GET responses, PATCH body when replacing groups). */
+export type MegaMenuDocument = {
+  id?: string;
+  name: string;
+  position: string;
+  isDefault: boolean;
+  version: number;
+  savedAt: string;
+  groups: MenuGroup[];
+};
+
+/** Admin list row — `id` always present from API. */
+export type MegaMenuListItem = {
+  id: string;
+  name: string;
+  position: string;
+  isDefault: boolean;
+};
+
+/** POST body: required name, version, groups; optional position, isDefault, savedAt. */
+export type CreateMegaMenuBody = {
+  name: string;
+  version: number;
+  groups: MenuGroup[];
+  position?: string;
+  isDefault?: boolean;
+  savedAt?: string;
+};
+
+export type UpdateMegaMenuBody = Partial<
+  Pick<
+    MegaMenuDocument,
+    "name" | "position" | "isDefault" | "version" | "savedAt" | "groups"
+  >
+>;
+
+/** @deprecated Prefer MenuSubcategory */
+export type MegaMenuSubcategory = MenuSubcategory;
+/** @deprecated Prefer MenuCategory */
+export type MegaMenuCategory = MenuCategory;
+/** @deprecated Prefer MenuGroup */
+export type MegaMenuGroup = MenuGroup;
+
+/** Where this menu is rendered: header row vs site footer */
+export type MegaMenuPlacement = "top" | "footer";
+
+/**
+ * Legacy aggregate type for admin editor / payloads.
+ * Prefer MegaMenuDocument for full reads; CreateMegaMenuBody / UpdateMegaMenuBody for writes.
+ */
+export type MegaMenuPayload = Partial<
+  Pick<MegaMenuDocument, "name" | "position" | "isDefault" | "version" | "savedAt">
+> & {
+  /** Backend may omit on empty shell; editor always sends groups array. */
+  groups?: MenuGroup[];
+};
+
+/** Envelope when backend wraps the menu in `data` */
+export interface MegaMenuApiResponse {
+  data: MegaMenuDocument;
+}

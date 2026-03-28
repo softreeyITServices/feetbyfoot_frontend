@@ -11,6 +11,12 @@ import type {
   AdminCategory,
   AdminCategoryType,
 } from "@/domain/shared/types/admin/category";
+import { productService } from "@/domain/application/services/product.service";
+import type {
+  CreateMegaMenuBody,
+  MegaMenuDocument,
+  MegaMenuListItem,
+} from "@/domain/shared/types/product.type";
 
 type SourceSubcategory = {
   id: string;
@@ -87,14 +93,28 @@ type MenuExportGroup = {
   categories: MenuExportCategory[];
 };
 
+type MenuPlacement = "top" | "footer";
+
 type MenuExportPayload = {
+  name: string;
+  /** top = header mega menu, footer = footer nav */
+  position: MenuPlacement;
+  /** Default menu for the chosen position (top / footer) */
+  isDefault: boolean;
   version: number;
   savedAt: string;
   groups: MenuExportGroup[];
 };
 
-function buildMenuExportPayload(groups: FinalGroup[]): MenuExportPayload {
+function buildMenuExportPayload(
+  groups: FinalGroup[],
+  meta: { name: string; position: MenuPlacement; isDefault: boolean }
+): MenuExportPayload {
+  const trimmedName = meta.name.trim();
   return {
+    name: trimmedName || "Untitled menu",
+    position: meta.position === "footer" ? "footer" : "top",
+    isDefault: Boolean(meta.isDefault),
     version: 1,
     savedAt: new Date().toISOString(),
     groups: groups.map((g) => ({
@@ -118,6 +138,31 @@ function buildMenuExportPayload(groups: FinalGroup[]): MenuExportPayload {
       })),
     })),
   };
+}
+
+function megaMenuPayloadToFinalGroups(
+  payload: Pick<MegaMenuDocument, "groups">
+): FinalGroup[] {
+  return (payload.groups ?? []).map((g) => ({
+    id: g.id,
+    name: g.name,
+    ...(g.href ? { href: g.href } : {}),
+    ...(g.storefrontPath ? { storefrontPath: g.storefrontPath } : {}),
+    categories: (g.categories ?? []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      ...(c.href ? { href: c.href } : {}),
+      ...(c.fromCatalog !== undefined ? { fromCatalog: c.fromCatalog } : {}),
+      image: c.image ?? "",
+      children: (c.subcategories ?? []).map((s) => ({
+        id: s.id,
+        name: s.name,
+        ...(s.href ? { href: s.href } : {}),
+        ...(s.slug !== undefined && s.slug !== "" ? { slug: s.slug } : {}),
+        ...(s.showSlug !== undefined ? { showSlug: s.showSlug } : {}),
+      })),
+    })),
+  }));
 }
 
 type DragItem =
@@ -298,11 +343,104 @@ export default function AdminMenuCreationPage() {
   const [customError, setCustomError] = useState("");
   const [dragging, setDragging] = useState<DragItem | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  /** Left catalog: expanded per group id (absent = collapsed by default) */
+  const [sourceGroupExpanded, setSourceGroupExpanded] = useState<
+    Record<string, boolean>
+  >({});
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [savedExportJson, setSavedExportJson] = useState("");
+  const [savingMenu, setSavingMenu] = useState(false);
+  const [menuMetaName, setMenuMetaName] = useState("Main menu");
+  const [menuPlacement, setMenuPlacement] = useState<MenuPlacement>("top");
+  const [menuIsDefault, setMenuIsDefault] = useState(true);
   const [uploadingCategoryKey, setUploadingCategoryKey] = useState<
     string | null
   >(null);
+  const [menuList, setMenuList] = useState<MegaMenuListItem[]>([]);
+  const [selectedMenuId, setSelectedMenuId] = useState<string>("");
+  const [menusLoading, setMenusLoading] = useState(true);
+
+  const applyMenuDocument = (payload: MegaMenuDocument) => {
+    if (payload.name !== undefined && String(payload.name).trim() !== "") {
+      setMenuMetaName(String(payload.name));
+    }
+    if (payload.position === "footer") {
+      setMenuPlacement("footer");
+    } else if (payload.position === "top") {
+      setMenuPlacement("top");
+    }
+    if (typeof payload.isDefault === "boolean") {
+      setMenuIsDefault(payload.isDefault);
+    }
+    if (payload.groups?.length) {
+      setFinalMenu(megaMenuPayloadToFinalGroups(payload));
+    } else {
+      setFinalMenu([]);
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setMenusLoading(true);
+      try {
+        const items = await productService.listMegaMenus();
+        if (cancelled) return;
+        setMenuList(items);
+        if (items.length > 0) {
+          const pick = items.find((i) => i.isDefault) ?? items[0];
+          setSelectedMenuId(pick.id);
+          const doc = await productService.getAdminMegaMenu(pick.id);
+          if (cancelled) return;
+          applyMenuDocument(doc);
+        } else {
+          setSelectedMenuId("");
+          try {
+            const doc = await productService.getMegaMenu();
+            if (!cancelled) applyMenuDocument(doc);
+          } catch {
+            if (!cancelled) setFinalMenu([]);
+          }
+        }
+      } catch {
+        try {
+          const doc = await productService.getMegaMenu();
+          if (!cancelled) {
+            setMenuList([]);
+            setSelectedMenuId("");
+            applyMenuDocument(doc);
+          }
+        } catch {
+          if (!cancelled) setFinalMenu([]);
+        }
+      } finally {
+        if (!cancelled) setMenusLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleMenuSelectionChange = async (value: string) => {
+    if (value === "__new__") {
+      setSelectedMenuId("");
+      setFinalMenu([]);
+      setMenuMetaName("");
+      setMenuPlacement("top");
+      setMenuIsDefault(false);
+      return;
+    }
+    setSelectedMenuId(value);
+    try {
+      const doc = await productService.getAdminMegaMenu(value);
+      applyMenuDocument(doc);
+    } catch (error: unknown) {
+      toast.error(
+        (error as { message?: string })?.message ?? "Failed to load menu"
+      );
+    }
+  };
 
   /** Links use the target menu group (e.g. Women), not necessarily the left drag column */
   const storefrontPathForFinalGroup = (groupId: string): string =>
@@ -603,37 +741,44 @@ export default function AdminMenuCreationPage() {
     }
   };
 
-  const handleDropToSource = (event: React.DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const payload = parseDropPayload(event);
-    if (!payload) return;
-
-    if (payload.type === "final-group") {
-      removeGroupFromFinal(payload.id);
-      return;
-    }
-    if (payload.type === "final-catalog-category") {
-      removeCatalogCategoryFromFinal(payload.groupId, payload.catalogCategoryId);
-      return;
-    }
-    if (payload.type === "final-subcategory") {
-      removeSubcategoryFromFinal(
-        payload.groupId,
-        payload.catalogCategoryId,
-        payload.subcategoryId
-      );
-    }
-  };
-
   const clearFinalMenu = () => setFinalMenu([]);
 
-  const handleSaveMenu = () => {
-    const payload: MenuExportPayload = buildMenuExportPayload(finalMenu);
-    const json = JSON.stringify(payload, null, 2);
-    setSavedExportJson(json);
-    setSaveModalOpen(true);
-    toast.success("Menu JSON ready — share with backend or copy below");
+  const handleSaveMenu = async () => {
+    const exportPayload = buildMenuExportPayload(finalMenu, {
+      name: menuMetaName,
+      position: menuPlacement,
+      isDefault: menuIsDefault,
+    });
+    const body: CreateMegaMenuBody = {
+      name: exportPayload.name,
+      version: exportPayload.version,
+      groups: exportPayload.groups,
+      position: exportPayload.position,
+      isDefault: exportPayload.isDefault,
+      savedAt: exportPayload.savedAt,
+    };
+    const json = JSON.stringify(exportPayload, null, 2);
+    setSavingMenu(true);
+    try {
+      if (selectedMenuId) {
+        await productService.updateMegaMenu(selectedMenuId, body);
+        setMenuList(await productService.listMegaMenus());
+      } else {
+        const created = await productService.createMegaMenu(body);
+        if (created.id) setSelectedMenuId(created.id);
+        const fresh = await productService.listMegaMenus();
+        setMenuList(fresh);
+      }
+      setSavedExportJson(json);
+      setSaveModalOpen(true);
+      toast.success("Menu saved");
+    } catch (error: unknown) {
+      const message =
+        (error as { message?: string })?.message ?? "Failed to save menu";
+      toast.error(message);
+    } finally {
+      setSavingMenu(false);
+    }
   };
 
   const handleCopySavedJson = async () => {
@@ -648,6 +793,15 @@ export default function AdminMenuCreationPage() {
   const isGroupCollapsed = (groupId: string) => Boolean(collapsedGroups[groupId]);
   const toggleGroupCollapsed = (groupId: string) => {
     setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
+
+  const isSourceGroupCollapsed = (groupId: string) =>
+    !sourceGroupExpanded[groupId];
+  const toggleSourceGroupCollapsed = (groupId: string) => {
+    setSourceGroupExpanded((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }));
   };
 
   const isValidHref = (value: string) => {
@@ -844,6 +998,25 @@ export default function AdminMenuCreationPage() {
     );
   };
 
+  /** Menu-only display name; does not update the category in Admin → Categories. */
+  const updateFinalCategoryName = (
+    groupId: string,
+    catalogCategoryId: string,
+    name: string
+  ) => {
+    setFinalMenu((prev) =>
+      prev.map((g) => {
+        if (g.id !== groupId) return g;
+        return {
+          ...g,
+          categories: g.categories.map((c) =>
+            c.id === catalogCategoryId ? { ...c, name } : c
+          ),
+        };
+      })
+    );
+  };
+
   const categoryKey = (groupId: string, catalogCategoryId: string) =>
     `${groupId}::${catalogCategoryId}`;
 
@@ -890,7 +1063,7 @@ export default function AdminMenuCreationPage() {
     groupId: string,
     catalogCategoryId: string,
     subcategoryId: string,
-    patch: Partial<Pick<FinalSubcategory, "slug" | "showSlug">>
+    patch: Partial<Pick<FinalSubcategory, "name" | "slug" | "showSlug">>
   ) => {
     setFinalMenu((prev) =>
       prev.map((g) => {
@@ -913,23 +1086,24 @@ export default function AdminMenuCreationPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0 flex-1">
           <h1 className="text-xl font-bold">Menu Creation</h1>
           <p className="text-sm text-neutral-400">
             Left: the same <strong>Categories</strong> and <strong>Subcategories</strong> from your
             admin catalog (API) appear under Men, Women, and Kids — each column only changes the
             storefront base path for links (<code className="text-[11px]">/mens</code>, etc.). Drag
-            into the final menu on the right. Drag back left to remove.
+            into the final menu on the right. Remove rows with the trash control on the right.
           </p>
         </div>
-        <div className="flex shrink-0 flex-row flex-nowrap items-center gap-2 self-start sm:self-auto">
+        <div className="flex shrink-0 flex-row flex-nowrap items-center gap-2 self-start md:self-auto">
           <button
             type="button"
-            onClick={handleSaveMenu}
-            className="whitespace-nowrap px-3 py-2 text-xs bg-black text-white rounded-lg hover:bg-neutral-800"
+            onClick={() => void handleSaveMenu()}
+            disabled={savingMenu}
+            className="whitespace-nowrap px-3 py-2 text-xs bg-black text-white rounded-lg hover:bg-neutral-800 disabled:opacity-60 disabled:pointer-events-none"
           >
-            Save
+            {savingMenu ? "Saving…" : "Save"}
           </button>
           <button
             type="button"
@@ -940,6 +1114,87 @@ export default function AdminMenuCreationPage() {
           </button>
         </div>
       </div>
+
+      <section className="rounded-xl border border-neutral-200 bg-white p-4">
+        <div className="mb-3">
+          <h2 className="text-sm font-semibold">Menu details</h2>
+          <p className="text-xs text-neutral-500 mb-3">
+            <strong>Position</strong> is header (top) or footer. Check <strong>Default menu</strong> if
+            this should be the default for that slot when you have more than one. Empty name is stored
+            as &quot;Untitled menu&quot;.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
+          <div className="space-y-1 sm:col-span-2">
+            <label htmlFor="menu-saved-select" className="text-xs text-neutral-600">
+              Saved menu
+            </label>
+            <select
+              id="menu-saved-select"
+              value={selectedMenuId || "__new__"}
+              onChange={(e) => void handleMenuSelectionChange(e.target.value)}
+              disabled={menusLoading}
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400 bg-white disabled:opacity-60"
+            >
+              <option value="__new__">New menu (create on Save)</option>
+              {menuList.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                  {m.isDefault ? " (default)" : ""}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-neutral-500">
+              Uses admin APIs: list → edit → PATCH; new row uses POST.
+            </p>
+          </div>
+          <div className="space-y-1 sm:col-span-2">
+            <label htmlFor="menu-meta-name" className="text-xs text-neutral-600">
+              Menu name
+            </label>
+            <input
+              id="menu-meta-name"
+              type="text"
+              value={menuMetaName}
+              onChange={(event) => setMenuMetaName(event.target.value)}
+              placeholder="e.g. Header mega menu"
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400"
+            />
+          </div>
+          <div className="space-y-1">
+            <label htmlFor="menu-meta-placement" className="text-xs text-neutral-600">
+              Position
+            </label>
+            <select
+              id="menu-meta-placement"
+              value={menuPlacement}
+              onChange={(event) =>
+                setMenuPlacement(event.target.value === "footer" ? "footer" : "top")
+              }
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400 bg-white"
+            >
+              <option value="top">Top (header)</option>
+              <option value="footer">Footer</option>
+            </select>
+          </div>
+          <div className="flex items-end pb-2">
+            <label className="flex items-start gap-2 text-sm text-neutral-800 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={menuIsDefault}
+                onChange={(event) => setMenuIsDefault(event.target.checked)}
+                className="rounded border-neutral-300 mt-0.5 shrink-0"
+              />
+              <span>
+                <span className="text-xs font-medium text-neutral-700 block">Default menu</span>
+                <span className="text-[10px] text-neutral-500 block mt-0.5">
+                  Use as the default for this position (top or footer).
+                </span>
+              </span>
+            </label>
+          </div>
+        </div>
+      </section>
 
       <section className="rounded-xl border border-neutral-200 bg-white p-4">
         <div className="mb-3">
@@ -1000,7 +1255,7 @@ export default function AdminMenuCreationPage() {
             <button
               type="button"
               onClick={handleAddCustomItem}
-              className="w-[80] md:w-auto px-4 py-2 text-xs bg-black text-white rounded-lg"
+              className="w-full md:w-auto px-4 py-2 text-xs bg-black text-white rounded-lg"
             >
               Add Custom Item
             </button>
@@ -1010,8 +1265,8 @@ export default function AdminMenuCreationPage() {
         {customError && <p className="mt-2 text-xs text-red-600">{customError}</p>}
       </section>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        <section className="rounded-xl border border-neutral-200 bg-white p-4 min-h-[520px] flex flex-col">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <section className="min-w-0 rounded-xl border border-neutral-200 bg-white p-4 min-h-[520px] flex flex-col">
           <div className="mb-4">
             <h2 className="text-sm font-semibold">Catalog source (left)</h2>
             <p className="text-xs text-neutral-500">
@@ -1033,89 +1288,102 @@ export default function AdminMenuCreationPage() {
             ) : (
               sourceGroups.map((group) => (
               <div key={group.id} className="rounded-lg border border-neutral-200 overflow-hidden">
-                <div
-                  draggable
-                  onDragStart={onDragStart({ type: "source-group", id: group.id })}
-                  onDragEnd={onDragEnd}
-                  className="px-3 py-2 border-b border-neutral-200 bg-neutral-50 text-sm font-medium cursor-grab active:cursor-grabbing flex items-center gap-2 flex-wrap"
-                >
-                  <span className="text-[10px] uppercase tracking-wide text-neutral-500 shrink-0">
-                    Group
-                  </span>
-                  <span>{group.name}</span>
-                  <span className="text-[10px] text-neutral-400 font-normal">
-                    {group.storefrontPath}
-                  </span>
-                </div>
-
-                <div className="px-3 py-2 bg-white">
-                  <p className="text-[11px] font-semibold text-neutral-700 mb-2">Categories</p>
-                  <div className="space-y-3">
-                    {group.categories.map((cat) => (
-                      <div
-                        key={cat.id}
-                        className="rounded-md border border-neutral-100 bg-neutral-50/80 p-2"
-                      >
-                        <div
-                          draggable
-                          onDragStart={onDragStart({
-                            type: "source-catalog-category",
-                            groupId: group.id,
-                            catalogCategoryId: cat.id,
-                          })}
-                          onDragEnd={onDragEnd}
-                          className="text-sm font-medium text-neutral-900 cursor-grab active:cursor-grabbing mb-2"
-                        >
-                          {cat.name}
-                        </div>
-                        <p className="text-[10px] uppercase tracking-wide text-neutral-500 mb-1.5">
-                          Subcategories
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {cat.subcategories.map((sub) => (
-                            <div
-                              key={sub.id}
-                              draggable
-                              onDragStart={onDragStart({
-                                type: "source-subcategory",
-                                groupId: group.id,
-                                catalogCategoryId: cat.id,
-                                subcategoryId: sub.id,
-                              })}
-                              onDragEnd={onDragEnd}
-                              className="px-2 py-1 text-xs rounded-md border border-neutral-200 bg-white cursor-grab active:cursor-grabbing"
-                            >
-                              {sub.name}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                <div className="flex items-stretch border-b border-neutral-200 bg-neutral-50">
+                  <button
+                    type="button"
+                    onClick={() => toggleSourceGroupCollapsed(group.id)}
+                    className="shrink-0 px-2 py-2 border-r border-neutral-200 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center"
+                    title={
+                      isSourceGroupCollapsed(group.id)
+                        ? "Expand catalog group"
+                        : "Collapse catalog group"
+                    }
+                    aria-expanded={!isSourceGroupCollapsed(group.id)}
+                  >
+                    {isSourceGroupCollapsed(group.id) ? (
+                      <ChevronDown className="h-4 w-4" aria-hidden />
+                    ) : (
+                      <ChevronUp className="h-4 w-4" aria-hidden />
+                    )}
+                  </button>
+                  <div
+                    draggable
+                    onDragStart={onDragStart({ type: "source-group", id: group.id })}
+                    onDragEnd={onDragEnd}
+                    className="flex-1 min-w-0 px-3 py-2 text-sm font-medium cursor-grab active:cursor-grabbing flex items-center gap-2 flex-wrap"
+                  >
+                    <span className="text-[10px] uppercase tracking-wide text-neutral-500 shrink-0">
+                      Group
+                    </span>
+                    <span>{group.name}</span>
+                    <span className="text-[10px] text-neutral-400 font-normal">
+                      {group.storefrontPath}
+                    </span>
                   </div>
                 </div>
+
+                {!isSourceGroupCollapsed(group.id) ? (
+                  <div className="px-3 py-2 bg-white">
+                    <p className="text-[11px] font-semibold text-neutral-700 mb-2">Categories</p>
+                    <div className="space-y-3">
+                      {group.categories.map((cat) => (
+                        <div
+                          key={cat.id}
+                          className="rounded-md border border-neutral-100 bg-neutral-50/80 p-2"
+                        >
+                          <div
+                            draggable
+                            onDragStart={onDragStart({
+                              type: "source-catalog-category",
+                              groupId: group.id,
+                              catalogCategoryId: cat.id,
+                            })}
+                            onDragEnd={onDragEnd}
+                            className="text-sm font-medium text-neutral-900 cursor-grab active:cursor-grabbing mb-2"
+                          >
+                            {cat.name}
+                          </div>
+                          <p className="text-[10px] uppercase tracking-wide text-neutral-500 mb-1.5">
+                            Subcategories
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {cat.subcategories.map((sub) => (
+                              <div
+                                key={sub.id}
+                                draggable
+                                onDragStart={onDragStart({
+                                  type: "source-subcategory",
+                                  groupId: group.id,
+                                  catalogCategoryId: cat.id,
+                                  subcategoryId: sub.id,
+                                })}
+                                onDragEnd={onDragEnd}
+                                className="px-2 py-1 text-xs rounded-md border border-neutral-200 bg-white cursor-grab active:cursor-grabbing"
+                              >
+                                {sub.name}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ))
             )}
           </div>
-
-          <div
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={handleDropToSource}
-            className="mt-4 shrink-0 rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50 px-3 py-3 text-center"
-          >
-            <p className="text-xs font-medium text-neutral-700">Remove zone</p>
-            <p className="text-[11px] text-neutral-500 mt-0.5">
-              Drop items from the final menu here only to remove them
-            </p>
-          </div>
         </section>
 
-        <section className="rounded-xl border border-neutral-200 bg-white p-4 min-h-[520px] flex flex-col">
+        <section className="min-w-0 rounded-xl border border-neutral-200 bg-white p-4 min-h-[520px] flex flex-col">
           <div className="mb-4">
             <h2 className="text-sm font-semibold">Final menu (right)</h2>
             <p className="text-xs text-neutral-500">
               Add catalog items only in the dashed <strong>Add zone</strong> below. Reorder using
-              ⠿ handles on rows. Remove using the left <strong>Remove zone</strong> only.
+              ⠿ handles on rows. Remove groups, categories, or subcategories with the trash button on
+              each row. <strong>Menu labels</strong> for categories and subcategories can be edited
+              here — they only change text in the saved menu and storefront nav, not catalog records,
+              IDs, or slugs.
             </p>
           </div>
 
@@ -1294,7 +1562,7 @@ export default function AdminMenuCreationPage() {
                                 catIndex
                               );
                             }}
-                            className="flex items-center gap-2 mb-2"
+                            className="flex items-start gap-2 mb-2"
                           >
                             <span
                               draggable
@@ -1304,48 +1572,78 @@ export default function AdminMenuCreationPage() {
                                 catalogCategoryId: cat.id,
                               })}
                               onDragEnd={onDragEnd}
-                              className="cursor-grab text-neutral-400"
+                              className="cursor-grab text-neutral-400 pt-2"
                             >
                               ⠿
                             </span>
-                            <span className="text-sm font-medium text-neutral-900 flex-1">
-                              {cat.name}
-                            </span>
+                            <div className="flex-1 min-w-0 space-y-0.5">
+                              <label
+                                htmlFor={`cat-menu-label-${group.id}-${cat.id}`}
+                                className="text-[10px] uppercase tracking-wide text-neutral-500"
+                              >
+                                Menu label
+                              </label>
+                              <input
+                                id={`cat-menu-label-${group.id}-${cat.id}`}
+                                type="text"
+                                value={cat.name}
+                                onChange={(event) =>
+                                  updateFinalCategoryName(
+                                    group.id,
+                                    cat.id,
+                                    event.target.value
+                                  )
+                                }
+                                className="w-full rounded-md border border-amber-200/80 bg-white px-2 py-1 text-sm font-medium text-neutral-900 outline-none focus:border-amber-400"
+                              />
+                              {cat.fromCatalog ? (
+                                <p className="text-[10px] text-neutral-400">
+                                  Catalog id: {cat.id} (unchanged)
+                                </p>
+                              ) : null}
+                            </div>
                             {cat.href && isSingleMenuCustomCategory(cat) ? (
-                              <span className="text-[11px] text-neutral-500 truncate max-w-[140px]">
+                              <span className="text-[11px] text-neutral-500 truncate max-w-[120px] shrink-0 self-center pt-1">
                                 {cat.href}
                               </span>
                             ) : null}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                moveCatalogCategory(group.id, cat.id, "up")
-                              }
-                              disabled={catIndex === 0}
-                              className="px-1 border rounded text-[10px] disabled:opacity-40"
-                            >
-                              ↑
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                moveCatalogCategory(group.id, cat.id, "down")
-                              }
-                              disabled={catIndex === group.categories.length - 1}
-                              className="px-1 border rounded text-[10px] disabled:opacity-40"
-                            >
-                              ↓
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                removeCatalogCategoryFromFinal(group.id, cat.id)
-                              }
-                              className="p-0.5 ml-0.5 border border-red-200 rounded text-red-600 hover:bg-red-50"
-                              title="Remove category"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                            </button>
+                            <div className="flex items-center gap-0.5 shrink-0 self-start pt-1">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  moveCatalogCategory(group.id, cat.id, "up")
+                                }
+                                disabled={catIndex === 0}
+                                className="px-1 border rounded text-[10px] disabled:opacity-40"
+                              >
+                                ↑
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  moveCatalogCategory(group.id, cat.id, "down")
+                                }
+                                disabled={
+                                  catIndex === group.categories.length - 1
+                                }
+                                className="px-1 border rounded text-[10px] disabled:opacity-40"
+                              >
+                                ↓
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  removeCatalogCategoryFromFinal(
+                                    group.id,
+                                    cat.id
+                                  )
+                                }
+                                className="p-0.5 ml-0.5 border border-red-200 rounded text-red-600 hover:bg-red-50"
+                                title="Remove category"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                              </button>
+                            </div>
                           </div>
                           {showCategoryImage(cat) ? (
                             <div className="mb-2 rounded-md border border-neutral-200 bg-white p-2">
@@ -1456,7 +1754,7 @@ export default function AdminMenuCreationPage() {
                                     }}
                                     className="flex flex-col gap-1"
                                   >
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-start gap-2">
                                       <span
                                         draggable
                                         onDragStart={onDragStart({
@@ -1466,15 +1764,34 @@ export default function AdminMenuCreationPage() {
                                           subcategoryId: sub.id,
                                         })}
                                         onDragEnd={onDragEnd}
-                                        className="cursor-grab text-neutral-400 shrink-0"
+                                        className="cursor-grab text-neutral-400 shrink-0 pt-1.5"
                                         title="Drop on another row to reorder"
                                       >
                                         ⠿
                                       </span>
-                                      <span className="font-medium text-neutral-900 flex-1 min-w-0">
-                                        {sub.name}
-                                      </span>
-                                      <div className="flex items-center gap-0.5 shrink-0">
+                                      <div className="flex-1 min-w-0 space-y-0.5">
+                                        <label
+                                          htmlFor={`sub-menu-label-${group.id}-${cat.id}-${sub.id}`}
+                                          className="text-[10px] text-neutral-500"
+                                        >
+                                          Menu label
+                                        </label>
+                                        <input
+                                          id={`sub-menu-label-${group.id}-${cat.id}-${sub.id}`}
+                                          type="text"
+                                          value={sub.name}
+                                          onChange={(event) =>
+                                            updateSubcategory(
+                                              group.id,
+                                              cat.id,
+                                              sub.id,
+                                              { name: event.target.value }
+                                            )
+                                          }
+                                          className="w-full rounded border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-900 outline-none focus:border-neutral-400"
+                                        />
+                                      </div>
+                                      <div className="flex items-center gap-0.5 shrink-0 pt-1">
                                         <button
                                           type="button"
                                           onClick={() =>
@@ -1589,8 +1906,8 @@ export default function AdminMenuCreationPage() {
       <AdminModal
         isOpen={saveModalOpen}
         onClose={() => setSaveModalOpen(false)}
-        title="Menu JSON (for API)"
-        description="Copy this payload for your backend contract. Groups contain categories; each category lists subcategories."
+        title="Menu saved"
+        description="The menu was sent to the server. You can copy the JSON below for backup or integration checks. Groups contain categories; each category lists subcategories."
         size="xl"
         footer={
           <>

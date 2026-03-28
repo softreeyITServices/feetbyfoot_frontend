@@ -12,13 +12,12 @@ export const categories: {
   right: [
     {
       label: "Pick Combos",
-      image: "/assets/images/grid_img_4.png",
-
+      image: "/assets/images/grid_img_2.png",
       href: "/gifts",
     },
     {
       label: "Kids",
-      image: "/assets/images/grid_img_2.png",
+      image: "/assets/images/grid_img_3.png",
       href: "/kids",
     },
     {
@@ -28,7 +27,7 @@ export const categories: {
     },
     {
       label: "Womens",
-      image: "/assets/images/product-5.png",
+      image: "/assets/images/grid_img_4.png",
       href: "/womens",
     },
   ],
