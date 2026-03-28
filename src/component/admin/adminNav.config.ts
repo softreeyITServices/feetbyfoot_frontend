@@ -49,6 +49,11 @@ export const ADMIN_NAV: AdminNavItem[] = [
     ],
   },
   {
+    label: "Menu Creation",
+    href: "/admin/menu",
+    icon: Settings,
+  },
+  {
     label: "Customers",
     href: "/admin/customers",
     icon: Users,

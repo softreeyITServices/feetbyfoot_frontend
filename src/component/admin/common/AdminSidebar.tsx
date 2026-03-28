@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ADMIN_NAV } from "../adminNav.config";
 
 interface AdminSidebarProps {
@@ -13,6 +13,16 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ collapsed }: AdminSidebarProps) {
   const pathname = usePathname();
   const [openMenus, setOpenMenus] = useState<string[]>([]);
+
+  useEffect(() => {
+    const activeParents = ADMIN_NAV.filter((item) =>
+      item.children?.some(
+        (child) => pathname === child.href || pathname.startsWith(child.href + "/")
+      )
+    ).map((item) => item.label);
+
+    setOpenMenus((prev) => Array.from(new Set([...prev, ...activeParents])));
+  }, [pathname]);
 
   const toggleMenu = (label: string) => {
     setOpenMenus((prev) =>
