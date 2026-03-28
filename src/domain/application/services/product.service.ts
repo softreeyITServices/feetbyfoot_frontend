@@ -6,6 +6,7 @@ import {
   PRODUCTS_MENUS_URL,
   PRODUCTS_PUBLIC_MEGA_MENU_URL,
   PRODUCTS_URL,
+  EX_PRODUCTS_URL,
   productsMenuByIdUrl,
   productsPublicMegaMenuByIdUrl,
 } from "@/constants/apis";
@@ -116,17 +117,17 @@ class ProductService {
     }
 
     const response = await httpClient.request<PublicProductsApiResponse>({
-      url: `${PRODUCTS_URL}?${params.toString()}`, // ✅ FIX
+      url: `${EX_PRODUCTS_URL}/public?${params.toString()}`, // ✅ FIX
       method: "GET",
       skipAuth: true,
     });
 
-    const data = response.data ?? [];
+    const data = response ?? {};
 
-    if (!data || !Array.isArray(data.products)) {
+    if (!data || !Array.isArray((data as any).products)) {
       throw new Error("Invalid products response");
     }
-    return data;
+    return data as any;
   }
 
 
@@ -250,7 +251,7 @@ class ProductService {
   async getProductFilters(): Promise<ProductFilterMeta> {
     try {
       const response = await httpClient.request<ProductFilterResponse>({
-        url: `${PRODUCTS_URL}/filters`,
+        url: `${EX_PRODUCTS_URL}/filters/meta`,
         method: "GET",
         skipAuth: true,
       });
@@ -264,7 +265,7 @@ class ProductService {
         throw new Error("Invalid filter meta response");
       }
 
-      return data;
+      return data as any;
     } catch (error) {
       handleApiError(error, "getProductFilters");
     }
@@ -278,7 +279,7 @@ class ProductService {
     }
     try {
       const response = await httpClient.request<ProductByIdResponse>({
-        url: `${PRODUCTS_URL}/${id}`,
+        url: `${EX_PRODUCTS_URL}/${id}`,
         method: "GET",
         skipAuth: true,
       });
@@ -299,7 +300,7 @@ class ProductService {
   async update(id: string, payload: UpdateProductPayload) {
     try {
       await httpClient.request({
-        url: `${PRODUCTS_URL}/${id}`,
+        url: `${EX_PRODUCTS_URL}/${id}`,
         method: "PATCH",
         data: payload,
         requiresAuth: true,
@@ -312,7 +313,7 @@ class ProductService {
   async delete(id: string) {
     try {
       await httpClient.request({
-        url: `${PRODUCTS_URL}/${id}`,
+        url: `${EX_PRODUCTS_URL}/${id}`,
         method: "DELETE",
         requiresAuth: true,
       });
@@ -324,7 +325,7 @@ class ProductService {
   async create(payload: CreateProductPayload): Promise<void> {
     try {
       await httpClient.request({
-        url: PRODUCTS_URL,
+        url: EX_PRODUCTS_URL,
         method: "POST",
         data: payload,
         requiresAuth: true,
