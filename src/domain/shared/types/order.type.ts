@@ -140,6 +140,10 @@ export interface Order {
   orderStatus: OrderStatus;
   paymentMethod: string;
 
+  /** Set when COD payment is updated via admin API */
+  codPaymentRemarks?: string;
+  codTransactionId?: string;
+
   shippingAddress: {
     _id: string;
     fullName: string;
@@ -157,6 +161,17 @@ export interface Order {
   uuid: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/* ---------------- COD PAYMENT STATUS (ADMIN) ---------------- */
+
+export type CodApiPaymentStatus = "PAID" | "FAILED" | "REFUNDED";
+
+export interface UpdateCodPaymentStatusRequest {
+  orderId: string;
+  paymentStatus: CodApiPaymentStatus;
+  remarks?: string;
+  transactionId?: string;
 }
 
 /* ---------------- STATUS UPDATE ---------------- */

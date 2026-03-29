@@ -22,7 +22,7 @@ import { AddressService } from "@/domain/application/services/address.service";
 import { Address } from "@/domain/shared/types/address.types";
 import CartPlatformFees from "@/component/ui/CartPlatformFees";
 import { setCart } from "@/store/slices/cart.slice";
-import { mapBackendCartToRedux } from "@/domain/shared/mappers/cartMapper";
+import { mapCartApiResponseToRedux } from "@/domain/shared/mappers/cartMapper";
 import {
   handleIncreaseCart,
   handleDecreaseCart,
@@ -153,7 +153,7 @@ export default function CartBody() {
 
   const refreshBackendCart = async () => {
     const dbCart = await cartService.getCart();
-    dispatch(setCart(mapBackendCartToRedux(dbCart.data.data.items)));
+    dispatch(setCart(mapCartApiResponseToRedux(dbCart)));
   };
 
   const handleIncrease = async (
@@ -236,20 +236,29 @@ export default function CartBody() {
 
       if (paymentMethod === "COD") {
         setIsCheckoutInProgress(true);
-        const orderId = await placeCodOrder({
-          addressId: selectedShippingId,
-          discount,
-        });
+        try {
+          const orderId = await placeCodOrder({
+            addressId: selectedShippingId,
+            discount,
+          });
 
-        dispatch(clearCart());
+          await cartService.clearAllServerItems();
+          dispatch(clearCart());
 
-        if (orderId) {
-          router.push(`/order/success?orderId=${orderId}`);
-          return;
+          if (orderId) {
+            router.push(`/order/success?orderId=${orderId}`);
+            return;
+          }
+
+          router.push("/order/success");
+        } catch (err) {
+          console.error("COD checkout error:", err);
+          toast.error(
+            err instanceof Error ? err.message : "Could not complete order"
+          );
+        } finally {
+          setIsCheckoutInProgress(false);
         }
-
-        router.push("/order/success");
-        setIsCheckoutInProgress(false);
         return;
       }
 
@@ -258,8 +267,19 @@ export default function CartBody() {
         addressId: selectedShippingId,
         discount,
         onSuccess: async () => {
-          dispatch(clearCart());
-          setIsCheckoutInProgress(false);
+          try {
+            await cartService.clearAllServerItems();
+          } catch (err) {
+            console.error("Failed to clear server cart after payment:", err);
+            toast.error(
+              err instanceof Error
+                ? err.message
+                : "Order placed but cart could not be cleared on the server"
+            );
+          } finally {
+            dispatch(clearCart());
+            setIsCheckoutInProgress(false);
+          }
         },
         onFailure: () => {
           setIsCheckoutInProgress(false);

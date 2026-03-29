@@ -100,7 +100,7 @@ function DesktopMegaNav({
             <Link
               key={g.id}
               href={primary}
-              className={`text-sm font-bold px-2 lg:px-3 py-1 whitespace-nowrap rounded ${
+              className={`text-sm font-bold uppercase px-2 lg:px-3 py-1 whitespace-nowrap rounded ${
                 groupActive
                   ? "bg-yellow-400 text-black"
                   : "text-gray-700 hover:text-black"
@@ -115,7 +115,7 @@ function DesktopMegaNav({
           <div key={g.id} className="relative group">
             <Link
               href={primary}
-              className={`text-sm font-bold px-2 lg:px-3 py-1 inline-flex items-center gap-0.5 whitespace-nowrap rounded ${
+              className={`text-sm font-bold uppercase px-2 lg:px-3 py-1 inline-flex items-center gap-0.5 whitespace-nowrap rounded ${
                 groupActive
                   ? "bg-yellow-400 text-black"
                   : "text-gray-700 hover:text-black"
@@ -286,7 +286,7 @@ export default function Navbar() {
             <Link
               key={g.id}
               href={primary}
-              className={`text-[11px] font-bold px-2 py-1 shrink-0 rounded whitespace-nowrap ${
+              className={`text-[11px] font-bold uppercase px-2 py-1 shrink-0 rounded whitespace-nowrap ${
                 groupActive ? "bg-yellow-400 text-black" : "text-gray-700"
               }`}
             >

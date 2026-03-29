@@ -6,7 +6,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { setAuthMode, setCart } from "@/store/slices/cart.slice";
 import { loadCartFromStorage } from "@/store/utils/cartStorage";
 import { cartService } from "@/domain/application/services/cart.service";
-import { mapBackendCartToRedux } from "@/domain/shared/mappers/cartMapper";
+import { mapCartApiResponseToRedux } from "@/domain/shared/mappers/cartMapper";
 
 export function useCartSync() {
   const { status, data: session } = useSession();
@@ -47,9 +47,7 @@ export function useCartSync() {
 
         const dbCart = await cartService.getCart();
 
-        dispatch(
-          setCart(mapBackendCartToRedux(dbCart.data.data.items))
-        );
+        dispatch(setCart(mapCartApiResponseToRedux(dbCart)));
 
       } catch (error) {
         console.error("Cart sync failed:", error);

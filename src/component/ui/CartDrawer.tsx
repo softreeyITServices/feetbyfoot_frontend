@@ -17,7 +17,7 @@ import {
 } from "@/lib/cartHandler";
 import { useSession } from "next-auth/react";
 import { cartService } from "@/domain/application/services/cart.service";
-import { mapBackendCartToRedux } from "@/domain/shared/mappers/cartMapper";
+import { mapCartApiResponseToRedux } from "@/domain/shared/mappers/cartMapper";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -61,7 +61,7 @@ export default function CartDrawer({
         dispatch(updateQuantity({ id, size, quantity: quantity + 1 })),
       refreshBackend: async () => {
         const dbCart = await cartService.getCart();
-        dispatch(setCart(mapBackendCartToRedux(dbCart.data.data.items)));
+        dispatch(setCart(mapCartApiResponseToRedux(dbCart)));
       },
     });
   };
@@ -82,7 +82,7 @@ export default function CartDrawer({
         dispatch(updateQuantity({ id, size, quantity: quantity - 1 })),
       refreshBackend: async () => {
         const dbCart = await cartService.getCart();
-        dispatch(setCart(mapBackendCartToRedux(dbCart.data.data.items)));
+        dispatch(setCart(mapCartApiResponseToRedux(dbCart)));
 
       },
     });
@@ -102,7 +102,7 @@ export default function CartDrawer({
         dispatch(removeFromCart({ id, size })),
       refreshBackend: async () => {
         const dbCart = await cartService.getCart();
-        dispatch(setCart(mapBackendCartToRedux(dbCart.data.data.items)));
+        dispatch(setCart(mapCartApiResponseToRedux(dbCart)));
       },
     });
   };

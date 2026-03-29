@@ -38,7 +38,12 @@ export function productsMenuByIdUrl(menuId: string): string {
   return `${API_BASE_URL}/products/menus/${menuId}`;
 }
 export const CATEGORIES_URL = API_BASE_URL + "/categories";
+/** Admin categories list → proxies to backend `/categories/admin` */
+export const ADMIN_CATEGORIES_URL = API_BASE_URL + "/categories/admin";
+
 export const SUB_CATEGORIES_URL = API_BASE_URL + "/categories/subcategories";
+/** Admin category types list → proxies to backend `/categoriestype/admin` */
+export const ADMIN_SUB_CATEGORIES_URL = API_BASE_URL + "/categoriestype/admin";
 export const ORDERS_URL = API_BASE_URL + "/payments/create-order";
 export const CART_URL = API_BASE_URL + "/cart";
 export const WISHLIST_URL = API_BASE_URL + "/wishlist";
@@ -47,6 +52,25 @@ export const ADDRESS_URL = API_BASE_URL + "/address";
 export const PLATFORM_FEES_URL = API_BASE_URL + "/platform-fees";
 
 export const ALL_ORDERS_URL = API_BASE_URL + "/orders";
+
+/** Customer invoice PDF → proxies to GET .../Orders/customer/download/:id (Mongo _id) */
+export function orderCustomerDownloadPdfUrl(orderMongoId: string): string {
+  return `${API_BASE_URL}/orders/customer/download/${encodeURIComponent(orderMongoId)}`;
+}
+
+/** Admin bulk confirmed+paid report → proxies to GET .../Orders/admin/download-orders-pdf */
+export const ORDER_ADMIN_DOWNLOAD_PDF_URL =
+  API_BASE_URL + "/orders/admin/download-orders-pdf";
+
+/**
+ * Admin single-order invoice PDF (Mongo _id).
+ * Proxies to GET .../Orders/admin/download-order-pdf/:id — must exist on Nest and must NOT
+ * scope by buyer userId (unlike the customer route, which only returns the current user’s orders).
+ */
+export function orderAdminSingleDownloadPdfUrl(orderMongoId: string): string {
+  return `${API_BASE_URL}/orders/admin/download-order-pdf/${encodeURIComponent(orderMongoId)}`;
+}
+
 export const EXCHANGE_URL = API_BASE_URL + "/orders/exchange";
 export const RETURN_URL = API_BASE_URL + "/orders/return";
 export const CANCEL_UPDATE_ORDER_URL = API_BASE_URL + "/orders";
@@ -60,6 +84,9 @@ export const ADMIN_ORDERS_URL = API_BASE_URL + "/orders/admin";
 export const ADMIN_EXCHANGE_URL = API_BASE_URL + "/orders/admin/exchange";
 export const ADMIN_RETURN_URL = API_BASE_URL + "/orders/admin/return";
 export const ADMIN_ORDER_STATUS_URL = API_BASE_URL + "/orders/admin/status";
+/** Admin COD payment status → proxies to `PATCH .../Orders/cod-payment-status` */
+export const ADMIN_ORDER_COD_PAYMENT_STATUS_URL =
+  API_BASE_URL + "/orders/admin/cod-payment-status";
 export const ADMIN_EXCHANGES_URL = API_BASE_URL + "/orders/admin/exchanges";
 export const ADMIN_UPLOAD_URL = API_BASE_URL + "/upload";
 export const BLOG_COMMENTS_URL = API_BASE_URL + "/blog-comments";
@@ -74,6 +101,15 @@ export const BLOGS_URL_USER = API_BASE_URL + "/blogs";
 export const ADMIN_BLOG_COMMENTS_URL = API_BASE_URL + "/blogs-comments";
 export const CMS_URL = API_BASE_URL + "/cms";
 export const SECTION_BANNERS_URL = API_BASE_URL + "/section-banners";
+
+/** Storefront active announcements (home marquee) */
+export const ANNOUNCEMENTS_PUBLIC_URL = API_BASE_URL + "/announcements/public";
+/** Admin announcements CRUD → proxies to backend `/announcements/admin` */
+export const ANNOUNCEMENTS_ADMIN_URL = API_BASE_URL + "/announcements/admin";
+
+export function announcementsAdminByIdUrl(id: string): string {
+  return `${API_BASE_URL}/announcements/admin/${encodeURIComponent(id)}`;
+}
 
 // External APIs (for server-side use)
 
@@ -101,8 +137,17 @@ export const EX_PRODUCTS_MENUS_URL = EXTERNAL_API_BASE_URL + "/products/menus";
 export function exProductsMenuByIdUrl(menuId: string): string {
   return `${EXTERNAL_API_BASE_URL}/products/menus/${menuId}`;
 }
+/** Public / storefront categories (active only). */
 export const EX_CATEGORIES_URL = EXTERNAL_API_BASE_URL + "/categories";
+/** Admin categories (`GET /categories/admin`). */
+export const EX_ADMIN_CATEGORIES_URL =
+  EXTERNAL_API_BASE_URL + "/categories/admin";
+
+/** Public / storefront category types (active only). */
 export const EX_SUB_CATEGORIES_URL = EXTERNAL_API_BASE_URL + "/categoriestype";
+/** Admin category types (`GET /categoriestype/admin`). */
+export const EX_ADMIN_SUB_CATEGORIES_URL =
+  EXTERNAL_API_BASE_URL + "/categoriestype/admin";
 export const EX_ORDERS_URL = EXTERNAL_API_BASE_URL + "/payments/create-order";
 export const EX_CART_URL = EXTERNAL_API_BASE_URL + "/cart";
 export const EX_WISHLIST_URL = EXTERNAL_API_BASE_URL + "/wishlist";
@@ -111,6 +156,26 @@ export const EX_PAYMENT_VERIFY = EXTERNAL_API_BASE_URL + "/payments/verify";
 export const EX_ADDRESS_URL = EXTERNAL_API_BASE_URL + "/address";
 export const EX_PLATFORM_FEES_URL = EXTERNAL_API_BASE_URL + "/platform-fees";
 export const EX_ALL_ORDERS_URL = EXTERNAL_API_BASE_URL + "/orders";
+
+function exApiV1Base(): string {
+  return (EXTERNAL_API_BASE_URL ?? "").replace(/\/$/, "");
+}
+
+/** Backend GET /Orders/customer/download/:id */
+export function exOrderCustomerDownloadPdfUrl(orderMongoId: string): string {
+  return `${exApiV1Base()}/Orders/customer/download/${encodeURIComponent(orderMongoId)}`;
+}
+
+/** Backend GET /Orders/admin/download-orders-pdf */
+export function exOrderAdminDownloadPdfUrl(): string {
+  return `${exApiV1Base()}/Orders/admin/download-orders-pdf`;
+}
+
+/** Backend GET /Orders/admin/download-order-pdf/:id (single invoice; admin role) */
+export function exOrderAdminSingleDownloadPdfUrl(orderMongoId: string): string {
+  return `${exApiV1Base()}/Orders/admin/download-order-pdf/${encodeURIComponent(orderMongoId)}`;
+}
+
 export const EX_EXCHANGE_URL = EXTERNAL_API_BASE_URL + "/user/order/exchange";
 export const EX_RETURN_URL = EXTERNAL_API_BASE_URL + "/user/order/return";
 export const EX_CANCEL_UPDATE_ORDER_URL = EXTERNAL_API_BASE_URL + "/user/orders";
@@ -125,6 +190,8 @@ export const EX_RATING_URL = EXTERNAL_API_BASE_URL + "/rating";
 export const EX_ADMIN_EXCHANGE_URL = EXTERNAL_API_BASE_URL + "/admin/exchanges";
 export const EX_ADMIN_RETURN_URL = EXTERNAL_API_BASE_URL + "/admin/order/return";
 export const EX_ADMIN_ORDER_STATUS_URL = EXTERNAL_API_BASE_URL + "/admin/order/status";
+export const EX_ADMIN_ORDER_COD_PAYMENT_STATUS_URL =
+  EXTERNAL_API_BASE_URL + "/Orders/cod-payment-status";
 export const EX_UPLOAD_URL = EXTERNAL_API_BASE_URL + "/upload";
 /** Public blog API (list / read published content). */
 export const EX_BLOGS_URL = EXTERNAL_API_BASE_URL + "/blogs";
@@ -137,3 +204,11 @@ export const EX_ADMIN_DASHBOARD_OVERVIEW_URL =
   EXTERNAL_API_BASE_URL + "/admin/dashboard/overview";
 export const EX_CMS_URL = EXTERNAL_API_BASE_URL + "/cms";
 export const EX_SECTION_BANNERS_URL = EXTERNAL_API_BASE_URL + "/section-banners";
+export const EX_ANNOUNCEMENTS_PUBLIC_URL =
+  EXTERNAL_API_BASE_URL + "/announcements/public";
+export const EX_ANNOUNCEMENTS_ADMIN_URL =
+  EXTERNAL_API_BASE_URL + "/announcements/admin";
+
+export function exAnnouncementsAdminByIdUrl(id: string): string {
+  return `${EXTERNAL_API_BASE_URL}/announcements/admin/${encodeURIComponent(id)}`;
+}

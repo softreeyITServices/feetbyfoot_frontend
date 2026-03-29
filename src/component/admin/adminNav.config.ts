@@ -2,8 +2,7 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
-  BarChart3,
-  Settings,
+  SlidersHorizontal,
   type LucideIcon,
   ImageIcon,
   DollarSignIcon,
@@ -12,6 +11,7 @@ import {
   BookIcon,
   LayoutPanelTopIcon,
   Users,
+  Rows3,
 } from "lucide-react";
 
 export interface AdminNavChild {
@@ -33,12 +33,9 @@ export const ADMIN_NAV: AdminNavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    label: "Orders",
-    icon: ShoppingCart,
-    children: [
-      { label: "All Orders", href: "/admin/orders" },
-      { label: "Exchanges", href: "/admin/orders/exchange" },
-    ],
+    label: "Customers",
+    href: "/admin/customers",
+    icon: Users,
   },
   {
     label: "Products",
@@ -49,37 +46,17 @@ export const ADMIN_NAV: AdminNavItem[] = [
     ],
   },
   {
-    label: "Menu Creation",
-    href: "/admin/menu",
-    icon: Settings,
-  },
-  {
-    label: "Customers",
-    href: "/admin/customers",
-    icon: Users,
-  },
-  {
-    label: "Banners",
-    icon: ImageIcon,
+    label: "Orders",
+    icon: ShoppingCart,
     children: [
-      { label: "All Banners", href: "/admin/banners" },
-      { label: "Section Banners", href: "/admin/section-banners" },
+      { label: "All Orders", href: "/admin/orders" },
+      { label: "Exchanges", href: "/admin/orders/exchange" },
     ],
   },
   {
-    label: "Platforms Fees",
-    href: "/admin/platforms-fees",
-    icon: DollarSignIcon,
-  },
-  {
-    label: "Coupons",
-    href: "/admin/coupons",
-    icon: PercentIcon,
-  },
-  {
-    label: "Contact",
-    href: "/admin/contact",
-    icon: MailIcon,
+    label: "CMS",
+    href: "/admin/cms",
+    icon: LayoutPanelTopIcon,
   },
   {
     label: "Blogs",
@@ -87,8 +64,20 @@ export const ADMIN_NAV: AdminNavItem[] = [
     icon: BookIcon,
   },
   {
-    label: "CMS",
-    href: "/admin/cms",
-    icon: LayoutPanelTopIcon,
+    label: "Contact",
+    href: "/admin/contact",
+    icon: MailIcon,
+  },
+  {
+    label: "Settings",
+    icon: SlidersHorizontal,
+    children: [
+      { label: "Menu Creation", href: "/admin/menu" },
+      { label: "Home marquee", href: "/admin/settings/marquee" },
+      { label: "Home Banners", href: "/admin/banners" },
+      { label: "Section Banners", href: "/admin/section-banners" },
+      { label: "Platforms Fees", href: "/admin/platforms-fees" },
+      { label: "Coupons", href: "/admin/coupons" },
+    ],
   },
 ];

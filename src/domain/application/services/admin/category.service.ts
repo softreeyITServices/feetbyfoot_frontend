@@ -1,7 +1,12 @@
 import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
-import type { AdminCategory, AdminCategoryResponse, CategoryPayload, CategoryResponse } from "@/domain/shared/types/admin/category";
-import { CATEGORIES_URL } from "@/constants/apis";
+import type {
+  AdminCategory,
+  AdminCategoryResponse,
+  CategoryPayload,
+  CategoryResponse,
+} from "@/domain/shared/types/admin/category";
+import { ADMIN_CATEGORIES_URL, CATEGORIES_URL } from "@/constants/apis";
 
 /* ================= TYPES ================= */
 
@@ -32,7 +37,7 @@ export class CategoryService {
       const res = await httpClient.request<
         CategoryResponse<AdminCategoryResponse<AdminCategory[]>>
       >({
-        url: CATEGORIES_URL,
+        url: ADMIN_CATEGORIES_URL,
         method: "GET",
         requiresAuth: true,
       });

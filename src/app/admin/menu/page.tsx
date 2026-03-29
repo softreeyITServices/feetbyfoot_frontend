@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { uploadService } from "@/domain/application/services/upload.service";
-import { AdminModal } from "@/component/admin/AdminModal";
 import { CategoryService } from "@/domain/application/services/admin/category.service";
 import { CategoryTypeService } from "@/domain/application/services/admin/subcategory.service";
 import type {
@@ -347,8 +346,6 @@ export default function AdminMenuCreationPage() {
   const [sourceGroupExpanded, setSourceGroupExpanded] = useState<
     Record<string, boolean>
   >({});
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const [savedExportJson, setSavedExportJson] = useState("");
   const [savingMenu, setSavingMenu] = useState(false);
   const [menuMetaName, setMenuMetaName] = useState("Main menu");
   const [menuPlacement, setMenuPlacement] = useState<MenuPlacement>("top");
@@ -757,7 +754,6 @@ export default function AdminMenuCreationPage() {
       isDefault: exportPayload.isDefault,
       savedAt: exportPayload.savedAt,
     };
-    const json = JSON.stringify(exportPayload, null, 2);
     setSavingMenu(true);
     try {
       if (selectedMenuId) {
@@ -769,8 +765,6 @@ export default function AdminMenuCreationPage() {
         const fresh = await productService.listMegaMenus();
         setMenuList(fresh);
       }
-      setSavedExportJson(json);
-      setSaveModalOpen(true);
       toast.success("Menu saved");
     } catch (error: unknown) {
       const message =
@@ -778,15 +772,6 @@ export default function AdminMenuCreationPage() {
       toast.error(message);
     } finally {
       setSavingMenu(false);
-    }
-  };
-
-  const handleCopySavedJson = async () => {
-    try {
-      await navigator.clipboard.writeText(savedExportJson);
-      toast.success("JSON copied to clipboard");
-    } catch {
-      toast.error("Could not copy — select the text manually");
     }
   };
 
@@ -1902,39 +1887,6 @@ export default function AdminMenuCreationPage() {
           )}
         </section>
       </div>
-
-      <AdminModal
-        isOpen={saveModalOpen}
-        onClose={() => setSaveModalOpen(false)}
-        title="Menu saved"
-        description="The menu was sent to the server. You can copy the JSON below for backup or integration checks. Groups contain categories; each category lists subcategories."
-        size="xl"
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={() => setSaveModalOpen(false)}
-              className="px-4 py-2 text-xs border rounded-lg"
-            >
-              Close
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleCopySavedJson()}
-              className="px-4 py-2 text-xs bg-black text-white rounded-lg"
-            >
-              Copy JSON
-            </button>
-          </>
-        }
-      >
-        <textarea
-          readOnly
-          value={savedExportJson}
-          className="w-full min-h-[min(420px,55vh)] rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 font-mono text-[11px] leading-relaxed text-neutral-800 outline-none focus:border-neutral-400"
-          spellCheck={false}
-        />
-      </AdminModal>
     </div>
   );
 }

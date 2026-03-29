@@ -4,7 +4,11 @@ import type {
   CategoryPayload,
   CategoryResponse,
 } from "@/domain/shared/types/admin/category";
-import { SUB_CATEGORIES_URL, CATEGORIES_URL } from "@/constants/apis";
+import {
+  ADMIN_SUB_CATEGORIES_URL,
+  SUB_CATEGORIES_URL,
+  CATEGORIES_URL,
+} from "@/constants/apis";
 
 export class CategoryTypeService {
   /* ---------------- CREATE ---------------- */
@@ -27,7 +31,7 @@ export class CategoryTypeService {
       const res = await httpClient.request<
         CategoryResponse<{ data: T[] }>
       >({
-        url: SUB_CATEGORIES_URL,
+        url: ADMIN_SUB_CATEGORIES_URL,
         method: "GET",
         requiresAuth: true,
       });
@@ -44,7 +48,7 @@ export class CategoryTypeService {
       const res = await httpClient.request<
         CategoryResponse<{ data: T[] }>
       >({
-        url: `${CATEGORIES_URL}/${categoryId}/subcategories`,
+        url: `${ADMIN_SUB_CATEGORIES_URL}/category/${categoryId}`,
         method: "GET",
         requiresAuth: true,
       });

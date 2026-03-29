@@ -75,6 +75,30 @@ class CartService {
       handleApiError(error, "deleteItems");
     }
   }
+
+  /**
+   * Removes every line from the server cart (authenticated users).
+   * Call after a successful order so Redux `clearCart` is not undone by the next sync.
+   */
+  async clearAllServerItems(): Promise<void> {
+    try {
+      const response = await this.getCart();
+      const cartItems = response.data?.data?.items ?? [];
+      if (!Array.isArray(cartItems) || cartItems.length === 0) {
+        return;
+      }
+
+      await this.deleteItems({
+        items: cartItems.map((item) => ({
+          itemId: item._id,
+          productId: item.productId,
+          size: item.size,
+        })),
+      });
+    } catch (error) {
+      handleApiError(error, "clearAllServerItems");
+    }
+  }
 }
 
 export const cartService = new CartService();

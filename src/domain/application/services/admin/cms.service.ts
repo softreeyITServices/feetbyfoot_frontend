@@ -2,7 +2,7 @@
 
 import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
-import { CMS_URL } from "@/constants/apis";
+import { CMS_URL, EX_CMS_URL } from "@/constants/apis";
 import type {
   CmsItem,
   CmsPayload,
@@ -55,11 +55,43 @@ export class CmsService {
     }
   }
 
+  /**
+   * Storefront / RSC: call backend directly when `API_URL` is set (avoid loopback
+   * to the Next dev server). Browser continues to use same-origin `/api/cms/...`.
+   */
+  private static cmsPublicFetchUrl(slug: string): string {
+    const encoded = encodeURIComponent(slug);
+    if (typeof window === "undefined" && process.env.API_URL) {
+      return `${EX_CMS_URL}/${encoded}`;
+    }
+    return `${CMS_URL}/by-name/${encoded}`;
+  }
+
+  /** Public read by slug (e.g. `privacy_policy`). Returns null if missing or on error. */
+  static async getPublicByName(name: string): Promise<CmsItem | null> {
+    try {
+      const res = await httpClient.request<unknown>({
+        url: CmsService.cmsPublicFetchUrl(name),
+        method: "GET",
+      });
+
+      const cms = CmsService.unwrapCmsData<CmsItem>(res);
+
+      if (!cms || typeof cms !== "object" || !("name" in cms)) {
+        return null;
+      }
+
+      return cms;
+    } catch {
+      return null;
+    }
+  }
+
   /* ---------------- GET BY NAME ---------------- */
   static async getByName(name: string): Promise<CmsItem> {
     try {
       const res = await httpClient.request<unknown>({
-        url: `${CMS_URL}/by-name/${name}`,
+        url: `${CMS_URL}/by-name/${encodeURIComponent(name)}`,
         method: "GET",
       });
 

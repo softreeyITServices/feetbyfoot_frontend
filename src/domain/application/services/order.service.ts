@@ -5,7 +5,11 @@ import {
   EXCHANGE_URL,
   RETURN_URL,
   ADMIN_ORDER_STATUS_URL,
+  ADMIN_ORDER_COD_PAYMENT_STATUS_URL,
   ADMIN_RETURN_URL,
+  ORDER_ADMIN_DOWNLOAD_PDF_URL,
+  orderAdminSingleDownloadPdfUrl,
+  orderCustomerDownloadPdfUrl,
 } from "@/constants/apis";
 
 import {
@@ -15,6 +19,8 @@ import {
   GenericMessageResponse,
   ReturnRequestPayload,
   UpdateOrderStatusRequest,
+  UpdateCodPaymentStatusRequest,
+  Order,
 } from "@/domain/shared/types/order.type";
 
 class OrdersService {
@@ -164,6 +170,26 @@ class OrdersService {
     }
   }
 
+  async updateCodPaymentStatus(
+    payload: UpdateCodPaymentStatusRequest
+  ): Promise<{ message: string; data: Order }> {
+    try {
+      const response = await httpClient.request<{
+        data: { message: string; data: Order };
+      }>({
+        url: ADMIN_ORDER_COD_PAYMENT_STATUS_URL,
+        method: "PATCH",
+        requiresAuth: true,
+        data: payload,
+      });
+
+      return response.data;
+    } catch (error) {
+      handleApiError(error, "updateCodPaymentStatus");
+      throw error;
+    }
+  }
+
   /* ---------------- GET RETURN ORDERS ---------------- */
   async getReturnOrders(params: {
     page?: number;
@@ -215,6 +241,90 @@ class OrdersService {
       handleApiError(error, "updateReturnStatus");
       throw error;
     }
+  }
+
+  private async fetchAuthorizedPdf(url: string): Promise<Blob> {
+    const { getSession } = await import("next-auth/react");
+    const session = await getSession();
+    const accessToken = (
+      session as { accessToken?: string } | null
+    )?.accessToken;
+
+    if (!accessToken) {
+      throw new Error("Please sign in to download.");
+    }
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!res.ok) {
+      let message = "Download failed";
+      try {
+        const j: unknown = await res.json();
+        if (
+          typeof j === "object" &&
+          j !== null &&
+          "message" in j &&
+          typeof (j as { message: unknown }).message === "string"
+        ) {
+          message = (j as { message: string }).message;
+        }
+      } catch {
+        message = res.statusText || message;
+      }
+      throw new Error(message);
+    }
+
+    return res.blob();
+  }
+
+  private triggerBlobDownload(blob: Blob, filename: string) {
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(objectUrl);
+  }
+
+  /**
+   * Customer account: single-order invoice. Backend matches order._id + JWT user (buyer).
+   * Will fail for admin tokens — use `downloadAdminSingleOrderInvoicePdf` in admin UI.
+   */
+  async downloadCustomerInvoicePdf(
+    orderMongoId: string,
+    orderNumber?: string
+  ): Promise<void> {
+    const blob = await this.fetchAuthorizedPdf(
+      orderCustomerDownloadPdfUrl(orderMongoId)
+    );
+    const safe =
+      (orderNumber && orderNumber.replace(/[^\w.-]/g, "_")) || "customer-order";
+    this.triggerBlobDownload(blob, `${safe}.pdf`);
+  }
+
+  /**
+   * Admin: single-order invoice PDF. Requires Nest `GET Orders/admin/download-order-pdf/:id`
+   * (no buyer userId filter). Adjust `exOrderAdminSingleDownloadPdfUrl` if your path differs.
+   */
+  async downloadAdminSingleOrderInvoicePdf(
+    orderMongoId: string,
+    orderNumber?: string
+  ): Promise<void> {
+    const blob = await this.fetchAuthorizedPdf(
+      orderAdminSingleDownloadPdfUrl(orderMongoId)
+    );
+    const safe =
+      (orderNumber && orderNumber.replace(/[^\w.-]/g, "_")) || "order";
+    this.triggerBlobDownload(blob, `${safe}.pdf`);
+  }
+
+  /** Admin: PDF summary of all confirmed + paid orders (server-side filter). */
+  async downloadAdminPaidOrdersReportPdf(): Promise<void> {
+    const blob = await this.fetchAuthorizedPdf(ORDER_ADMIN_DOWNLOAD_PDF_URL);
+    this.triggerBlobDownload(blob, "admin-confirmed-paid-orders.pdf");
   }
 }
 

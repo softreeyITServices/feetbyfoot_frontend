@@ -288,7 +288,7 @@ export function DataTable<T extends { id: string | number }>({
                 ))}
 
                 {hasActions && (
-                  <td className="px-4 py-3 flex justify-end gap-2">
+                  <td className="px-4 py-3 flex justify-center h-18 gap-2">
                     {onSettings && (
                       <button
                         onClick={() => onSettings(row)}

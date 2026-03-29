@@ -1,64 +1,77 @@
-"use client";
-
-import { useState } from "react";
 import Navbar from "@/component/common/navbar";
 import Footer from "@/component/common/Footer";
-import { Phone, Mail, MapPin } from "lucide-react";
-import { contactService } from "@/domain/application/services/contact.service";
-import { CreateContactRequest } from "@/domain/shared/types/contact.type";
+import { CmsService } from "@/domain/application/services/admin/cms.service";
+import type { Metadata } from "next";
+import { cache } from "react";
+import ContactMessageForm from "./ContactMessageForm";
 
-export default function ContactPage() {
-  const [formData, setFormData] = useState<CreateContactRequest>({
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    subject: "",
-    message: "",
-  });
+/** CMS is loaded on the server; avoid static shell so content and /api/cms calls stay fresh. */
+export const dynamic = "force-dynamic";
 
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<
-    "idle" | "success" | "error"
-  >("idle");
+/** Must match the CMS page name in Admin → CMS (underscores). Content = information column only (not the form). */
+const CONTACT_US_CMS_NAME = "contact_us";
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+const getContactUsCms = cache(() =>
+  CmsService.getPublicByName(CONTACT_US_CMS_NAME)
+);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+export async function generateMetadata(): Promise<Metadata> {
+  const cms = await getContactUsCms();
+  const heading =
+    cms?.isActive && cms.title?.trim() ? cms.title.trim() : "Contact Us";
+  return { title: `${heading} | FeetByFoot` };
+}
 
-    if (!formData.fullName || !formData.email || !formData.message) {
-      setStatus("error");
-      return;
-    }
+function DefaultContactInfo() {
+  return (
+    <>
+      <h2 className="text-3xl font-semibold mb-6">Information</h2>
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <img
+            src="/icons/contact/phone.svg"
+            width={16}
+            height={16}
+            alt=""
+            className="shrink-0 w-4 h-4 block"
+          />
+          <p className="text-gray-800">+91-9896454666</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <img
+            src="/icons/contact/email.svg"
+            width={16}
+            height={16}
+            alt=""
+            className="shrink-0 w-4 h-4 block"
+          />
+          <p className="text-gray-800">info@feetbyfoot.com</p>
+        </div>
+        <div className="flex items-start gap-4">
+          <img
+            src="/icons/contact/location.svg"
+            width={16}
+            height={16}
+            alt=""
+            className="shrink-0 w-4 h-4 block mt-0.5"
+          />
+          <p className="text-gray-800 leading-relaxed">
+            2nd Floor, SCO 9, Eldeco County Rd, Sector 19,
+            <br />
+            Sonipat, Haryana 131001
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
 
-    try {
-      setLoading(true);
-      setStatus("idle");
-
-      await contactService.createContact(formData);
-
-      setStatus("success");
-
-      setFormData({
-        fullName: "",
-        email: "",
-        phoneNumber: "",
-        subject: "",
-        message: "",
-      });
-    } catch {
-      setStatus("error");
-    } finally {
-      setLoading(false);
-    }
-  };
+export default async function ContactPage() {
+  const cms = await getContactUsCms();
+  const active = cms?.isActive === true;
+  const html = cms?.content?.trim() ?? "";
+  const bannerTitle =
+    active && cms.title?.trim() ? cms.title.trim() : "Contact";
 
   return (
     <>
@@ -67,7 +80,7 @@ export default function ContactPage() {
       <div className="min-h-screen bg-white py-16 px-6">
         <div className="text-center mb-10">
           <div className="inline-block bg-yellow-400 px-16 py-4">
-            <h1 className="text-4xl font-bold text-black">Contact</h1>
+            <h1 className="text-4xl font-bold text-black">{bannerTitle}</h1>
           </div>
           <p className="mt-4 text-gray-600">
             Preorder now to receive exclusive deals & gifts
@@ -75,124 +88,18 @@ export default function ContactPage() {
         </div>
 
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16">
-          {/* LEFT SIDE */}
           <div>
-            <h2 className="text-3xl font-semibold mb-6">Information</h2>
-
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Phone className="text-green-500 w-6 h-6" />
-                <p className="text-gray-800">+91-9896454666</p>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <Mail className="text-green-500 w-6 h-6" />
-                <p className="text-gray-800">info@feetbyfoot.com</p>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <MapPin className="text-green-500 w-6 h-6" />
-                <p className="text-gray-800 leading-relaxed">
-                  2nd Floor, SCO 9, Eldeco County Rd, Sector 19,
-                  <br />
-                  Sonipat, Haryana 131001
-                </p>
-              </div>
-            </div>
+            {active && html ? (
+              <div
+                className="contact-info-cms"
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+            ) : (
+              <DefaultContactInfo />
+            )}
           </div>
 
-          {/* RIGHT SIDE */}
-          <div className="bg-black p-10 rounded-md shadow-xl">
-            <h3 className="text-2xl font-semibold text-yellow-400 mb-8">
-              Send us a Message
-            </h3>
-
-            {/* SUCCESS MESSAGE */}
-            {status === "success" && (
-              <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-800 rounded">
-                ✅ Your message has been sent successfully. We’ll contact you soon.
-              </div>
-            )}
-
-            {/* ERROR MESSAGE */}
-            {status === "error" && (
-              <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-800 rounded">
-                ❌ Something went wrong. Please check your inputs and try again.
-              </div>
-            )}
-
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-white text-sm">Full Name *</label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    className="w-full mt-2 p-3 rounded bg-white text-black"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-white text-sm">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full mt-2 p-3 rounded bg-white text-black"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-white text-sm">Phone Number</label>
-                <input
-                  type="text"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  className="w-full mt-2 p-3 rounded bg-white text-black"
-                />
-              </div>
-
-              <div>
-                <label className="text-white text-sm">Subject</label>
-                <input
-                  type="text"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  className="w-full mt-2 p-3 rounded bg-white text-black"
-                />
-              </div>
-
-              <div>
-                <label className="text-white text-sm">Message *</label>
-                <textarea
-                  rows={4}
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  className="w-full mt-2 p-3 rounded bg-white text-black"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-yellow-400 text-black font-semibold py-4 rounded hover:bg-yellow-500 disabled:opacity-60 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-              >
-                {loading && (
-                  <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
-                )}
-                {loading ? "Sending..." : "SEND MESSAGE"}
-              </button>
-            </form>
-          </div>
+          <ContactMessageForm />
         </div>
       </div>
 

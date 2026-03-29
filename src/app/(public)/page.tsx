@@ -8,7 +8,7 @@ import HeroBanner from "@/component/home/HeroBanner";
 import PromoSection from "@/component/home/PromoSection";
 import ShopByCategory from "@/component/home/ShopByCategory";
 import TrendingGallery from "@/component/home/TrendingGallery";
-import { SimpleMarquee } from "@/component/ui/Marquee";
+import HomeMarquee from "@/component/home/HomeMarquee";
 export const dynamic = "force-dynamic";
 
 export default function HomePage() {
@@ -16,7 +16,7 @@ export default function HomePage() {
     <>
       <Navbar />
       <HeroBanner />
-      <SimpleMarquee text="Sale is live upto 60% off shop now free shiping | &nbsp;"/>
+      <HomeMarquee />
       <CategoryStrip />
       <BestSelling />
       <PromoSection />

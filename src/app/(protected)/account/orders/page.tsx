@@ -12,12 +12,15 @@ import {
   PaginatedOrders,
   OrderItem,
   OrderStatus,
+  PaymentStatus,
 } from "@/domain/shared/types/order.type";
 import { ordersService } from "@/domain/application/services/order.service";
 import { DataTable } from "@/component/ui/DataTable";
 import { getStatusBadgeClasses } from "@/lib/common";
+import { canDownloadOrderInvoicePdf } from "@/lib/orderPdf";
 import ExchangeModal from "@/component/ui/modals/ExchangeModal";
 import { RowActionMenu } from "@/component/ui/tables/order/RowActionMenu";
+import { OrderPdfDownloadIcon } from "@/component/ui/tables/order/OrderPdfDownloadIcon";
 import ReturnModal from "@/component/ui/modals/ReturnModal";
 import UpdateAddressModal from "@/component/ui/modals/UpdateAddressModal";
 import CancelOrderModal from "@/component/ui/modals/CancelOrderModal";
@@ -30,6 +33,7 @@ interface FormattedOrder {
   date: string;
   total: number;
   status: OrderStatus;
+  paymentStatus: PaymentStatus;
   items: OrderItem[];
   addressId: string;
 }
@@ -143,6 +147,7 @@ export default function OrdersPage() {
     date: new Date(order.createdAt).toLocaleDateString(),
     total: order.totalAmount,
     status: order.orderStatus,
+    paymentStatus: order.paymentStatus,
     items: order.items,
     addressId: order.shippingAddress?._id
   }));
@@ -339,6 +344,24 @@ export default function OrdersPage() {
                   >
                     {row.status}
                   </span>
+                ),
+              },
+              {
+                header: "Invoice",
+                accessor: (row) => (
+                  <OrderPdfDownloadIcon
+                    enabled={canDownloadOrderInvoicePdf({
+                      paymentStatus: row.paymentStatus,
+                    })}
+                    enabledTitle="Download invoice (PDF)"
+                    disabledTitle="Invoice PDF is available once payment is completed (paid)."
+                    onDownload={() =>
+                      ordersService.downloadCustomerInvoicePdf(
+                        row.orderId,
+                        row.orderNumber
+                      )
+                    }
+                  />
                 ),
               },
               {
