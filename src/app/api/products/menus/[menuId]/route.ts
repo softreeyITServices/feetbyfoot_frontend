@@ -89,3 +89,42 @@ export const PATCH = apiHandler(
   },
   { allowedMethods: ["PATCH"] }
 );
+
+/** Proxies `DELETE /products/menus/:menuId` (admin delete). */
+export const DELETE = apiHandler(
+  async (req: NextRequest, context: ApiContext<unknown, { menuId: string }>) => {
+    const menuId = context.params?.menuId;
+    if (!menuId) {
+      return NextResponse.json({ message: "menuId is required" }, { status: 400 });
+    }
+    try {
+      const authorization = req.headers.get("authorization");
+      if (!authorization) {
+        return NextResponse.json(
+          { message: "Missing Authorization header" },
+          { status: 401 }
+        );
+      }
+
+      const response = await httpClient.request({
+        url: exProductsMenuByIdUrl(menuId),
+        method: "DELETE",
+        headers: { Authorization: authorization },
+      });
+
+      return createSuccessResponse(response, 200);
+    } catch (error: unknown) {
+      if (isHttpClientError(error)) {
+        throw new ExternalApiError(
+          error.data?.message ??
+            error.message ??
+            "Failed to delete menu",
+          error.status,
+          error.data
+        );
+      }
+      throw error;
+    }
+  },
+  { allowedMethods: ["DELETE"] }
+);

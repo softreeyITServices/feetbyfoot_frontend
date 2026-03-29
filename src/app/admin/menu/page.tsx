@@ -11,6 +11,7 @@ import type {
   AdminCategoryType,
 } from "@/domain/shared/types/admin/category";
 import { productService } from "@/domain/application/services/product.service";
+import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
 import type {
   CreateMegaMenuBody,
   MegaMenuDocument,
@@ -364,6 +365,7 @@ export default function AdminMenuCreationPage() {
     Record<string, boolean>
   >({});
   const [savingMenu, setSavingMenu] = useState(false);
+  const [deleteMenuModalOpen, setDeleteMenuModalOpen] = useState(false);
   const [menuMetaName, setMenuMetaName] = useState("Main menu");
   const [menuPlacement, setMenuPlacement] = useState<MenuPlacement>("top");
   const [menuIsDefault, setMenuIsDefault] = useState(true);
@@ -437,6 +439,7 @@ export default function AdminMenuCreationPage() {
   }, []);
 
   const handleMenuSelectionChange = async (value: string) => {
+    setDeleteMenuModalOpen(false);
     if (value === "__new__") {
       setSelectedMenuId("");
       setFinalMenu([]);
@@ -792,6 +795,35 @@ export default function AdminMenuCreationPage() {
     }
   };
 
+  const confirmDeleteMenu = async () => {
+    if (!selectedMenuId) return;
+    try {
+      await productService.deleteMegaMenu(selectedMenuId);
+      toast.success("Menu deleted");
+      const items = await productService.listMegaMenus();
+      setMenuList(items);
+      if (items.length > 0) {
+        const pick = items.find((i) => i.isDefault) ?? items[0];
+        setSelectedMenuId(pick.id);
+        const doc = await productService.getAdminMegaMenu(pick.id);
+        applyMenuDocument(doc);
+      } else {
+        setSelectedMenuId("");
+        try {
+          const doc = await productService.getMegaMenu();
+          applyMenuDocument(doc);
+        } catch {
+          setFinalMenu([]);
+        }
+      }
+    } catch (error: unknown) {
+      const message =
+        (error as { message?: string })?.message ?? "Failed to delete menu";
+      toast.error(message);
+      throw error;
+    }
+  };
+
   const isGroupCollapsed = (groupId: string) => Boolean(collapsedGroups[groupId]);
   const toggleGroupCollapsed = (groupId: string) => {
     setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
@@ -1131,21 +1163,33 @@ export default function AdminMenuCreationPage() {
             <label htmlFor="menu-saved-select" className="text-xs text-neutral-600">
               Saved menu
             </label>
-            <select
-              id="menu-saved-select"
-              value={selectedMenuId || "__new__"}
-              onChange={(e) => void handleMenuSelectionChange(e.target.value)}
-              disabled={menusLoading}
-              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400 bg-white disabled:opacity-60"
-            >
-              <option value="__new__">New menu (create on Save)</option>
-              {menuList.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                  {m.isDefault ? " (default)" : ""}
-                </option>
-              ))}
-            </select>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+              <select
+                id="menu-saved-select"
+                value={selectedMenuId || "__new__"}
+                onChange={(e) => void handleMenuSelectionChange(e.target.value)}
+                disabled={menusLoading}
+                className="min-w-0 flex-1 rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400 bg-white disabled:opacity-60"
+              >
+                <option value="__new__">New menu (create on Save)</option>
+                {menuList.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                    {m.isDefault ? " (default)" : ""}
+                  </option>
+                ))}
+              </select>
+              {selectedMenuId ? (
+                <button
+                  type="button"
+                  onClick={() => setDeleteMenuModalOpen(true)}
+                  disabled={menusLoading}
+                  className="whitespace-nowrap rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50 disabled:pointer-events-none disabled:opacity-60 sm:shrink-0"
+                >
+                  Delete menu
+                </button>
+              ) : null}
+            </div>
             <p className="text-[10px] text-neutral-500">
               Uses admin APIs: list → edit → PATCH; new row uses POST.
             </p>
@@ -1904,6 +1948,22 @@ export default function AdminMenuCreationPage() {
           )}
         </section>
       </div>
+
+      <ConfirmModal
+        isOpen={deleteMenuModalOpen}
+        onClose={() => setDeleteMenuModalOpen(false)}
+        onConfirm={confirmDeleteMenu}
+        variant="danger"
+        title="Delete menu"
+        description={
+          menuMetaName.trim()
+            ? `Delete “${menuMetaName.trim()}”? This removes the saved menu and cannot be undone.`
+            : "This removes the saved menu and cannot be undone."
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        loadingText="Deleting..."
+      />
     </div>
   );
 }

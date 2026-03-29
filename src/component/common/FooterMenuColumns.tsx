@@ -173,7 +173,7 @@ export default function FooterMenuColumns() {
 
   if (!ready) {
     return (
-      <div className="flex flex-wrap md:flex-nowrap gap-12 w-full md:w-3/5">
+      <div className="flex w-full flex-wrap gap-12 md:flex-nowrap">
         {[1, 2, 3].map((i) => (
           <div key={i} className="min-w-35 space-y-3">
             <div className="h-6 w-28 rounded bg-neutral-200 animate-pulse" />
@@ -193,7 +193,7 @@ export default function FooterMenuColumns() {
 
   if (groups && groups.length > 0) {
     return (
-      <div className="flex flex-wrap md:flex-nowrap gap-12 w-full md:w-3/5">
+      <div className="flex w-full flex-wrap gap-12 md:flex-nowrap">
         {groups.map((g) => (
           <FooterColumn key={g.id} group={g} />
         ))}
@@ -202,7 +202,7 @@ export default function FooterMenuColumns() {
   }
 
   return (
-    <div className="flex flex-wrap md:flex-nowrap gap-12 w-full md:w-3/5">
+    <div className="flex w-full flex-wrap gap-12 md:flex-nowrap">
       <StaticFooterColumns />
     </div>
   );

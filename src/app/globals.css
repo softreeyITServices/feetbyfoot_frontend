@@ -453,6 +453,20 @@ body {
   transform: rotate(45deg);
 }
 
+/* Footer CMS HTML (about + newsletter) */
+.footer-cms {
+  min-width: 0;
+}
+
+.footer-cms a {
+  color: inherit;
+}
+
+.footer-cms img {
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .collection-outline {
   font-family: "Inter", sans-serif;
   font-weight: 900;

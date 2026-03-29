@@ -303,6 +303,19 @@ class ProductService {
     }
   }
 
+  /** Admin: `DELETE .../products/menus/:menuId` */
+  async deleteMegaMenu(menuId: string): Promise<void> {
+    try {
+      await httpClient.request({
+        url: productsMenuByIdUrl(menuId),
+        method: "DELETE",
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "deleteMegaMenu");
+    }
+  }
+
   async getProductFilters(): Promise<ProductFilterMeta> {
     try {
       const response = await httpClient.request<ProductFilterResponse>({

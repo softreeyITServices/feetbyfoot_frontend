@@ -1,89 +1,105 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { YoutubeIcon } from "@/icons/YoutubeIcon";
 import { FacebookIcon } from "@/icons/FacebookIcon";
 import { InstagramIcon } from "@/icons/InstagramIcon";
 import { TwitterIcon } from "@/icons/TwitterIcon";
 import { LinkedinIcon } from "@/icons/LinkedinIcon";
 import FooterMenuColumns from "@/component/common/FooterMenuColumns";
+import { CmsService } from "@/domain/application/services/admin/cms.service";
+import type { CmsItem } from "@/domain/shared/types/admin/cms";
+
+/** Admin → CMS page names (underscores). */
+export const FOOTER_ABOUT_CMS_NAME = "footer_about_us";
+export const FOOTER_NEWSLETTER_CMS_NAME = "footer_newsletter";
+
+const DEFAULT_ABOUT = (
+  <>
+    At <span className="font-semibold text-green-700">Feet by Foot</span>, every pair of
+    socks is a canvas. Collaborating with graphic designers, illustrators,
+    street artists, and creators from across visual universes, we turn bold
+    imagination into wearable art. These aren’t just socks — they’re
+    expressions of creativity, crafted to bring color, story, and originality
+    to every step you take.
+  </>
+);
+
+const DEFAULT_NEWSLETTER_BODY = (
+  <p className="text-gray-700 leading-relaxed mb-4 text-md">
+    Subscribe now to get 20% off your first order, plus special offers,
+    free giveaways, and once-in-a-lifetime deals
+  </p>
+);
+
 
 export default function Footer() {
+  const [about, setAbout] = useState<CmsItem | null>(null);
+  const [newsletter, setNewsletter] = useState<CmsItem | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      CmsService.getPublicByName(FOOTER_ABOUT_CMS_NAME),
+      CmsService.getPublicByName(FOOTER_NEWSLETTER_CMS_NAME),
+    ]).then(([a, n]) => {
+      if (!cancelled) {
+        setAbout(a);
+        setNewsletter(n);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const showAboutCms = about?.isActive === true && !!about.content?.trim();
+  const newsletterActive = newsletter?.isActive === true;
+  const newsletterHeading =
+    newsletterActive && newsletter.title?.trim()
+      ? newsletter.title.trim()
+      : "Sign up for our Newsletter";
+  const showNewsletterCmsBody = newsletterActive && !!newsletter.content?.trim();
+
   return (
     <footer className="mt-20 bg-white shadow-[3px_3px_10px_#BFBFBE]">
-
-      {/* TOP SECTION */}
-      <div className="max-w-7xl mx-auto px-4 py-14 flex flex-col md:flex-row md:justify-between gap-12 text-sm">
-
-        {/* LEFT TEXT BLOCK */}
-        <div className="md:w-2/5">
-          <Link href="/" className="cursor-pointer">
-            <Image
-              src="/assets/images/footer_logo.png"
-              alt="Feet by Foot"
-              width={140}
-              height={60}
-              className="mb-4 w-full"
+      <div className="max-w-7xl mx-auto grid grid-cols-1 gap-12 px-4 py-14 text-sm md:grid-cols-12 md:items-start md:gap-x-8 lg:gap-x-12">
+        <div className="min-w-0 md:col-span-3">
+          {showAboutCms ? (
+            <div
+              className="footer-cms text-gray-700 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: about!.content }}
             />
-          </Link>
-
-          <p className="text-gray-700 leading-relaxed">
-            At <span className="font-semibold text-green-700">Feet by Foot</span>, every pair of
-            socks is a canvas. Collaborating with graphic designers, illustrators,
-            street artists, and creators from across visual universes, we turn bold
-            imagination into wearable art. These aren’t just socks — they’re
-            expressions of creativity, crafted to bring color, story, and originality
-            to every step you take.
-          </p>
+          ) : (
+            <p className="text-gray-700 leading-relaxed">{DEFAULT_ABOUT}</p>
+          )}
         </div>
 
-        {/* RIGHT SIDE COLUMNS — default footer menu (position=footer, isDefault) from admin */}
-        <FooterMenuColumns />
+        <div className="min-w-0 md:col-span-6">
+          <FooterMenuColumns />
+        </div>
 
-        <div className="flex flex-wrap md:flex-nowrap gap-12 w-full md:w-2/5">
-          {/* NEWSLETTER */}
-          <div className="flex-1 min-w-55">
-            <h4 className="font-semibold mb-3 text-green-700 text-2xl">
-              Sign up for our Newsletter
-            </h4>
-            <p className="text-gray-700 leading-relaxed mb-4 text-md">
-              Subscribe now to get 20% off your first order, plus special offers,
-              free giveaways, and once-in-a-lifetime deals
-            </p>
-
-            {/* <div className="border-b flex items-center pb-2">
-              <input
-                placeholder="Enter your email"
-                className="w-full focus:outline-none"
+        <div className="min-w-0 md:col-span-3">
+          {showNewsletterCmsBody ? (
+            <>
+              <div
+                className="footer-cms text-gray-700 leading-relaxed mb-4 text-md"
+                dangerouslySetInnerHTML={{ __html: newsletter!.content }}
               />
-              <span className="text-gray-600"><Mail width={24} height={24} /></span>
-            </div> */}
 
-            {/* ICONS */}
-            <div className="flex items-center gap-4 mt-4 text-xl text-gray-700 flex-row">
-              <Link href="https://www.facebook.com/feetbyfoot" target="_blank" >
-                <FacebookIcon width={24} height={24} />
-              </Link>
-              <Link href="https://www.youtube.com/@FeetbyFoot" target="_blank" >
-                <YoutubeIcon width={24} height={24} />
-              </Link>
-              <Link href="https://x.com/FeetByfoot" target="_blank">
-                <TwitterIcon width={24} height={24} />
-              </Link>
-              <Link href="https://www.linkedin.com/company/feet-by-foot" target="_blank">
-                <LinkedinIcon width={24} height={24} />
-              </Link>
-              <Link href="https://www.instagram.com/feetbyfoot.socks/" target="_blank">
-                <InstagramIcon width={24} height={24} />
-              </Link>
+            </>
+          ) : (
+            <>
+             
 
-            </div>
-          </div>
+            </>
+          )}
         </div>
-      </div >
+      </div>
 
-      {/* YELLOW WAVE IMAGE */}
-
-      < Image
+      <Image
         src="/assets/images/footer_bottom.png"
         alt="Decorative Footer"
         width={1920}
@@ -91,8 +107,7 @@ export default function Footer() {
         className="w-full h-auto"
       />
 
-      {/* BOTTOM COPYRIGHT */}
-      < div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between gap-12 text-sm" >
+      <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between gap-12 text-sm">
         <p>
           Copyright © 2025{" "}
           <span className="font-semibold">Feet By Foot</span> All Rights Reserved.
@@ -104,7 +119,7 @@ export default function Footer() {
           width={250}
           height={40}
         />
-      </div >
-    </footer >
+      </div>
+    </footer>
   );
 }

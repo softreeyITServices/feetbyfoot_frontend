@@ -34,6 +34,17 @@ const FIELDS: FormField[] = [
     type: "text",
     required: true,
   },
+  {
+    key: "isActive",
+    label: "Status",
+    type: "radio",
+    required: true,
+    cols: 1,
+    options: [
+      { label: "Active", value: "Active" },
+      { label: "Inactive", value: "Inactive" },
+    ],
+  },
 ];
 
 /* ================= COMPONENT ================= */
@@ -90,6 +101,8 @@ export function SubcategoryModal({
     if (!categoryId) return;
 
     const name = String(values.name ?? "").trim();
+    const statusValue = String(values.isActive ?? "Active");
+    const isActive = statusValue === "Active";
 
     if (!name) {
       toast.error("Name is required");
@@ -101,12 +114,14 @@ export function SubcategoryModal({
         await CategoryTypeService.update(editing.id, {
           name,
           categoryId,
+          isActive,
         });
         toast.success("Subcategory updated");
       } else {
         await CategoryTypeService.create({
           name,
           categoryId,
+          isActive,
         });
         toast.success("Subcategory created");
       }
@@ -205,9 +220,16 @@ export function SubcategoryModal({
           title={editing ? "Edit Subcategory" : "Add Subcategory"}
         >
           <AdminForm
+            key={editing?.id ?? "new-subcategory"}
             fields={FIELDS}
             initialValues={{
               name: editing?.name ?? "",
+              isActive:
+                editing == null
+                  ? "Active"
+                  : editing.isActive !== false
+                    ? "Active"
+                    : "Inactive",
             }}
             onSubmit={handleSubmit}
           />
