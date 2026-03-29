@@ -13,56 +13,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { productService } from "@/domain/application/services/product.service";
-import type { MenuCategory, MenuGroup, MenuSubcategory } from "@/domain/shared/types/product.type";
-
-function groupPrimaryHref(g: MenuGroup): string {
-  if (g.href) return g.href;
-  if (g.storefrontPath) return g.storefrontPath;
-  return "#";
-}
-
-function categoryHref(g: MenuGroup, c: MenuCategory): string {
-  if (c.href) return c.href;
-  if (g.storefrontPath) {
-    const qs = new URLSearchParams();
-    qs.set("category", c.id);
-    return `${g.storefrontPath}?${qs.toString()}`;
-  }
-  return "#";
-}
-
-function subcategoryHref(
-  g: MenuGroup,
-  c: MenuCategory,
-  s: MenuSubcategory
-): string {
-  if (s.href) return s.href;
-  if (g.storefrontPath) {
-    const qs = new URLSearchParams();
-    qs.set("category", c.id);
-    qs.set("subcategory", s.id);
-    return `${g.storefrontPath}?${qs.toString()}`;
-  }
-  return "#";
-}
-
-function pathFromHref(href: string): string {
-  try {
-    if (href.startsWith("/")) return href.split("?")[0] ?? href;
-    const u = new URL(href);
-    return u.pathname;
-  } catch {
-    return href.split("?")[0] ?? href;
-  }
-}
-
-function isGroupPathActive(pathname: string, g: MenuGroup): boolean {
-  const raw = g.storefrontPath || g.href;
-  if (!raw || raw === "#") return false;
-  const path = pathFromHref(raw);
-  if (!path || path === "#") return false;
-  return pathname === path || pathname.startsWith(`${path}/`);
-}
+import type { MenuCategory, MenuGroup } from "@/domain/shared/types/product.type";
+import {
+  categoryHref,
+  categoryIsHeaderOnly,
+  groupIsHeaderOnly,
+  groupPrimaryHref,
+  isGroupPathActive,
+  subcategoryHref,
+  subcategoryIsHeaderOnly,
+} from "@/lib/megaMenuLinks";
 
 function DesktopNavSkeleton() {
   return (
@@ -94,18 +54,28 @@ function DesktopMegaNav({
         const hasFlyout = categories.length > 0;
         const primary = groupPrimaryHref(g);
         const groupActive = isGroupPathActive(pathname, g);
+        const headerOnly = groupIsHeaderOnly(g);
+        const groupLabelClass = `text-sm font-bold uppercase px-2 lg:px-3 py-1 whitespace-nowrap rounded ${
+          groupActive
+            ? "bg-yellow-400 text-black"
+            : "text-gray-700 hover:text-black"
+        }`;
+        const groupLabelClassFlyout = `${groupLabelClass} inline-flex items-center gap-0.5`;
 
         if (!hasFlyout) {
+          if (headerOnly) {
+            return (
+              <span
+                key={g.id}
+                className={`${groupLabelClass} cursor-default`}
+                role="presentation"
+              >
+                {g.name}
+              </span>
+            );
+          }
           return (
-            <Link
-              key={g.id}
-              href={primary}
-              className={`text-sm font-bold uppercase px-2 lg:px-3 py-1 whitespace-nowrap rounded ${
-                groupActive
-                  ? "bg-yellow-400 text-black"
-                  : "text-gray-700 hover:text-black"
-              }`}
-            >
+            <Link key={g.id} href={primary} className={groupLabelClass}>
               {g.name}
             </Link>
           );
@@ -113,20 +83,23 @@ function DesktopMegaNav({
 
         return (
           <div key={g.id} className="relative group">
-            <Link
-              href={primary}
-              className={`text-sm font-bold uppercase px-2 lg:px-3 py-1 inline-flex items-center gap-0.5 whitespace-nowrap rounded ${
-                groupActive
-                  ? "bg-yellow-400 text-black"
-                  : "text-gray-700 hover:text-black"
-              }`}
-            >
-              {g.name}
-              <ChevronDown
-                className="h-3 w-3 opacity-70 group-hover:rotate-180 transition-transform shrink-0"
-                aria-hidden
-              />
-            </Link>
+            {headerOnly ? (
+              <span className={`${groupLabelClassFlyout} cursor-default`}>
+                {g.name}
+                <ChevronDown
+                  className="h-3 w-3 opacity-70 group-hover:rotate-180 transition-transform shrink-0"
+                  aria-hidden
+                />
+              </span>
+            ) : (
+              <Link href={primary} className={groupLabelClassFlyout}>
+                {g.name}
+                <ChevronDown
+                  className="h-3 w-3 opacity-70 group-hover:rotate-180 transition-transform shrink-0"
+                  aria-hidden
+                />
+              </Link>
+            )}
             <div
               className="absolute left-0 top-full pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-[60]"
               role="region"
@@ -136,39 +109,66 @@ function DesktopMegaNav({
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                   {categories.map((c) => {
                     const subs = c.subcategories ?? [];
+                    const catHeader = categoryIsHeaderOnly(g, c);
                     const catLink = categoryHref(g, c);
                     return (
                       <div key={c.id} className="min-w-0">
-                        <Link
-                          href={catLink}
-                          className="text-xs font-bold text-black hover:underline block mb-2"
-                        >
-                          {c.name}
-                        </Link>
-                        {c.image ? (
+                        {catHeader ? (
+                          <span className="text-xs font-bold text-black block mb-2 cursor-default">
+                            {c.name}
+                          </span>
+                        ) : (
                           <Link
                             href={catLink}
-                            className="block mb-2 rounded overflow-hidden bg-neutral-100 max-h-20"
+                            className="text-xs font-bold text-black hover:underline block mb-2"
                           >
-                            {/* eslint-disable-next-line @next/next/no-img-element -- menu image URLs come from CMS / various hosts */}
-                            <img
-                              src={c.image}
-                              alt=""
-                              className="w-full h-20 object-cover"
-                            />
+                            {c.name}
                           </Link>
+                        )}
+                        {c.image ? (
+                          catHeader ? (
+                            <div className="block mb-2 rounded overflow-hidden bg-neutral-100 max-h-20">
+                              {/* eslint-disable-next-line @next/next/no-img-element -- menu image URLs come from CMS / various hosts */}
+                              <img
+                                src={c.image}
+                                alt=""
+                                className="w-full h-20 object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <Link
+                              href={catLink}
+                              className="block mb-2 rounded overflow-hidden bg-neutral-100 max-h-20"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element -- menu image URLs come from CMS / various hosts */}
+                              <img
+                                src={c.image}
+                                alt=""
+                                className="w-full h-20 object-cover"
+                              />
+                            </Link>
+                          )
                         ) : null}
                         <ul className="space-y-1">
-                          {subs.map((s) => (
-                            <li key={s.id}>
-                              <Link
-                                href={subcategoryHref(g, c, s)}
-                                className="text-xs text-gray-600 hover:text-black line-clamp-2"
-                              >
-                                {s.name}
-                              </Link>
-                            </li>
-                          ))}
+                          {subs.map((s) => {
+                            const subHeader = subcategoryIsHeaderOnly(g, s);
+                            return (
+                              <li key={s.id}>
+                                {subHeader ? (
+                                  <span className="text-xs text-gray-600 line-clamp-2 cursor-default">
+                                    {s.name}
+                                  </span>
+                                ) : (
+                                  <Link
+                                    href={subcategoryHref(g, c, s)}
+                                    className="text-xs text-gray-600 hover:text-black line-clamp-2"
+                                  >
+                                    {s.name}
+                                  </Link>
+                                )}
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     );
@@ -282,14 +282,22 @@ export default function Navbar() {
         {megaGroups.map((g) => {
           const primary = groupPrimaryHref(g);
           const groupActive = isGroupPathActive(pathname, g);
+          const mobileClass = `text-[11px] font-bold uppercase px-2 py-1 shrink-0 rounded whitespace-nowrap ${
+            groupActive ? "bg-yellow-400 text-black" : "text-gray-700"
+          }`;
+          if (groupIsHeaderOnly(g)) {
+            return (
+              <span
+                key={g.id}
+                className={`${mobileClass} cursor-default`}
+                role="presentation"
+              >
+                {g.name}
+              </span>
+            );
+          }
           return (
-            <Link
-              key={g.id}
-              href={primary}
-              className={`text-[11px] font-bold uppercase px-2 py-1 shrink-0 rounded whitespace-nowrap ${
-                groupActive ? "bg-yellow-400 text-black" : "text-gray-700"
-              }`}
-            >
+            <Link key={g.id} href={primary} className={mobileClass}>
               {g.name}
             </Link>
           );

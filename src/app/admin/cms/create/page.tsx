@@ -259,7 +259,7 @@ function CmsCreateEditPageContent() {
           </section>
 
           {/* FAQ card */}
-          <section style={styles.card}>
+          {/* <section style={styles.card}>
             <div style={{ ...styles.cardHeader, marginBottom: "1.25rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
                 <span style={styles.cardIcon}>
@@ -327,7 +327,7 @@ function CmsCreateEditPageContent() {
                 ))}
               </div>
             )}
-          </section>
+          </section> */}
         </div>
 
         {/* ── Right sidebar ── */}

@@ -105,6 +105,20 @@ type MenuExportPayload = {
   groups: MenuExportGroup[];
 };
 
+/**
+ * External API may require `href` to be present (e.g. non-null column). For true
+ * header-only rows (no href, no storefrontPath), send empty string — storefront
+ * treats falsy href like omitted.
+ */
+function exportHrefOrEmpty(
+  href: string | undefined,
+  groupHasStorefrontPath: boolean
+): { href?: string } {
+  if (href) return { href };
+  if (groupHasStorefrontPath) return {};
+  return { href: "" };
+}
+
 function buildMenuExportPayload(
   groups: FinalGroup[],
   meta: { name: string; position: MenuPlacement; isDefault: boolean }
@@ -116,26 +130,29 @@ function buildMenuExportPayload(
     isDefault: Boolean(meta.isDefault),
     version: 1,
     savedAt: new Date().toISOString(),
-    groups: groups.map((g) => ({
-      id: g.id,
-      name: g.name,
-      ...(g.href ? { href: g.href } : {}),
-      ...(g.storefrontPath ? { storefrontPath: g.storefrontPath } : {}),
-      categories: g.categories.map((c) => ({
-        id: c.id,
-        name: c.name,
-        ...(c.href ? { href: c.href } : {}),
-        ...(c.fromCatalog !== undefined ? { fromCatalog: c.fromCatalog } : {}),
-        ...(c.image ? { image: c.image } : {}),
-        subcategories: c.children.map((s) => ({
-          id: s.id,
-          name: s.name,
-          ...(s.href ? { href: s.href } : {}),
-          ...(s.slug !== undefined && s.slug !== "" ? { slug: s.slug } : {}),
-          ...(s.showSlug !== undefined ? { showSlug: s.showSlug } : {}),
+    groups: groups.map((g) => {
+      const hasStore = Boolean(g.storefrontPath);
+      return {
+        id: g.id,
+        name: g.name,
+        ...exportHrefOrEmpty(g.href, hasStore),
+        ...(g.storefrontPath ? { storefrontPath: g.storefrontPath } : {}),
+        categories: g.categories.map((c) => ({
+          id: c.id,
+          name: c.name,
+          ...exportHrefOrEmpty(c.href, hasStore),
+          ...(c.fromCatalog !== undefined ? { fromCatalog: c.fromCatalog } : {}),
+          ...(c.image ? { image: c.image } : {}),
+          subcategories: c.children.map((s) => ({
+            id: s.id,
+            name: s.name,
+            ...exportHrefOrEmpty(s.href, hasStore),
+            ...(s.slug !== undefined && s.slug !== "" ? { slug: s.slug } : {}),
+            ...(s.showSlug !== undefined ? { showSlug: s.showSlug } : {}),
+          })),
         })),
-      })),
-    })),
+      };
+    }),
   };
 }
 
@@ -807,18 +824,18 @@ export default function AdminMenuCreationPage() {
       setCustomError("Name is required.");
       return;
     }
-    if (!href) {
-      setCustomError("Href is required.");
-      return;
+    if (href) {
+      if (!isValidHref(href)) {
+        setCustomError("Href must be a path (/path) or https URL.");
+        return;
+      }
+      if (existingHrefs.has(href.toLowerCase())) {
+        setCustomError("This href already exists.");
+        return;
+      }
     }
-    if (!isValidHref(href)) {
-      setCustomError("Href must be a path (/path) or https URL.");
-      return;
-    }
-    if (existingHrefs.has(href.toLowerCase())) {
-      setCustomError("This href already exists.");
-      return;
-    }
+
+    const hrefField = href ? { href } : {};
 
     if (customParentId === "root") {
       const gid = `custom-group-${Date.now()}`;
@@ -827,7 +844,7 @@ export default function AdminMenuCreationPage() {
         {
           id: gid,
           name,
-          href,
+          ...hrefField,
           categories: [],
         },
       ]);
@@ -843,7 +860,7 @@ export default function AdminMenuCreationPage() {
               {
                 id: catId,
                 name,
-                href,
+                ...hrefField,
                 children: [],
                 fromCatalog: false,
               },
@@ -1207,14 +1224,14 @@ export default function AdminMenuCreationPage() {
           </div>
           <div className="space-y-1">
             <label htmlFor="custom-menu-href" className="text-xs text-neutral-600">
-              Href
+              Href <span className="text-neutral-400 font-normal">(optional)</span>
             </label>
             <input
               id="custom-menu-href"
               type="text"
               value={customHref}
               onChange={(event) => setCustomHref(event.target.value)}
-              placeholder="/sale or https://..."
+              placeholder="Leave empty for a non-clickable label"
               className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400"
             />
           </div>

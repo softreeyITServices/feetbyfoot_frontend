@@ -5,7 +5,7 @@ import { FacebookIcon } from "@/icons/FacebookIcon";
 import { InstagramIcon } from "@/icons/InstagramIcon";
 import { TwitterIcon } from "@/icons/TwitterIcon";
 import { LinkedinIcon } from "@/icons/LinkedinIcon";
-import { Mail } from "lucide-react";
+import FooterMenuColumns from "@/component/common/FooterMenuColumns";
 
 export default function Footer() {
   return (
@@ -36,45 +36,8 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* RIGHT SIDE COLUMNS */}
-        <div className="flex flex-wrap md:flex-nowrap gap-12 w-full md:w-3/5">
-
-          {/* ABOUT US */}
-          <div className="min-w-35">
-            <h4 className="font-semibold mb-3 text-gray-900 text-lg">About Us</h4>
-            <ul className="space-y-2 text-gray-700">
-              <li><Link href="/workofart">About Us</Link> </li>
-              <li><Link href="/blogs">Blog</Link></li>
-              <li><Link href="/privacypolicy">Privacy Policy</Link></li>
-              <li><Link href="/shippingpolicy">Shipping Policy</Link></li>
-              <li><Link href="/termsandconditions">Terms & Conditions</Link></li>
-            </ul>
-          </div>
-
-          {/* SUPPORT */}
-          <div className="min-w-40">
-            <h4 className="font-semibold mb-3 text-gray-900 text-lg">Support</h4>
-            <ul className="space-y-2 text-gray-700">
-              <li><Link href="/refundreturnpolicy">Returns & Refunds</Link></li>
-              <li><Link href="/contactus">Contact Us</Link></li>
-              <li><Link href="/changesorders">Changes to Orders</Link></li>
-              <li><Link href="/faqs">FAQs</Link></li>
-              <li><Link href="/sizeguide">Size Guide</Link></li>
-            </ul>
-          </div>
-
-          {/* QUICK LINKS */}
-          <div className="min-w-35">
-            <h4 className="font-semibold mb-3 text-gray-900 text-lg">Quick Links</h4>
-            <ul className="space-y-2 text-gray-700">
-              <li><Link href="/shop">Shop</Link></li>
-              <li><Link href="/cart">My Cart</Link></li>
-              <li><Link href="/payments">Checkout</Link></li>
-              <li><Link href="/account">My Account</Link></li>
-              <li><Link href="/wishlists">My Wishlist</Link></li>
-            </ul>
-          </div>
-        </div>
+        {/* RIGHT SIDE COLUMNS — default footer menu (position=footer, isDefault) from admin */}
+        <FooterMenuColumns />
 
         <div className="flex flex-wrap md:flex-nowrap gap-12 w-full md:w-2/5">
           {/* NEWSLETTER */}

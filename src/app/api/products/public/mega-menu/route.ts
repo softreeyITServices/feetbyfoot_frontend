@@ -6,15 +6,17 @@ import {
 import { httpClient } from "@/lib/httpClient";
 import { isHttpClientError } from "@/lib/httpClientError";
 import { EX_PRODUCTS_PUBLIC_MEGA_MENU_URL } from "@/constants/apis";
-import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
-/** Proxies `GET .../products/public/mega-menu` (default storefront menu). */
+/** Proxies `GET .../products/public/mega-menu` — optional `?position=top|footer` for placement default. */
 export const GET = apiHandler(
-  async () => {
+  async (req: NextRequest) => {
     try {
+      const position = req.nextUrl.searchParams.get("position");
+      const query = position ? { position } : {};
       const response = await httpClient.get<unknown>(
         EX_PRODUCTS_PUBLIC_MEGA_MENU_URL,
-        {},
+        query,
         { skipAuth: true }
       );
 

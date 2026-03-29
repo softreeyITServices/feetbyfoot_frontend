@@ -16,6 +16,7 @@ import {
   MegaMenuApiResponse,
   MegaMenuDocument,
   MegaMenuListItem,
+  MegaMenuPlacement,
   ProductByIdData,
   ProductByIdResponse,
   ProductFilterMeta,
@@ -161,6 +162,7 @@ class ProductService {
 
   /**
    * Public default mega menu (`GET .../products/public/mega-menu`).
+   * Use {@link getMegaMenuForPlacement} when header vs footer defaults differ.
    */
   async getMegaMenu(): Promise<MegaMenuDocument> {
     try {
@@ -176,6 +178,31 @@ class ProductService {
       throw new Error("Invalid mega menu response");
     } catch (error) {
       throw handleApiError(error, "getMegaMenu");
+    }
+  }
+
+  /**
+   * Default mega menu for a placement (`GET .../products/public/mega-menu?position=top|footer`).
+   * Backend should return the menu marked default for that position.
+   */
+  async getMegaMenuForPlacement(
+    placement: MegaMenuPlacement
+  ): Promise<MegaMenuDocument> {
+    try {
+      const params = new URLSearchParams();
+      params.set("position", placement);
+      const raw = await httpClient.request<unknown>({
+        url: `${PRODUCTS_PUBLIC_MEGA_MENU_URL}?${params.toString()}`,
+        method: "GET",
+        skipAuth: true,
+      });
+
+      const doc = extractMegaMenuDocument(raw);
+      if (doc) return doc;
+
+      throw new Error("Invalid mega menu response");
+    } catch (error) {
+      throw handleApiError(error, "getMegaMenuForPlacement");
     }
   }
 
