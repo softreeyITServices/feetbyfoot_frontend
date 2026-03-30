@@ -105,6 +105,8 @@ function ProductCard({
     setIsWishlisted(wishlistSelect ?? false);
   }, [wishlistSelect]);
 
+  const productHref = `/${toSlug(categories)}/${toSlug(title)}/${id}`;
+
   return (
     <div className="rounded-xl bg-white border border-gray-200 p-3 relative">
 
@@ -123,7 +125,11 @@ function ProductCard({
         </button>
       }
 
-      <div className="relative aspect-4/5 w-full shrink-0 overflow-hidden rounded-lg bg-gray-50">
+      <Link
+        href={productHref}
+        className="relative block aspect-4/5 w-full shrink-0 overflow-hidden rounded-lg bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
+        title={title}
+      >
         <Image
           src={imageSrc}
           alt={altText}
@@ -131,7 +137,7 @@ function ProductCard({
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover object-center"
         />
-      </div>
+      </Link>
 
       <div className="p-0 pt-5">
         <p className="text-xs text-gray-500 uppercase tracking-wide">
@@ -139,7 +145,7 @@ function ProductCard({
         </p>
 
         <Link
-          href={`/${toSlug(categories)}/${toSlug(title)}/${id}`}
+          href={productHref}
           className="no-underline hover:underline text-black"
           title={title}
         >

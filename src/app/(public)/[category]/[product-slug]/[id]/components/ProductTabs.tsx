@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import ProductReviewTab from "./tabs/ProductReviewTab";
-import ProductDeliveryTab from "./tabs/ProductDeliveryTab";
 import ProductDescriptionTab from "./tabs/ProductDescriptionTab";
 import { Review } from "@/domain/shared/types/rating.type";
 
@@ -44,7 +43,7 @@ export default function ProductTabs({
   return (
     <section className="mt-16">
       <div className="flex gap-8 mb-6 justify-center">
-        {["description", "delivery", "reviews"].map((t) => (
+        {(["description", "reviews"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -56,8 +55,6 @@ export default function ProductTabs({
           >
             {t === "description"
               ? "Description"
-              : t === "delivery"
-              ? "Delivery & Returns"
               : `Reviews (${totalRatings})`}
           </button>
         ))}
@@ -67,8 +64,6 @@ export default function ProductTabs({
         {tab === "description" && (
           <ProductDescriptionTab description={description} />
         )}
-
-        {tab === "delivery" && <ProductDeliveryTab />}
 
         {tab === "reviews" && (
           <ProductReviewTab
