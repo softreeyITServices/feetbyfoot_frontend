@@ -19,7 +19,17 @@ interface ExchangeModalProps {
   onSuccess: () => void;
 }
 
-const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+/** Sizes the product still offers in stock, excluding the size already on this line. */
+function exchangeSizeOptions(item: OrderItem | undefined) {
+  if (!item?.product?.sizes?.length) return [];
+  const seen = new Set<string>();
+  return item.product.sizes.filter((s) => {
+    if (!s.isActive || s.quantity <= 0 || s.size === item.size) return false;
+    if (seen.has(s.size)) return false;
+    seen.add(s.size);
+    return true;
+  });
+}
 
 export default function ExchangeModal({
   open,
@@ -40,10 +50,12 @@ export default function ExchangeModal({
 
   const orderId = order.orderId;
 
+  const sizeChoices = exchangeSizeOptions(selectedItem);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedItemId || !newSize) {
+    if (!selectedItemId || !newSize.trim()) {
       setError("Please select an item and new size");
       return;
     }
@@ -52,6 +64,8 @@ export default function ExchangeModal({
       setError("Selected item not found");
       return;
     }
+
+    const toSize = newSize.trim();
 
     setLoading(true);
     setError(null);
@@ -65,7 +79,7 @@ export default function ExchangeModal({
             productId: selectedItem.productId,
             reason,
             fromSize: selectedItem.size,
-            toSize: newSize,
+            toSize,
             quantity: 1,
           },
         ],
@@ -74,11 +88,14 @@ export default function ExchangeModal({
 
       onSuccess();
     } catch (err: unknown) {
-      const message =
+      const raw =
         err instanceof Error
           ? err.message
           : "Failed to exchange item. Please try again.";
-      setError(message);
+      const simple = /not available/i.test(raw)
+        ? "That size is not available for this item. Choose a different size."
+        : raw;
+      setError(simple);
     } finally {
       setLoading(false);
     }
@@ -95,11 +112,15 @@ export default function ExchangeModal({
     }
   };
 
-  const hasEligibleItems = order.items.some(
-    (item) =>
+  const hasEligibleItems = order.items.some((item) => {
+    const noPendingExchange =
+      !item.exchangeRequests || item.exchangeRequests.length === 0;
+    return (
       item.status === "DELIVERED" &&
-      (!item.exchangeRequests || item.exchangeRequests.length === 0)
-  );
+      noPendingExchange &&
+      exchangeSizeOptions(item).length > 0
+    );
+  });
 
 
   return (
@@ -126,7 +147,8 @@ export default function ExchangeModal({
               const isExchangeable =
                 isDelivered &&
                 !isExchangeRequested &&
-                (!item.exchangeRequests || item.exchangeRequests.length === 0);
+                (!item.exchangeRequests || item.exchangeRequests.length === 0) &&
+                exchangeSizeOptions(item).length > 0;
 
               return (
                 <label
@@ -218,26 +240,30 @@ export default function ExchangeModal({
               New Size (Current: {selectedItem?.size})
             </label>
 
-            <div className="grid grid-cols-3 gap-2">
-              {AVAILABLE_SIZES.map((size) => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => setNewSize(size)}
-                  disabled={size === selectedItem?.size || loading}
-                  className={`
+            {sizeChoices.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {sizeChoices.map(({ size }) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setNewSize(size)}
+                    disabled={loading}
+                    className={`
                     px-4 py-2 rounded-md text-sm font-medium transition-all
-                    ${size === selectedItem?.size
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : newSize === size
+                    ${newSize === size
                         ? "bg-blue-600 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
                   `}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">
+                No other sizes are in stock for this item.
+              </p>
+            )}
           </div>
         )}
 
@@ -296,7 +322,7 @@ export default function ExchangeModal({
 
           <button
             type="submit"
-            disabled={loading || !selectedItemId || !newSize}
+            disabled={loading || !selectedItemId || !newSize.trim()}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? "Processing..." : "Submit Exchange"}
