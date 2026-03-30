@@ -131,9 +131,6 @@ function StaticFooterColumns() {
             <Link href="/cart">My Cart</Link>
           </li>
           <li>
-            <Link href="/payments">Checkout</Link>
-          </li>
-          <li>
             <Link href="/account">My Account</Link>
           </li>
           <li>
