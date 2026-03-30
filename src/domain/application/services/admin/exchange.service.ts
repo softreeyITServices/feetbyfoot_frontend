@@ -173,6 +173,7 @@ export class ExchangeService {
       await httpClient.request({
         url: `${ADMIN_EXCHANGES_URL}/${id}/ship-replacement`,
         method: "PATCH",
+        data: {},
         requiresAuth: true,
       });
     } catch (error) {

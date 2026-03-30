@@ -241,8 +241,8 @@ export default function BannerPage() {
       render: (row) => (
         <span
           className={`px-2 py-0.5 text-xs rounded-lg ${row.isActive
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-red-50 text-red-600"
+            ? "bg-emerald-50 text-emerald-700"
+            : "bg-red-50 text-red-600"
             }`}
         >
           {row.isActive ? "Active" : "Inactive"}
