@@ -72,7 +72,7 @@ export default async function ShopPage({
   const isBestseller = resolvedSearchParams.isBestseller === "true";
   const isNewArrival = resolvedSearchParams.isNewArrival === "true";
   const isGiftPack = resolvedSearchParams.isGiftPack === "true";
-  const packTypeFilters = toArray(resolvedSearchParams.packType).map((v) => v === "true");
+  const packTypeFilters = toArray(resolvedSearchParams.packType)?.map((v) => v === "true");
   const effectivePackTypes =
     packTypeFilters.length > 0 ? packTypeFilters : isGiftPack ? [true] : [];
 
@@ -84,7 +84,7 @@ export default async function ShopPage({
     try {
       const response = await wishlistService.getWishlist(token);
       const wishlistProducts = response?.data?.products ?? [];
-      wishlistIds = new Set(wishlistProducts.map((item) => item._id));
+      wishlistIds = new Set(wishlistProducts?.map((item) => item._id));
     } catch (error) {
       const status =
         typeof error === "object" && error !== null && "status" in error
@@ -166,9 +166,9 @@ export default async function ShopPage({
               <SortDropdown />
             </div>
 
-            {products.length > 0 ? (
+            {products?.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {products.map((product) => (
+                {products?.map((product) => (
                   <ProductCard
                     wishlist={true}
                     wishlistSelect={wishlistIds.has(product._id)}
@@ -192,7 +192,7 @@ export default async function ShopPage({
             )}
 
             <div className="flex justify-center gap-2 mt-10">
-              {Array.from({ length: totalPages }).map((_, i) => (
+              {Array.from({ length: totalPages })?.map((_, i) => (
                 <Link
                   key={i}
                   href={buildPageHref(i + 1)}
