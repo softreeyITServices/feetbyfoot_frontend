@@ -23,7 +23,7 @@ export default function SizeSelector({
       <p className="text-sm font-medium mb-2">SELECT SIZE</p>
 
       <div className="flex flex-wrap gap-3">
-        {sizes.map((item, index) => {
+        {(sizes ?? []).map((item, index) => {
           const disabled = !item.isActive || item.quantity === 0;
 
           return (

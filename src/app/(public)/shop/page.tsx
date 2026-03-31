@@ -178,7 +178,7 @@ export default async function ShopPage({
                     size={product.sizes}
                     imageSrc={product.imageUrls[0]}
                     altText={product.name}
-                    categories={product.tags.join(", ")}
+                    categories={(product.tags ?? []).join(", ")}
                     title={product.name}
                     originalPrice={product.price.toFixed(2)}
                     discountedPrice={product.salePrice.toFixed(2)}
