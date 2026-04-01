@@ -39,6 +39,13 @@ const CATEGORY_CONFIG = {
     title: "Gift Socks",
     description: "Perfect sock gifts for every occasion",
     sectionBannerKey: "GIFTS",
+
+  },
+  "pick-combos": {
+    label: "Pick Combos",
+    title: "Pick Combo Socks",
+    description: "Mix and match your favourite socks",
+    sectionBannerKey: "PICK_COMBOS",
   },
   // brand: {
   //   label: "Brand",

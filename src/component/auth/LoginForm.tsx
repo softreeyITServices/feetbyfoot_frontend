@@ -66,10 +66,11 @@ export default function LoginForm() {
       setError("");
       setSuccess("");
 
-      await authService.sendOtp({
+      const otpRes = await authService.sendOtp({
         identifier,
         type: authType,
       });
+      console.log("🔑 OTP:", (otpRes as any)?.otp || otpRes);
 
       setOtpSent(true);
       setTimer(60);
@@ -95,10 +96,11 @@ export default function LoginForm() {
 
       if(!authType) return;
 
-      await authService.sendOtp({
+      const otpRes = await authService.sendOtp({
         identifier,
         type: authType,
       });
+      console.log("🔑 OTP:", (otpRes as any)?.otp || otpRes);
 
       setTimer(60);
       setSuccess("OTP resent successfully!");
