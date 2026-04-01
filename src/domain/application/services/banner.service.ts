@@ -58,18 +58,27 @@ class BannerService {
       });
 
       if (!response || !response.data) {
-        throw new Error("Invalid active banner response");
+        return [];
       }
 
       const { data } = response.data;
 
       if (!data || !Array.isArray(data)) {
-        throw new Error("Invalid active banner response structure");
+        return [];
       }
 
       return data;
     } catch (error) {
+      // Gracefully handle 404 / unavailable banner endpoint
+      const status =
+        error && typeof error === "object" && "status" in error
+          ? (error as { status?: number }).status
+          : undefined;
+      if (status === 404 || status === 503) {
+        return [];
+      }
       handleApiError(error, "getActiveBanners");
+      return [];
     }
   }
 

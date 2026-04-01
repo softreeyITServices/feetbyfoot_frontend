@@ -54,25 +54,27 @@ export default async function ShopPage({
   const genderFilters = toArray(resolvedSearchParams.gender);
   const categoryFilters = mergeUnique(
     toArray(resolvedSearchParams.category),
-    toArray(resolvedSearchParams.categoryIds)
+    toArray(resolvedSearchParams.categoryIds),
   );
   const subcategoryFilters = mergeUnique(
     toArray(resolvedSearchParams.subcategory),
-    toArray(resolvedSearchParams.categoryTypeIds)
+    toArray(resolvedSearchParams.categoryTypeIds),
   );
   const sizeFilters = mergeUnique(
     toArray(resolvedSearchParams.size),
-    toArray(resolvedSearchParams.sizes)
+    toArray(resolvedSearchParams.sizes),
   );
   const colorFilters = mergeUnique(
     toArray(resolvedSearchParams.color),
-    toArray(resolvedSearchParams.colors)
+    toArray(resolvedSearchParams.colors),
   );
 
   const isBestseller = resolvedSearchParams.isBestseller === "true";
   const isNewArrival = resolvedSearchParams.isNewArrival === "true";
   const isGiftPack = resolvedSearchParams.isGiftPack === "true";
-  const packTypeFilters = toArray(resolvedSearchParams.packType)?.map((v) => v === "true");
+  const packTypeFilters = toArray(resolvedSearchParams.packType)?.map(
+    (v) => v === "true",
+  );
   const effectivePackTypes =
     packTypeFilters.length > 0 ? packTypeFilters : isGiftPack ? [true] : [];
 
@@ -97,25 +99,62 @@ export default async function ShopPage({
     }
   }
 
-  const { products, total, totalPages } = await productService.getPublicProducts({
-    gender: genderFilters,
-    page,
-    limit: perpage,
-    search: resolvedSearchParams.search?.trim(),
-    sortBy,
-    categories: categoryFilters,
-    subcategories: subcategoryFilters,
-    sizes: sizeFilters,
-    colors: colorFilters,
-    minDiscount: resolvedSearchParams.minDiscount
-      ? Number(resolvedSearchParams.minDiscount)
-      : resolvedSearchParams.discount
-      ? Number(resolvedSearchParams.discount)
-      : undefined,
-    packTypes: effectivePackTypes,
-    isBestseller,
-    isNewArrival,
-  });
+  let rawResponse:
+    | Awaited<ReturnType<typeof productService.getPublicProducts>>
+    | undefined;
+
+  try {
+    rawResponse = await productService.getPublicProducts({
+      gender: genderFilters,
+      page,
+      limit: perpage,
+      search: resolvedSearchParams.search?.trim(),
+      sortBy,
+      categories: categoryFilters,
+      subcategories: subcategoryFilters,
+      sizes: sizeFilters,
+      colors: colorFilters,
+      minDiscount: resolvedSearchParams.minDiscount
+        ? Number(resolvedSearchParams.minDiscount)
+        : resolvedSearchParams.discount
+          ? Number(resolvedSearchParams.discount)
+          : undefined,
+      packTypes: effectivePackTypes,
+      isBestseller,
+      isNewArrival,
+    });
+    console.log("rawResponse", rawResponse);
+    console.log("[ShopPage] rawResponse keys:", Object.keys(rawResponse ?? {}));
+    console.log(
+      "[ShopPage] products type:",
+      typeof rawResponse?.products,
+      "isArray:",
+      Array.isArray(rawResponse?.products),
+      "value:",
+      rawResponse?.products,
+    );
+    console.log(
+      "[ShopPage] total:",
+      rawResponse?.total,
+      "totalPages:",
+      rawResponse?.totalPages,
+    );
+  } catch (err: any) {
+    console.error(err.message);
+    throw err;
+  }
+
+  const { products, total, totalPages } = rawResponse!;
+
+
+  if (products !== undefined && !Array.isArray(products)) {
+    console.error(
+      "[ShopPage] products is NOT an array! Type:",
+      typeof products,
+      "Value:",
+      products,
+    );
+  }
 
   const buildPageHref = (pageNum: number) => {
     const qs = new URLSearchParams();
@@ -168,22 +207,38 @@ export default async function ShopPage({
 
             {products?.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {products?.map((product) => (
-                  <ProductCard
-                    wishlist={true}
-                    wishlistSelect={wishlistIds.has(product._id)}
-                    home={false}
-                    key={product._id}
-                    id={product._id}
-                    size={product.sizes}
-                    imageSrc={product.imageUrls[0]}
-                    altText={product.name}
-                    categories={(product.tags ?? []).join(", ")}
-                    title={product.name}
-                    originalPrice={product.price.toFixed(2)}
-                    discountedPrice={product.salePrice.toFixed(2)}
-                  />
-                ))}
+                {products?.map((product, idx) => {
+                  console.log(
+                    `[ShopPage] product[${idx}] _id:`,
+                    product._id,
+                    "sizes:",
+                    product.sizes,
+                    "tags:",
+                    product.tags,
+                    "imageUrls:",
+                    product.imageUrls,
+                    "price:",
+                    product.price,
+                    "salePrice:",
+                    product.salePrice,
+                  );
+                  return (
+                    <ProductCard
+                      wishlist={true}
+                      wishlistSelect={wishlistIds.has(product._id)}
+                      home={false}
+                      key={product._id}
+                      id={product._id}
+                      size={product.sizes}
+                      imageSrc={product.imageUrls?.[0]}
+                      altText={product.name}
+                      categories={(product.tags ?? []).join(", ")}
+                      title={product.name}
+                      originalPrice={product.price?.toFixed(2)}
+                      discountedPrice={product.salePrice?.toFixed(2)}
+                    />
+                  );
+                })}
               </div>
             ) : (
               <div className="align-middle justify-center flex py-10">

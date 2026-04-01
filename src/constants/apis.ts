@@ -1,9 +1,5 @@
-const isBrowser = typeof window !== "undefined";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
-// Use same-origin API in browser so auth cookies/session stay on the active host.
-export const API_BASE_URL = isBrowser
-  ? "/api"
-  : process.env.NEXT_PUBLIC_API_URL || "/api";
 const EXTERNAL_API_BASE_URL = process.env.API_URL;
 
 
@@ -21,6 +17,7 @@ export const UPDATE_PROFILE_URL = API_BASE_URL + "/auth/profile";
 export const DASHBOARD_URL = API_BASE_URL + "/dashboard"
 
 export const PRODUCTS_URL = API_BASE_URL + "/products";
+export const PRODUCTS_PUBLIC_URL = API_BASE_URL + "/products/public";
 /** Admin product list → proxies to `GET .../products/admin/list` on backend */
 export const PRODUCTS_ADMIN_LIST_URL = API_BASE_URL + "/products/admin/list";
 /** Storefront default mega menu → proxies to `GET .../products/public/mega-menu` */

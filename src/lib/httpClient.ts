@@ -8,7 +8,7 @@ class HttpClient {
   private client: AxiosInstance;
 
   constructor() {
-    const baseURL = isBrowser ? "" : process.env.NEXT_PUBLIC_API_URL || "";
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || "";
 
     this.client = axios.create({
       baseURL,

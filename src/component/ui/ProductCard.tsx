@@ -45,6 +45,8 @@ function ProductCard({
   wishlistSelect?: boolean;
   onWishlistChange?: (id: string, removed: boolean) => void;
 }) {
+  console.log("[ProductCard] id:", id, "size prop:", size, "isArray:", Array.isArray(size), "imageSrc:", imageSrc, "title:", title, "originalPrice:", originalPrice, "discountedPrice:", discountedPrice);
+
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [isWishlisted, setIsWishlisted] = useState(wishlistSelect ?? false);

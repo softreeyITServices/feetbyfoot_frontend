@@ -6,6 +6,7 @@ import {
   PRODUCTS_ADMIN_LIST_URL,
   PRODUCTS_MENUS_URL,
   PRODUCTS_PUBLIC_MEGA_MENU_URL,
+  PRODUCTS_PUBLIC_URL,
   PRODUCTS_URL,
   productsMenuByIdUrl,
   productsPublicMegaMenuByIdUrl,
@@ -118,14 +119,29 @@ class ProductService {
     }
 
     const response = await httpClient.request<PublicProductsApiResponse>({
-      url: `${PRODUCTS_URL}?${params.toString()}`, // ✅ FIX
+      url: `${PRODUCTS_PUBLIC_URL}?${params.toString()}`,
       method: "GET",
       skipAuth: true,
     });
 
-    const data = response.data ?? [];
+    console.log("[productService.getPublicProducts] raw response type:", typeof response);
+    console.log("[productService.getPublicProducts] raw response keys:", response && typeof response === "object" ? Object.keys(response) : response);
+    console.log("[productService.getPublicProducts] raw response:", JSON.stringify(response)?.slice(0, 500));
+
+    // The httpClient interceptor already unwraps the axios envelope, so
+    // `response` is the raw JSON body.  The backend may return either:
+    //   (a) { data: { products, total, … } }  ← wrapped
+    //   (b) { products, total, … }             ← flat
+    const data: PublicProductsResponse =
+      response &&
+      typeof response === "object" &&
+      "products" in response &&
+      Array.isArray((response as unknown as PublicProductsResponse).products)
+        ? (response as unknown as PublicProductsResponse)
+        : (response as PublicProductsApiResponse).data;
 
     if (!data || !Array.isArray(data.products)) {
+      console.error("[productService.getPublicProducts] INVALID data shape:", JSON.stringify(data)?.slice(0, 500));
       throw new Error("Invalid products response");
     }
     return data;
@@ -319,7 +335,7 @@ class ProductService {
   async getProductFilters(): Promise<ProductFilterMeta> {
     try {
       const response = await httpClient.request<ProductFilterResponse>({
-        url: `${PRODUCTS_URL}/filters`,
+        url: `${PRODUCTS_URL}/filters/meta`,
         method: "GET",
         skipAuth: true,
       });

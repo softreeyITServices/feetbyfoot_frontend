@@ -13,8 +13,14 @@ const getBestSellingProducts = cache(async () => {
 });
 
 export default async function BestSelling() {
-  const response = await getBestSellingProducts();
-  const products = response?.products ?? [];
+  let products: Awaited<ReturnType<typeof getBestSellingProducts>>["products"] =
+    [];
+  try {
+    const response = await getBestSellingProducts();
+    products = response?.products ?? [];
+  } catch {
+    return null;
+  }
 
   return (
     <Container>

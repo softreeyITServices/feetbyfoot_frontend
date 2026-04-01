@@ -18,6 +18,8 @@ export default function SizeSelector({
   selectedSize,
   onSelectSize,
 }: SizeSelectorProps) {
+  console.log("[SizeSelector] sizes prop received:", sizes, "type:", typeof sizes, "isArray:", Array.isArray(sizes));
+
   return (
     <div>
       <p className="text-sm font-medium mb-2">SELECT SIZE</p>
