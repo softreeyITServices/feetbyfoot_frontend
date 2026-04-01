@@ -135,19 +135,16 @@ class BannerService {
     }
   
     try {
-      const response = await httpClient.request<{
-        success: boolean;
-        data: { message: string };
-      }>({
+      const response = await httpClient.request<{ message: string }>({
         url: `${BANNERS_URL}/${id}`,
         method: "DELETE",
       });
-  
-      if (!response || !response.data?.message) {
+
+      if (!response || !response.message) {
         throw new Error("Invalid banner delete response");
       }
-  
-      return response.data.message;
+
+      return response.message;
     } catch (error) {
       handleApiError(error, "deleteBanner");
     }
