@@ -29,13 +29,13 @@ class ContactService {
   /* ---------------- GET CONTACTS ---------------- */
   async getContacts(): Promise<Contact[]> {
     try {
-      const response = await httpClient.request<ContactResponse>({
+      const response:any = await httpClient.request<ContactResponse>({
         url: CONTACT_URL,
         method: "GET",
         requiresAuth: true,
       });
 
-      return response.data;
+      return response;
     } catch (error) {
       handleApiError(error, "getContacts");
       throw error;

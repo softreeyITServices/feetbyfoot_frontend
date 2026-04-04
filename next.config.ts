@@ -21,8 +21,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "cdn.site.com",
         pathname: "/**",
+      },{
+        protocol: "https",
+        hostname: "feetbyfoot.hiremyrecruiter.com",
+        pathname: "/**",
       },
-
     ],
   },
 };

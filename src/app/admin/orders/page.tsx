@@ -450,6 +450,8 @@ function OrderPage() {
         orderStatus: filters.orderStatus || undefined,
       });
 
+      console.log('res', res)
+
       const transformed: OrderRow[] = (res.data || []).map((order) => ({
         ...order,
         id: order._id,

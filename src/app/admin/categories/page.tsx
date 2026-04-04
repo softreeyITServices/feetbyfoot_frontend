@@ -41,9 +41,11 @@ export default function AdminCategoriesPage() {
       setLoading(true);
 
       const categories: AdminCategory[] = await CategoryService.getAll();
+      console.log('categories', categories)
 
       const subcategories =
         await CategoryTypeService.getAll<AdminCategoryType>();
+      console.log('subcategories', subcategories)
 
       const countMap: Record<string, number> = {};
 

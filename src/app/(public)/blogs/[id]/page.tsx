@@ -20,7 +20,8 @@ export default function BlogDetailPage() {
 
   const [blog, setBlog] = React.useState<BlogDetails | null>(null);
   const [comments, setComments] = React.useState<BlogComment[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [blogLoading, setBlogLoading] = React.useState(true);
+  const [commentsLoading, setCommentsLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitMessage, setSubmitMessage] = React.useState("");
@@ -30,32 +31,46 @@ export default function BlogDetailPage() {
     comment: "",
   });
 
-  const loadBlog = React.useCallback(async () => {
+  const fetchBlog = React.useCallback(async () => {
     if (!blogIdOrSlug) return;
     try {
-      setLoading(true);
+      setBlogLoading(true);
       setError("");
       const blogRes = await BlogService.getPublicBySlugOrId(blogIdOrSlug);
       setBlog(blogRes);
-
-      if (blogRes?._id) {
-        const commentsRes = await BlogService.getCommentsByBlogId(blogRes._id);
-        setComments(commentsRes);
-      } else {
-        setComments([]);
-      }
     } catch {
       setError("Unable to load blog right now.");
       setBlog(null);
-      setComments([]);
     } finally {
-      setLoading(false);
+      setBlogLoading(false);
     }
   }, [blogIdOrSlug]);
 
+  const fetchComments = React.useCallback(async (id: string) => {
+    if (!id) return;
+    try {
+      setCommentsLoading(true);
+      const commentsRes = await BlogService.getCommentsByBlogId(id);
+      setComments(commentsRes);
+    } catch (err) {
+      console.error("Comments fetch failed:", err);
+      // Don't set global error, just log it. Comments are non-critical.
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, []);
+
   React.useEffect(() => {
-    void loadBlog();
-  }, [loadBlog]);
+    void fetchBlog();
+  }, [fetchBlog]);
+
+  React.useEffect(() => {
+    if (blog?._id) {
+      void fetchComments(blog._id);
+    }
+  }, [blog?._id, fetchComments]);
+
+  console.log("blog",blog)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -88,7 +103,7 @@ export default function BlogDetailPage() {
     }
   };
 
-  if (loading) {
+  if (blogLoading) {
     return (
       <>
         <Navbar />

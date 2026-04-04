@@ -30,20 +30,11 @@ class BannerService {
 
   async getAllBanners(): Promise<Banner[]> {
     try {
-      const response = await httpClient.request<BannerListResponse>({
+      const response:any = await httpClient.request<BannerListResponse>({
         url: `${BANNERS_URL}`,
         method: "GET",
-      });
-
-      if (!response || !response.data) {
-        throw new Error("Invalid banner list response");
-      }
-
-      const { data } = response.data;
-      if (!data || !Array.isArray(data)) {
-        throw new Error("Invalid active banner response structure");
-      }
-      return data;
+      });    
+      return response;
     } catch (error) {
       handleApiError(error, "getAllBanners");
     }
@@ -61,11 +52,8 @@ class BannerService {
         return [];
       }
 
-      const { data } = response.data;
-
-      if (!data || !Array.isArray(data)) {
-        return [];
-      }
+      const data : any = response.data;
+      console.log("data", data);
 
       return data;
     } catch (error) {

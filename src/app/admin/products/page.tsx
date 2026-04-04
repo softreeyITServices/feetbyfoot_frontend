@@ -71,7 +71,7 @@ function ProductPage() {
         limit: 100,
         search,
       });
-      setData(res.products); // adjust if needed
+      setData(res?.products); // adjust if needed
     } finally {
       setLoading(false);
     }
@@ -105,7 +105,7 @@ function ProductPage() {
     void loadLookups();
   }, []);
 
-  const categoryOptions = categories.map((category) => ({
+  const categoryOptions = categories?.map((category) => ({
     label: category.name,
     value: category._id,
   }));
@@ -145,8 +145,7 @@ function ProductPage() {
     "Bronze",
   ].map((color) => ({ label: color, value: color }));
 
-  const subcategoryOptions = subcategories
-    .filter(
+  const subcategoryOptions = subcategories?.filter(
       (subcategory) =>
         !selectedCategoryId || subcategory.categoryId === selectedCategoryId
     )

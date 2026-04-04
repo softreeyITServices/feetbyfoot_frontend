@@ -52,7 +52,7 @@ export interface OrderMeta {
 }
 
 export interface PaginatedOrders {
-  message: string;
+  // message: string;
   data: Order[];
   meta: OrderMeta;
 }

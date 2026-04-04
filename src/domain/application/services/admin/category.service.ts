@@ -34,14 +34,17 @@ export class CategoryService {
   /* ---------------- GET ALL ---------------- */
   static async getAll(): Promise<AdminCategory[]> {
     try {
-      const res = await httpClient.request<
+      const res: any = await httpClient.request<
         CategoryResponse<AdminCategoryResponse<AdminCategory[]>>
       >({
         url: ADMIN_CATEGORIES_URL,
         method: "GET",
         requiresAuth: true,
       });
-      return res.data.data;
+      if (Array.isArray(res)) return res;
+      if (res && Array.isArray(res.data)) return res.data;
+      if (res?.data && Array.isArray(res.data.data)) return res.data.data;
+      return [];
     } catch (error) {
       throw handleApiError(error, "getAllCategories");
     }

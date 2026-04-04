@@ -70,7 +70,7 @@ export class ExchangeService {
         ? "?" + new URLSearchParams(params as any).toString()
         : "";
 
-      const res = await httpClient.request<
+      const res :any = await httpClient.request<
         ApiResponse<ExchangeListResponse>
       >({
         url: `${ADMIN_EXCHANGES_URL}${query}`,
@@ -78,7 +78,7 @@ export class ExchangeService {
         requiresAuth: true,
       });
 
-      return res.data;
+      return res;
     } catch (error) {
       throw handleApiError(error, "getExchanges");
     }

@@ -481,7 +481,7 @@ body {
   position: relative;
   width: 100%;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 1.5rem;
   aspect-ratio: 1440 / 580;
   background: #111;
 }

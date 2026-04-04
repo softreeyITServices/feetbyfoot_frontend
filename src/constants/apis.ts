@@ -84,7 +84,7 @@ export const ADMIN_ORDER_STATUS_URL = API_BASE_URL + "/orders/admin/status";
 /** Admin COD payment status → proxies to `PATCH .../Orders/cod-payment-status` */
 export const ADMIN_ORDER_COD_PAYMENT_STATUS_URL =
   API_BASE_URL + "/orders/admin/cod-payment-status";
-export const ADMIN_EXCHANGES_URL = API_BASE_URL + "/orders/admin/exchanges";
+export const ADMIN_EXCHANGES_URL = API_BASE_URL + "/admin/exchanges";
 export const ADMIN_UPLOAD_URL = API_BASE_URL + "/upload";
 export const BLOG_COMMENTS_URL = API_BASE_URL + "/blog-comments";
 export const ADMIN_CUSTOMERS_URL = API_BASE_URL + "/admin/customers";

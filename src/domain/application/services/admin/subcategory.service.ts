@@ -28,7 +28,7 @@ export class CategoryTypeService {
   /* ---------------- GET ALL ---------------- */
   static async getAll<T>(): Promise<T[]> {
     try {
-      const res = await httpClient.request<
+      const res: any = await httpClient.request<
         CategoryResponse<{ data: T[] }>
       >({
         url: ADMIN_SUB_CATEGORIES_URL,
@@ -36,7 +36,10 @@ export class CategoryTypeService {
         requiresAuth: true,
       });
 
-      return res.data.data;
+      if (Array.isArray(res)) return res;
+      if (res && Array.isArray(res.data)) return res.data;
+      if (res?.data && Array.isArray(res.data.data)) return res.data.data;
+      return [];
     } catch (error) {
       throw handleApiError(error, "getAllSubcategories");
     }
@@ -45,7 +48,7 @@ export class CategoryTypeService {
   /* ---------------- GET BY CATEGORY ---------------- */
   static async getByCategory<T>(categoryId: string): Promise<T[]> {
     try {
-      const res = await httpClient.request<
+      const res: any = await httpClient.request<
         CategoryResponse<{ data: T[] }>
       >({
         url: `${ADMIN_SUB_CATEGORIES_URL}/category/${categoryId}`,
@@ -53,7 +56,10 @@ export class CategoryTypeService {
         requiresAuth: true,
       });
 
-      return res.data.data;
+      if (Array.isArray(res)) return res;
+      if (res && Array.isArray(res.data)) return res.data;
+      if (res?.data && Array.isArray(res.data.data)) return res.data.data;
+      return [];
     } catch (error) {
       throw handleApiError(error, "getSubcategoriesByCategory");
     }

@@ -38,26 +38,22 @@ class OrdersService {
     try {
       const query = new URLSearchParams();
 
-      if (params.page !== undefined)
-        query.append("page", String(params.page));
+      if (params.page !== undefined) query.append("page", String(params.page));
       if (params.perPage !== undefined)
         query.append("perPage", String(params.perPage));
       if (params.paymentStatus)
         query.append("paymentStatus", params.paymentStatus);
-      if (params.orderStatus)
-        query.append("orderStatus", params.orderStatus);
+      if (params.orderStatus) query.append("orderStatus", params.orderStatus);
 
       const queryString = query.toString();
 
-      const response = await httpClient.request<PaginatedOrdersResponse>({
-        url: queryString
-          ? `${ALL_ORDERS_URL}?${queryString}`
-          : ALL_ORDERS_URL,
+      const response: any = await httpClient.request<PaginatedOrdersResponse>({
+        url: queryString ? `${ALL_ORDERS_URL}?${queryString}` : ALL_ORDERS_URL,
         method: "GET",
         requiresAuth: true,
       });
 
-      return response.data;
+      return response;
     } catch (error) {
       handleApiError(error, "getOrders");
       throw error;
@@ -66,16 +62,15 @@ class OrdersService {
 
   /* ---------------- EXCHANGE ITEMS ---------------- */
   async exchangeItems(
-    payload: ExchangeRequestPayload
+    payload: ExchangeRequestPayload,
   ): Promise<GenericMessageResponse> {
     try {
-      const response =
-        await httpClient.request<GenericMessageResponse>({
-          url: EXCHANGE_URL,
-          method: "POST",
-          requiresAuth: true,
-          data: payload,
-        });
+      const response = await httpClient.request<GenericMessageResponse>({
+        url: EXCHANGE_URL,
+        method: "POST",
+        requiresAuth: true,
+        data: payload,
+      });
 
       return response;
     } catch (error) {
@@ -86,16 +81,15 @@ class OrdersService {
 
   /* ---------------- RETURN ITEMS ---------------- */
   async returnItems(
-    payload: ReturnRequestPayload
+    payload: ReturnRequestPayload,
   ): Promise<GenericMessageResponse> {
     try {
-      const response =
-        await httpClient.request<GenericMessageResponse>({
-          url: RETURN_URL,
-          method: "POST",
-          requiresAuth: true,
-          data: payload,
-        });
+      const response = await httpClient.request<GenericMessageResponse>({
+        url: RETURN_URL,
+        method: "POST",
+        requiresAuth: true,
+        data: payload,
+      });
 
       return response;
     } catch (error) {
@@ -107,16 +101,15 @@ class OrdersService {
   /* ---------------- CANCEL ORDER ---------------- */
   async cancelOrder(
     orderId: string,
-    reason: string
+    reason: string,
   ): Promise<GenericMessageResponse> {
     try {
-      const response =
-        await httpClient.request<GenericMessageResponse>({
-          url: `${ALL_ORDERS_URL}/${orderId}/cancel`,
-          method: "PATCH",
-          data: { reason },
-          requiresAuth: true,
-        });
+      const response = await httpClient.request<GenericMessageResponse>({
+        url: `${ALL_ORDERS_URL}/${orderId}/cancel`,
+        method: "PATCH",
+        data: { reason },
+        requiresAuth: true,
+      });
 
       return response;
     } catch (error) {
@@ -128,16 +121,15 @@ class OrdersService {
   /* ---------------- UPDATE ORDER ADDRESS ---------------- */
   async updateOrderAddress(
     orderId: string,
-    addressId: string
+    addressId: string,
   ): Promise<GenericMessageResponse> {
     try {
-      const response =
-        await httpClient.request<GenericMessageResponse>({
-          url: `${ALL_ORDERS_URL}/${orderId}/update`,
-          method: "PATCH",
-          data: { addressId },
-          requiresAuth: true,
-        });
+      const response = await httpClient.request<GenericMessageResponse>({
+        url: `${ALL_ORDERS_URL}/${orderId}/update`,
+        method: "PATCH",
+        data: { addressId },
+        requiresAuth: true,
+      });
 
       return response;
     } catch (error) {
@@ -152,16 +144,15 @@ class OrdersService {
 
   /* ---------------- UPDATE ORDER STATUS ---------------- */
   async updateOrderStatus(
-    payload: UpdateOrderStatusRequest
+    payload: UpdateOrderStatusRequest,
   ): Promise<GenericMessageResponse> {
     try {
-      const response =
-        await httpClient.request<GenericMessageResponse>({
-          url: ADMIN_ORDER_STATUS_URL,
-          method: "PATCH",
-          requiresAuth: true,
-          data: payload,
-        });
+      const response = await httpClient.request<GenericMessageResponse>({
+        url: ADMIN_ORDER_STATUS_URL,
+        method: "PATCH",
+        requiresAuth: true,
+        data: payload,
+      });
 
       return response;
     } catch (error) {
@@ -171,7 +162,7 @@ class OrdersService {
   }
 
   async updateCodPaymentStatus(
-    payload: UpdateCodPaymentStatusRequest
+    payload: UpdateCodPaymentStatusRequest,
   ): Promise<{ message: string; data: Order }> {
     try {
       const response = await httpClient.request<{
@@ -199,8 +190,7 @@ class OrdersService {
     try {
       const query = new URLSearchParams();
 
-      if (params.page !== undefined)
-        query.append("page", String(params.page));
+      if (params.page !== undefined) query.append("page", String(params.page));
       if (params.perPage !== undefined)
         query.append("perPage", String(params.perPage));
       if (params.status) query.append("status", params.status);
@@ -228,13 +218,12 @@ class OrdersService {
     status: string;
   }): Promise<GenericMessageResponse> {
     try {
-      const response =
-        await httpClient.request<GenericMessageResponse>({
-          url: ADMIN_RETURN_URL,
-          method: "PATCH",
-          requiresAuth: true,
-          data: payload,
-        });
+      const response = await httpClient.request<GenericMessageResponse>({
+        url: ADMIN_RETURN_URL,
+        method: "PATCH",
+        requiresAuth: true,
+        data: payload,
+      });
 
       return response;
     } catch (error) {
@@ -246,9 +235,8 @@ class OrdersService {
   private async fetchAuthorizedPdf(url: string): Promise<Blob> {
     const { getSession } = await import("next-auth/react");
     const session = await getSession();
-    const accessToken = (
-      session as { accessToken?: string } | null
-    )?.accessToken;
+    const accessToken = (session as { accessToken?: string } | null)
+      ?.accessToken;
 
     if (!accessToken) {
       throw new Error("Please sign in to download.");
@@ -295,10 +283,10 @@ class OrdersService {
    */
   async downloadCustomerInvoicePdf(
     orderMongoId: string,
-    orderNumber?: string
+    orderNumber?: string,
   ): Promise<void> {
     const blob = await this.fetchAuthorizedPdf(
-      orderCustomerDownloadPdfUrl(orderMongoId)
+      orderCustomerDownloadPdfUrl(orderMongoId),
     );
     const safe =
       (orderNumber && orderNumber.replace(/[^\w.-]/g, "_")) || "customer-order";
@@ -311,10 +299,10 @@ class OrdersService {
    */
   async downloadAdminSingleOrderInvoicePdf(
     orderMongoId: string,
-    orderNumber?: string
+    orderNumber?: string,
   ): Promise<void> {
     const blob = await this.fetchAuthorizedPdf(
-      orderAdminSingleDownloadPdfUrl(orderMongoId)
+      orderAdminSingleDownloadPdfUrl(orderMongoId),
     );
     const safe =
       (orderNumber && orderNumber.replace(/[^\w.-]/g, "_")) || "order";

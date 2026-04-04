@@ -8,10 +8,14 @@ import { bannerService } from "@/domain/application/services/banner.service";
 export default function HeroBanner() {
   const [slides, setSlides] = useState<Slide[]>([]);
 
+  console.log("slides", slides);
+
   useEffect(() => {
-    bannerService
-      .getActiveBanners()
-      .then((banners) => {
+    const fetchBanners = async () => {
+      try {
+        const banners = await bannerService.getActiveBanners();
+        console.log("banners", banners);
+        
         if (!banners?.length) return;
         setSlides(
           banners.map((banner, index) => ({
@@ -20,16 +24,18 @@ export default function HeroBanner() {
             title: banner.title,
           }))
         );
-      })
-      .catch(() => {
+      } catch (error) {
         // Silently ignore — backend may be down or returning 404
-      });
+      }
+    };
+
+    fetchBanners();
   }, []);
 
   if (!slides.length) return null;
 
   return (
-    <section className="section">
+    <section className="w-full py-4 sm:py-6">
       <Container>
         <BannerSlider slides={slides} />
       </Container>

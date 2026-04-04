@@ -28,6 +28,7 @@ export class AnnouncementService {
       }
       if (!cur || typeof cur !== "object") break;
       const o = cur as Record<string, unknown>;
+      console.log(`[AnnouncementService] Testing data extraction:`, { dataInO: "data" in o, isArray: Array.isArray(o.data) });
       if ("data" in o) {
         const next = o.data;
         if (Array.isArray(next)) {
@@ -38,6 +39,7 @@ export class AnnouncementService {
       }
       break;
     }
+    console.warn(`[AnnouncementService] No announcement array found in payload:`, payload);
     return [];
   }
 
@@ -66,13 +68,18 @@ export class AnnouncementService {
   static async getPublic(): Promise<Announcement[]> {
     try {
       const base = AnnouncementService.publicBaseUrl();
+      console.log(`[AnnouncementService] Fetching public from URL: ${base}`);
       const res = await httpClient.request<unknown>({
         url: base,
         method: "GET",
         skipAuth: true,
       });
-      return AnnouncementService.pickAnnouncementArray(res);
+      console.log(`[AnnouncementService] Received response from public API:`, res);
+      const picked = AnnouncementService.pickAnnouncementArray(res);
+      console.log(`[AnnouncementService] Picked ${picked.length} announcements.`);
+      return picked;
     } catch (error) {
+      console.error(`[AnnouncementService] Error fetching public announcements:`, error);
       throw handleApiError(error, "getPublicAnnouncements");
     }
   }

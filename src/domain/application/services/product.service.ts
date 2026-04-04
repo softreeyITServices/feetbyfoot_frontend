@@ -162,18 +162,13 @@ class ProductService {
     params.append("limit", String(limit));
     if (search?.trim()) params.append("search", search.trim());
 
-    const response = await httpClient.request<PublicProductsApiResponse>({
+    const response: any = await httpClient.request<PublicProductsApiResponse>({
       url: `${PRODUCTS_ADMIN_LIST_URL}?${params.toString()}`,
       method: "GET",
       requiresAuth: true,
     });
 
-    const data = response.data ?? [];
-
-    if (!data || !Array.isArray(data.products)) {
-      throw new Error("Invalid products response");
-    }
-    return data;
+    return response;
   }
 
   /**

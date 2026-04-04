@@ -32,19 +32,21 @@ export default function CustomersPage() {
   const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await CustomerService.getAll({
+      const response:any = await CustomerService.getAll({
         page,
         limit,
         search: searchQuery || undefined,
       });
 
+      console.log('response',response)
+
       setRows(
-        response.data.map((customer) => ({
+        response?.data?.map((customer:any) => ({
           ...customer,
           id: customer._id,
         }))
       );
-      setTotalPages(Math.max(1, response.pagination.totalPages || 1));
+      setTotalPages(1); // Set to 1 as API does not provide pagination
     } catch (error: unknown) {
       toast.error(
         (error as { message?: string })?.message ||
@@ -59,10 +61,11 @@ export default function CustomersPage() {
     async (customerId: string, targetPage = 1) => {
       try {
         setOrdersLoading(true);
-        const response = await CustomerService.getOrders(customerId, {
+        const response:any = await CustomerService.getOrders(customerId, {
           page: targetPage,
           limit: 10,
         });
+        console.log('response',response)
         setOrders(response.data);
         setOrdersPage(response.pagination.page);
         setOrdersTotalPages(Math.max(1, response.pagination.totalPages || 1));
@@ -159,7 +162,7 @@ export default function CustomersPage() {
         <div className="space-y-4">
           {ordersLoading ? (
             <p className="text-sm text-neutral-500">Loading orders...</p>
-          ) : orders.length === 0 ? (
+          ) : orders?.length === 0 ? (
             <p className="text-sm text-neutral-500">No orders found.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -174,7 +177,7 @@ export default function CustomersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((order) => (
+                  {orders?.map((order) => (
                     <tr key={order._id} className="border-b border-neutral-100">
                       <td className="py-2 pr-2">{order.orderNumber}</td>
                       <td className="py-2 pr-2">{order.orderStatus}</td>

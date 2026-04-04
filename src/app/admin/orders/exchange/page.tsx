@@ -4,7 +4,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { Column, DataTable } from "@/component/admin/Admindatatable";
 
 import { AdminModal } from "@/component/admin/AdminModal";
-import { Exchange, ExchangeService } from "@/domain/application/services/admin/exchange.service";
+import {
+  Exchange,
+  ExchangeService,
+} from "@/domain/application/services/admin/exchange.service";
 import { ExchangeStatus } from "@/domain/shared/types/order.type";
 import toast from "react-hot-toast";
 
@@ -22,10 +25,8 @@ type PendingAction =
 /* ================= STATUS STYLE ================= */
 
 const STATUS_STYLE: Record<string, string> = {
-  EXCHANGE_REQUESTED:
-    "bg-yellow-50 text-yellow-700 border border-yellow-200",
-  EXCHANGE_APPROVED:
-    "bg-blue-50 text-blue-700 border border-blue-200",
+  EXCHANGE_REQUESTED: "bg-yellow-50 text-yellow-700 border border-yellow-200",
+  EXCHANGE_APPROVED: "bg-blue-50 text-blue-700 border border-blue-200",
   REPLACEMENT_SHIPPED:
     "bg-emerald-50 text-emerald-700 border border-emerald-200",
 };
@@ -49,8 +50,7 @@ function ActionDropdown({
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -135,6 +135,7 @@ function ExchangePage() {
 
       const res = await ExchangeService.getAll(params);
 
+      console.log("res", res);
       const transformed: ExchangeRow[] = (res.data || []).map((x) => ({
         ...x,
         id: x._id,
@@ -222,8 +223,7 @@ function ExchangePage() {
     {
       key: "createdAt",
       label: "Date",
-      render: (row) =>
-        new Date(row.createdAt).toLocaleDateString(),
+      render: (row) => new Date(row.createdAt).toLocaleDateString(),
     },
 
     {
@@ -244,9 +244,7 @@ function ExchangePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold">Exchanges</h1>
-        <p className="text-sm text-neutral-400">
-          Manage product exchanges
-        </p>
+        <p className="text-sm text-neutral-400">Manage product exchanges</p>
       </div>
 
       {/* FILTERS */}
@@ -301,25 +299,58 @@ function ExchangePage() {
         {selected && (
           <div className="space-y-4 text-sm">
             <div className="grid grid-cols-2 gap-3">
-              <p><b>Exchange ID:</b> {selected.exchangeId || "NA"}</p>
-              <p><b>Order No:</b> {selected.orderNumber || "NA"}</p>
+              <p>
+                <b>Exchange ID:</b> {selected.exchangeId || "NA"}
+              </p>
+              <p>
+                <b>Order No:</b> {selected.orderNumber || "NA"}
+              </p>
 
-              <p><b>Status:</b> {selected.status || "NA"}</p>
-              <p><b>Created:</b> {selected.createdAt ? new Date(selected.createdAt).toLocaleString() : "NA"}</p>
-              <p><b>Updated:</b> {selected.updatedAt ? new Date(selected.updatedAt).toLocaleString() : "NA"}</p>
-              <p><b>Approved At:</b> {selected.approvedAt ? new Date(selected.approvedAt).toLocaleString() : "NA"}</p>
+              <p>
+                <b>Status:</b> {selected.status || "NA"}
+              </p>
+              <p>
+                <b>Created:</b>{" "}
+                {selected.createdAt
+                  ? new Date(selected.createdAt).toLocaleString()
+                  : "NA"}
+              </p>
+              <p>
+                <b>Updated:</b>{" "}
+                {selected.updatedAt
+                  ? new Date(selected.updatedAt).toLocaleString()
+                  : "NA"}
+              </p>
+              <p>
+                <b>Approved At:</b>{" "}
+                {selected.approvedAt
+                  ? new Date(selected.approvedAt).toLocaleString()
+                  : "NA"}
+              </p>
             </div>
 
             <div className="space-y-1">
-              <p><b>Customer Notes:</b> {selected.notes || "NA"}</p>
-              <p><b>Admin Notes:</b> {selected.adminNotes || "NA"}</p>
-              <p><b>Reject Reason:</b> {selected.rejectReason || "NA"}</p>
+              <p>
+                <b>Customer Notes:</b> {selected.notes || "NA"}
+              </p>
+              <p>
+                <b>Admin Notes:</b> {selected.adminNotes || "NA"}
+              </p>
+              <p>
+                <b>Reject Reason:</b> {selected.rejectReason || "NA"}
+              </p>
             </div>
 
             <div className="space-y-1">
-              <p><b>Courier Name:</b> {selected.courierName || "NA"}</p>
-              <p><b>Pickup AWB:</b> {selected.pickupAwb || "NA"}</p>
-              <p><b>Replacement AWB:</b> {selected.replacementAwb || "NA"}</p>
+              <p>
+                <b>Courier Name:</b> {selected.courierName || "NA"}
+              </p>
+              <p>
+                <b>Pickup AWB:</b> {selected.pickupAwb || "NA"}
+              </p>
+              <p>
+                <b>Replacement AWB:</b> {selected.replacementAwb || "NA"}
+              </p>
             </div>
 
             <div>
@@ -328,10 +359,18 @@ function ExchangePage() {
                 {selected.lines?.length ? (
                   selected.lines.map((line) => (
                     <div key={line.orderItemId} className="p-3">
-                      <p><b>Product:</b> {line.productId}</p>
-                      <p><b>Size:</b> {line.fromSize} → {line.toSize}</p>
-                      <p><b>Qty:</b> {line.quantity}</p>
-                      <p><b>Reason:</b> {line.reason || "NA"}</p>
+                      <p>
+                        <b>Product:</b> {line.productId}
+                      </p>
+                      <p>
+                        <b>Size:</b> {line.fromSize} → {line.toSize}
+                      </p>
+                      <p>
+                        <b>Qty:</b> {line.quantity}
+                      </p>
+                      <p>
+                        <b>Reason:</b> {line.reason || "NA"}
+                      </p>
                     </div>
                   ))
                 ) : (
@@ -368,22 +407,24 @@ function ExchangePage() {
       >
         {pending && (
           <div className="space-y-4 text-sm">
-
             {/* CONTEXT */}
             <div className="border rounded-lg p-3 bg-neutral-50">
-              <p><b>Exchange ID:</b> {pending.row.exchangeId || "NA"}</p>
-              <p><b>Order No:</b> {pending.row.orderNumber || "NA"}</p>
-              <p><b>Status:</b> {pending.row.status || "NA"}</p>
+              <p>
+                <b>Exchange ID:</b> {pending.row.exchangeId || "NA"}
+              </p>
+              <p>
+                <b>Order No:</b> {pending.row.orderNumber || "NA"}
+              </p>
+              <p>
+                <b>Status:</b> {pending.row.status || "NA"}
+              </p>
 
               <p>
                 <b>Items:</b>{" "}
                 {pending.row.lines?.length
                   ? pending.row.lines
-                    .map(
-                      (l) =>
-                        `${l.fromSize}→${l.toSize} (x${l.quantity})`
-                    )
-                    .join(", ")
+                      .map((l) => `${l.fromSize}→${l.toSize} (x${l.quantity})`)
+                      .join(", ")
                   : "NA"}
               </p>
             </div>
@@ -412,9 +453,7 @@ function ExchangePage() {
             )}
 
             {pending.type === "SHIP" && (
-              <p className="text-neutral-500">
-                Confirm shipping replacement
-              </p>
+              <p className="text-neutral-500">Confirm shipping replacement</p>
             )}
           </div>
         )}

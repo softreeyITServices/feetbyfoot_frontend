@@ -56,12 +56,14 @@ export default function BlogsPage() {
       blogs.map((blog) => ({
         id: blog._id,
         title: blog.title,
-        href: `/blogs/${blog.slug || blog._id}`,
+        href: `/blogs/${blog._id}`,
         imageSrc: safeNextImageSrc(blog.coverImage?.url, FALLBACK_IMAGE),
         imageAlt: blog.title || "Blog cover image",
       })),
     [blogs]
   );
+
+  console.log("blogs",blogs)
 
   return (
     <>

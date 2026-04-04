@@ -150,7 +150,7 @@ export function DataTable<T extends { id: string | number }>({
   const hasActions = Boolean(onEdit || onDelete || onView || onSettings);
 
   return (
-    <div className="bg-white rounded-2xl border border-neutral-100 overflow-hidden shadow-sm">
+    <div className="bg-white rounded-2xl border border-neutral-100 overflow-hidden shadow-sm w-full min-w-0">
       {/* Header */}
       <div className="px-5 py-4 border-b border-neutral-100 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
         <div>

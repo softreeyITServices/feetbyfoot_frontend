@@ -6,6 +6,7 @@ import type {
   CustomerOrderDetailApiResponse,
   CustomerOrdersApiResponse,
   SingleCustomerApiResponse,
+  AdminCustomer
 } from "@/domain/shared/types/admin/customer";
 
 type InternalApiResponse<T> = {
@@ -19,18 +20,20 @@ export class CustomerService {
     page?: number;
     limit?: number;
     search?: string;
-  }): Promise<CustomerListApiResponse> {
+  }): Promise<AdminCustomer[]> {
     try {
-      const response = await httpClient.request<
-        InternalApiResponse<CustomerListApiResponse>
-      >({
+      const response : any = await httpClient.request<any>({
         url: ADMIN_CUSTOMERS_URL,
         method: "GET",
         params,
         requiresAuth: true,
       });
 
-      return response.data;
+      if (Array.isArray(response)) return response;
+      if (response && Array.isArray(response.data)) return response;
+      if (response?.data && Array.isArray(response.data.data)) return response;
+      
+      return [];
     } catch (error) {
       throw handleApiError(error, "getCustomers");
     }
@@ -62,7 +65,7 @@ export class CustomerService {
     }
   ): Promise<CustomerOrdersApiResponse> {
     try {
-      const response = await httpClient.request<
+      const response : any = await httpClient.request<
         InternalApiResponse<CustomerOrdersApiResponse>
       >({
         url: `${ADMIN_CUSTOMERS_URL}/${customerId}/orders`,
@@ -71,7 +74,7 @@ export class CustomerService {
         requiresAuth: true,
       });
 
-      return response.data;
+      return response;
     } catch (error) {
       throw handleApiError(error, "getCustomerOrders");
     }

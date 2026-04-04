@@ -1,3 +1,4 @@
+import { AnnouncementService } from "@/domain/application/services/admin/announcement.service";
 import type { CSSProperties } from "react";
 
 /** Shorter duration = faster scroll. One announcement is quickest; each extra one adds time to read. */
@@ -14,7 +15,7 @@ type SimpleMarqueeProps = {
 };
 
 export const SimpleMarquee = ({
-  text,
+  text, 
   announcementCount = 1,
 }: SimpleMarqueeProps) => {
   const trimmed = text.trim();
@@ -45,4 +46,32 @@ export const SimpleMarquee = ({
       </div>
     </div>
   );
+};
+
+/** 
+ * Autonomous component that fetches public announcements and renders a marquee.
+ * Returns null if no announcements are active or if the fetch fails.
+ */
+export const Marquee = async () => {
+  let announcements = [];
+  try {
+    announcements = await AnnouncementService.getPublic();
+  } catch (error) {
+    // Silent fail; marquee is usually non-critical
+    console.error("Marquee fetch error:", error);
+    return null;
+  }
+
+  const messages = announcements
+    .map((a) => (a.message || "").trim())
+    .filter(Boolean);
+
+  if (messages.length === 0) return null;
+
+  const text =
+    messages.length === 1
+      ? messages[0]
+      : `${messages.join("   •   ")}   •   `;
+
+  return <SimpleMarquee text={text} announcementCount={messages.length} />;
 };
