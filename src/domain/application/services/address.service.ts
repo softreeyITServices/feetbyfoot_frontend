@@ -20,12 +20,12 @@ export class AddressService {
 
   static async getAll(): Promise<Address[]> {
     try {
-      const { data } = await httpClient.request<ApiResponse<Address[]>>({
+      const  data :any = await httpClient.request<ApiResponse<Address[]>>({
         url: ADDRESS_URL,
         method: "GET",
         requiresAuth: true,
       });
-      return data.data;
+      return data;
     } catch (error) {
       throw handleApiError(error, "getAllAddress");
     }

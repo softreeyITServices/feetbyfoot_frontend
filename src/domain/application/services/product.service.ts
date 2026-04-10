@@ -21,7 +21,6 @@ import {
   ProductByIdData,
   ProductByIdResponse,
   ProductFilterMeta,
-  ProductFilterResponse,
   PublicProductsApiResponse,
   PublicProductsResponse,
   UpdateMegaMenuBody,
@@ -329,16 +328,11 @@ class ProductService {
 
   async getProductFilters(): Promise<ProductFilterMeta> {
     try {
-      const response = await httpClient.request<ProductFilterResponse>({
+      const data = await httpClient.request<ProductFilterMeta>({
         url: `${PRODUCTS_URL}/filters/meta`,
         method: "GET",
         skipAuth: true,
       });
-
-      if (!response || !response.data) {
-        throw new Error("Invalid filter meta response");
-      }
-      const data = response.data;
 
       if (!data) {
         throw new Error("Invalid filter meta response");
@@ -346,7 +340,7 @@ class ProductService {
 
       return data;
     } catch (error) {
-      handleApiError(error, "getProductFilters");
+      throw handleApiError(error, "getProductFilters");
     }
   }
 

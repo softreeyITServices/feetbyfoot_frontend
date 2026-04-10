@@ -55,12 +55,12 @@ function DesktopMegaNav({
         const primary = groupPrimaryHref(g);
         const groupActive = isGroupPathActive(pathname, g);
         const headerOnly = groupIsHeaderOnly(g);
-        const groupLabelClass = `text-sm font-bold uppercase px-2 lg:px-3 py-1 whitespace-nowrap rounded ${
+        const groupLabelClass = `text-[12px] tracking-[0.08em] uppercase px-2 lg:px-3 py-2 whitespace-nowrap transition-colors ${
           groupActive
-            ? "bg-yellow-400 text-black"
-            : "text-gray-700 hover:text-black"
+            ? "text-black font-semibold"
+            : "text-[#555] font-medium hover:text-black"
         }`;
-        const groupLabelClassFlyout = `${groupLabelClass} inline-flex items-center gap-0.5`;
+        const groupLabelClassFlyout = `${groupLabelClass} inline-flex items-center gap-1`;
 
         if (!hasFlyout) {
           if (headerOnly) {
@@ -100,68 +100,72 @@ function DesktopMegaNav({
                 />
               </Link>
             )}
+            {/* Flyout panel — fixed to full viewport width */}
             <div
-              className="absolute left-0 top-full pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-[60]"
+              className="fixed left-0 top-[72px] w-screen opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-[60]"
               role="region"
               aria-label={`${g.name} categories`}
             >
-              <div className="bg-white border border-neutral-200 shadow-lg rounded-lg p-4 max-h-[min(70vh,480px)] overflow-y-auto min-w-[min(90vw,720px)] max-w-[90vw]">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="bg-[#f4f4f4] border-t border-neutral-300 shadow-xl w-full px-8 py-8 h-[360px] overflow-hidden">
+                <div
+                  className="grid gap-6"
+                  style={{ gridTemplateColumns: `repeat(${Math.min(categories.length, 5)}, minmax(0, 1fr))` }}
+                >
                   {categories.map((c) => {
                     const subs = c.subcategories ?? [];
                     const catHeader = categoryIsHeaderOnly(g, c);
                     const catLink = categoryHref(g, c);
                     return (
                       <div key={c.id} className="min-w-0">
+                        {/* Image first (Swole Panda style) */}
+                        {c.image && (
+                          catHeader ? (
+                            <div className="mb-3 overflow-hidden bg-neutral-100">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={c.image}
+                                alt={c.name}
+                                className="w-full h-[170px] object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <Link href={catLink} className="block mb-3 overflow-hidden bg-neutral-100">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={c.image}
+                                alt={c.name}
+                                className="w-full h-[170px] object-cover hover:scale-105 transition-transform duration-300"
+                              />
+                            </Link>
+                          )
+                        )}
+                        {/* Category name below image */}
                         {catHeader ? (
-                          <span className="text-xs font-bold text-black block mb-2 cursor-default">
+                          <span className="text-[11px] font-bold text-black uppercase tracking-wide block mb-2 cursor-default">
                             {c.name}
                           </span>
                         ) : (
                           <Link
                             href={catLink}
-                            className="text-xs font-bold text-black hover:underline block mb-2"
+                            className="text-[11px] font-bold text-black uppercase tracking-wide hover:underline block mb-2"
                           >
                             {c.name}
                           </Link>
                         )}
-                        {c.image ? (
-                          catHeader ? (
-                            <div className="block mb-2 rounded overflow-hidden bg-neutral-100 max-h-20">
-                              {/* eslint-disable-next-line @next/next/no-img-element -- menu image URLs come from CMS / various hosts */}
-                              <img
-                                src={c.image}
-                                alt=""
-                                className="w-full h-20 object-cover"
-                              />
-                            </div>
-                          ) : (
-                            <Link
-                              href={catLink}
-                              className="block mb-2 rounded overflow-hidden bg-neutral-100 max-h-20"
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element -- menu image URLs come from CMS / various hosts */}
-                              <img
-                                src={c.image}
-                                alt=""
-                                className="w-full h-20 object-cover"
-                              />
-                            </Link>
-                          )
-                        ) : null}
-                        <ul className="space-y-1">
+                        {/* Subcategory list */}
+                        <ul className="space-y-1.5">
                           {subs.map((s) => {
                             const subHeader = subcategoryIsHeaderOnly(g, s);
                             return (
                               <li key={s.id}>
                                 {subHeader ? (
-                                  <span className="text-xs text-gray-600 line-clamp-2 cursor-default">
+                                  <span className="text-xs text-gray-500 cursor-default">
                                     {s.name}
                                   </span>
                                 ) : (
                                   <Link
                                     href={subcategoryHref(g, c, s)}
-                                    className="text-xs text-gray-600 hover:text-black line-clamp-2"
+                                    className="text-xs text-gray-600 hover:text-black"
                                   >
                                     {s.name}
                                   </Link>
@@ -282,8 +286,11 @@ export default function Navbar() {
         {megaGroups.map((g) => {
           const primary = groupPrimaryHref(g);
           const groupActive = isGroupPathActive(pathname, g);
-          const mobileClass = `text-[11px] font-bold uppercase px-2 py-1 shrink-0 rounded whitespace-nowrap ${
-            groupActive ? "bg-yellow-400 text-black" : "text-gray-700"
+          const isOutlet = g.name.toLowerCase() === 'outlet';
+          const mobileClass = `text-[11px] tracking-wide uppercase px-2 py-1 shrink-0 whitespace-nowrap transition-colors ${
+            isOutlet 
+              ? "text-[#F93A3A] font-semibold" 
+              : groupActive ? "text-black font-semibold" : "text-[#555] font-medium"
           }`;
           if (groupIsHeaderOnly(g)) {
             return (
@@ -324,8 +331,8 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="shadow-[3px_3px_10px_#BFBFBE] bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      <header className="bg-[#f4f4f4] sticky top-0 z-50">
+        <div className="max-w-[90rem] mx-auto px-4 lg:px-8 h-[72px] flex items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <Image
               src="/assets/images/logo.png"
@@ -344,14 +351,18 @@ export default function Navbar() {
 
           {mobileNavBody}
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-5 lg:gap-7 shrink-0 text-gray-800">
+            <Link href="/login" aria-label="Account" className="hover:text-black transition-colors">
+              <ProfileIcon width={21} height={21} fill="currentColor" />
+            </Link>
+
             <form
               ref={searchRef}
               onSubmit={handleSearchSubmit}
               className={`hidden md:flex items-center rounded-full transition-all duration-200 ${
                 searchOpen
-                  ? "w-60 border border-gray-200 bg-white px-3 py-1.5"
-                  : "w-10 justify-center p-2"
+                  ? "w-60 border border-gray-300 bg-white px-3 py-1.5"
+                  : "w-10 justify-center p-2 hover:text-black cursor-pointer"
               }`}
             >
               <button
@@ -360,41 +371,45 @@ export default function Navbar() {
                 className="shrink-0"
                 onClick={() => setSearchOpen((prev) => !prev)}
               >
-                <SearchIcon width={18} height={18} fill="#000" />
+                <SearchIcon width={20} height={20} fill="currentColor" />
               </button>
               {searchOpen && (
                 <input
                   autoFocus
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search socks..."
+                  placeholder="Search products..."
                   className="ml-2 w-full bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400"
                 />
               )}
             </form>
 
-            <Link href="/login" aria-label="Account">
-              <ProfileIcon width={20} height={20} fill="#000" />
-            </Link>
+            <button
+              aria-label="Search"
+              className="md:hidden hover:text-black transition-colors"
+              onClick={() => router.push("/shop")}
+            >
+              <SearchIcon width={20} height={20} fill="currentColor" />
+            </button>
 
-            <Link href="/wishlists" aria-label="Wishlists">
-              <WishlistIcon width={24} height={24} fill="#000" />
+            <Link href="/wishlists" aria-label="Wishlists" className="hover:text-black transition-colors hidden lg:block">
+              <WishlistIcon width={24} height={24} fill="currentColor" />
             </Link>
 
             <button
               aria-label="Cart"
               onClick={handleCart}
-              className="relative"
+              className="relative hover:text-black transition-colors"
             >
-              <CartIcon width={20} height={20} fill="#000" />
+              <CartIcon width={21} height={21} fill="currentColor" />
 
               {cartCount > 0 && (
                 <span
                   className="
-                    absolute -top-3 -right-2
-                    bg-black text-white
-                    text-[10px] font-semibold
-                    w-5 h-5
+                    absolute -top-2.5 -right-2.5
+                    bg-[#F93A3A] text-white
+                    text-[10px] font-bold
+                    w-[18px] h-[18px]
                     flex items-center justify-center
                     rounded-full
                   "
@@ -402,14 +417,6 @@ export default function Navbar() {
                   {cartCount}
                 </span>
               )}
-            </button>
-
-            <button
-              aria-label="Search"
-              className="md:hidden"
-              onClick={() => router.push("/shop")}
-            >
-              <SearchIcon width={20} height={20} fill="#000" />
             </button>
           </div>
         </div>

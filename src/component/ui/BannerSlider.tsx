@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 /* ───────── Types ───────── */
 
@@ -10,6 +11,8 @@ export interface Slide {
   image: string;
   title: string;
   subtitle?: string;
+  ctaText?: string;
+  ctaLink?: string;
 }
 
 interface BannerSliderProps {
@@ -18,9 +21,7 @@ interface BannerSliderProps {
 
 /* ───────── Component ───────── */
 
-export default function BannerSlider({
-  slides,
-}: BannerSliderProps) {
+export default function BannerSlider({ slides }: BannerSliderProps) {
   const [current, setCurrent] = useState<number>(0);
 
   useEffect(() => {
@@ -34,37 +35,54 @@ export default function BannerSlider({
   }, [slides.length]);
 
   return (
-    <>
-      <div className="bs-wrap">
-        {slides.map((slide, idx) => (
-          <div
-            key={slide.id}
-            className={`bs-slide${idx === current ? " bs-active" : ""}`}
-          >
-            {/* <img src={slide.image} alt={slide.title} /> */}
-            <Image
-              src={slide.image}
-              alt={slide.title}
-              width={1920}
-              height={650}
-              priority
-            />
-          </div>
-        ))}
+    <div className="bs-wrap">
+      {slides.map((slide, idx) => (
+        <div
+          key={slide.id}
+          className={`bs-slide${idx === current ? " bs-active" : ""}`}
+        >
+          <Image
+            src={slide.image}
+            alt={slide.title}
+            fill
+            sizes="90vw"
+            priority={idx === 0}
+            className="object-stretch"
+          />
 
-        {slides.length > 1 && (
-          <div className="bs-dots bg-white p-6 rounded-tl-2xl">
-            {slides.map((slide, idx) => (
-              <button
-                key={slide.id}
-                className={`bs-dot${idx === current ? " bs-dot-on" : ""}`}
-                onClick={() => setCurrent(idx)}
-                aria-label={`Go to ${slide.title}`}
-              />
-            ))}
+          {/* Dark gradient overlay */}
+          <div className="bs-overlay" />
+
+          {/* Text content */}
+          <div className="bs-content">
+            {slide.title && (
+              <h1 className="bs-title">{slide.title}</h1>
+            )}
+            {slide.subtitle && (
+              <p className="bs-subtitle">{slide.subtitle}</p>
+            )}
+            {slide.ctaText && slide.ctaLink && (
+              <Link href={slide.ctaLink} className="bs-cta">
+                {slide.ctaText}
+              </Link>
+            )}
           </div>
-        )}
-      </div>
-    </>
+        </div>
+      ))}
+
+      {/* Dot navigation — bottom center */}
+      {slides.length > 1 && (
+        <div className="bs-dots">
+          {slides.map((slide, idx) => (
+            <button
+              key={slide.id}
+              className={`bs-dot${idx === current ? " bs-dot-on" : ""}`}
+              onClick={() => setCurrent(idx)}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

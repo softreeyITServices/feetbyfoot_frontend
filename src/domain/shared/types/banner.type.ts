@@ -1,7 +1,10 @@
 export interface Banner {
   _id: string;
   title: string;
+  subtitle?: string;
   imageUrl: string;
+  redirectUrl?: string;
+  ctaText?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
