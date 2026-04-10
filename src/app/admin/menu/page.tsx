@@ -26,6 +26,7 @@ type SourceSubcategory = {
 type SourceCatalogCategory = {
   id: string;
   name: string;
+  image?: string;
   subcategories: SourceSubcategory[];
 };
 
@@ -276,6 +277,7 @@ function buildSharedCatalogFromApi(
   return activeCats.map((c) => ({
     id: c._id,
     name: c.name,
+    image: c.image?.url,
     subcategories: byCategory[c._id] ?? [],
   }));
 }
@@ -557,7 +559,7 @@ export default function AdminMenuCreationPage() {
                 name: srcCat.name,
                 children: [],
                 fromCatalog: true,
-                image: "",
+                image: srcCat.image ?? "",
                 ...(categoryHref ? { href: categoryHref } : {}),
               },
             ],
@@ -636,7 +638,7 @@ export default function AdminMenuCreationPage() {
                 name: srcCat.name,
                 children: [newSub],
                 fromCatalog: true,
-                image: "",
+                image: srcCat.image ?? "",
                 ...(categoryHref ? { href: categoryHref } : {}),
               },
             ],
@@ -658,7 +660,7 @@ export default function AdminMenuCreationPage() {
                 name: srcCat.name,
                 children: [newSub],
                 fromCatalog: true,
-                image: "",
+                image: srcCat.image ?? "",
                 ...(categoryHref ? { href: categoryHref } : {}),
               },
             ],

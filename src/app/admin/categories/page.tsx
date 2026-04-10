@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
+import { ADMIN_UPLOAD_URL } from "@/constants/apis";
 import { Column, DataTable } from "@/component/admin/Admindatatable";
 import { CategoryService } from "@/domain/application/services/admin/category.service";
 import { CategoryTypeService } from "@/domain/application/services/admin/subcategory.service";
@@ -58,6 +60,7 @@ export default function AdminCategoriesPage() {
         name: item.name,
         isActive: Boolean(item.isActive),
         createdAt: item.createdAt,
+        image: item.image,
         subcategoryCount: countMap[item._id] || 0,
       })) : [];
 
@@ -121,11 +124,42 @@ export default function AdminCategoriesPage() {
     }
 
     try {
+      // — optional image upload
+      let image: { url: string; publicId: string } | undefined;
+      const imageFiles = values.image as (File | string)[] | undefined;
+
+      if (imageFiles && imageFiles.length > 0) {
+        const file = imageFiles[0];
+
+        if (file instanceof File) {
+          const fd = new FormData();
+          fd.append("file", file);
+
+          const uploadRes = await fetch(ADMIN_UPLOAD_URL, {
+            method: "POST",
+            body: fd,
+          });
+
+          if (!uploadRes.ok) {
+            toast.error("Image upload failed");
+            return;
+          }
+
+          const uploadData = await uploadRes.json();
+          image = { url: uploadData.url, publicId: uploadData.publicId };
+        } else if (typeof file === "string" && editing?.image) {
+          // if it's already a string (existing URL), keep existing image
+          image = editing.image;
+        }
+      }
+
+      const payload = { name, isActive, ...(image ? { image } : {}) };
+
       if (editing) {
-        await CategoryService.update(editing.id, { name, isActive });
+        await CategoryService.update(editing.id, payload);
         toast.success("Category updated");
       } else {
-        await CategoryService.create({ name, isActive });
+        await CategoryService.create(payload);
         toast.success("Category created");
       }
 
@@ -160,6 +194,16 @@ export default function AdminCategoriesPage() {
         { label: "Inactive", value: "Inactive" },
       ],
     },
+    {
+      key: "image",
+      label: "Category Image (optional)",
+      type: "image",
+      required: false,
+      accept: "image/*",
+      multiple: false,
+      hint: "Recommended: square image, minimum 200×200 px",
+      cols: 1,
+    },
   ];
 
   const COLUMNS: Column<CategoryRow>[] = [
@@ -168,17 +212,29 @@ export default function AdminCategoriesPage() {
       label: "Category",
       sortable: true,
       render: (row) => (
-        <div className="flex flex-col gap-1">
-          {/* Category Name */}
-          <span className="font-medium text-sm text-neutral-900">
-            {row.name}
-          </span>
+        <div className="flex items-center gap-3">
+          {/* Thumbnail */}
+          {row.image?.url ? (
+            <Image
+              src={row.image.url}
+              alt={row.name}
+              width={36}
+              height={36}
+              className="w-9 h-9 rounded-lg object-cover shrink-0 border border-neutral-200"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0 border border-neutral-200">
+              <span className="text-[10px] text-neutral-400">IMG</span>
+            </div>
+          )}
 
-          {/* Pills Row */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-2 py-0.5 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-              Subcategories: {row.subcategoryCount}
-            </span>
+          <div className="flex flex-col gap-1">
+            <span className="font-medium text-sm text-neutral-900">{row.name}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2 py-0.5 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                Subcategories: {row.subcategoryCount}
+              </span>
+            </div>
           </div>
         </div>
       ),
@@ -255,6 +311,7 @@ export default function AdminCategoriesPage() {
           initialValues={{
             name: editing?.name ?? "",
             isActive: editing?.isActive ? "Active" : "Inactive",
+            image: editing?.image?.url ? [editing.image.url] : [],
           }}
           submitLabel={editing ? "Save Changes" : "Create Category"}
           onSubmit={handleSubmit}

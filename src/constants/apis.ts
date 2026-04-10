@@ -38,7 +38,7 @@ export const CATEGORIES_URL = API_BASE_URL + "/categories";
 /** Admin categories list → proxies to backend `/categories/admin` */
 export const ADMIN_CATEGORIES_URL = API_BASE_URL + "/categories/admin";
 
-export const SUB_CATEGORIES_URL = API_BASE_URL + "/categories/subcategories";
+export const SUB_CATEGORIES_URL = API_BASE_URL + "/categoriestype";
 /** Admin category types list → proxies to backend `/categoriestype/admin` */
 export const ADMIN_SUB_CATEGORIES_URL = API_BASE_URL + "/categoriestype/admin";
 export const ORDERS_URL = API_BASE_URL + "/payments/create-order";

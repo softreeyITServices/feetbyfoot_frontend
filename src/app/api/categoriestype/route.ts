@@ -8,7 +8,7 @@ import { isHttpClientError } from "@/lib/httpClientError";
 import { EX_SUB_CATEGORIES_URL } from "@/constants/apis";
 import { NextRequest, NextResponse } from "next/server";
 
-/* ---------------- CREATE SUBCATEGORY ---------------- */
+/* ---------------- CREATE SUBCATEGORY (CategoriesType) ---------------- */
 export const POST = apiHandler(
   async (req: NextRequest) => {
     try {
@@ -49,25 +49,13 @@ export const POST = apiHandler(
   { allowedMethods: ["POST"] }
 );
 
-/* ---------------- GET ALL SUBCATEGORIES ---------------- */
+/* ---------------- GET ALL PUBLIC SUBCATEGORIES ---------------- */
 export const GET = apiHandler(
   async (req: NextRequest) => {
     try {
-      const authorization = req.headers.get("authorization");
-
-      if (!authorization) {
-        return NextResponse.json(
-          { message: "Missing Authorization header" },
-          { status: 401 }
-        );
-      }
-
       const response = await httpClient.request({
         url: EX_SUB_CATEGORIES_URL,
         method: "GET",
-        headers: {
-          Authorization: authorization,
-        },
       });
 
       return createSuccessResponse(response, 200);

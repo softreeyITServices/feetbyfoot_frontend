@@ -2,6 +2,10 @@ export interface AdminCategory {
   _id: string;
   name: string;
   isActive: boolean;
+  image?: {
+    url: string;
+    publicId: string;
+  };
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
@@ -16,6 +20,10 @@ export interface CategoryPayload {
   name: string;
   categoryId?: string; // for subcategory
   isActive?: boolean;
+  image?: {
+    url: string;
+    publicId: string;
+  };
 }
 
 export interface CategoryResponse<T> {
@@ -34,6 +42,10 @@ export interface CategoryRow {
   id: string;
   name: string;
   isActive: boolean;
+  image?: {
+    url: string;
+    publicId: string;
+  };
   createdAt?: string;
   subcategoryCount: number;
   subcategories?: string;
