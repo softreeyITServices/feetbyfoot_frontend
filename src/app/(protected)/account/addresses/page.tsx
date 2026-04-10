@@ -34,10 +34,8 @@ export default function AddressesPage() {
   const fetchAddresses = async () => {
     try {
       setLoading(true);
-      const response: any = await AddressService.getAll();
-      const data = response
-      console.log(data)
-      setAddresses(Array.isArray(data?.data) ? data.data : []);
+      const response = await AddressService.getAll();
+      setAddresses(Array.isArray(response) ? response : []);
     } catch (error) {
       console.error("Failed to load addresses", error);
       setAddresses([]); // Set empty array on error

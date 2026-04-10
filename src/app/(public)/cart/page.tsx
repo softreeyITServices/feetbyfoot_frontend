@@ -90,16 +90,21 @@ export default function CartBody() {
           (a) => a.type === "Shipping" && a.isDefault
         );
 
+        console.log("defaultShipping", defaultShipping)
+
         const defaultBilling = sorted.find(
           (a) => a.type === "Billing" && a.isDefault
         );
 
+        console.log("defaultBilling", defaultBilling)
+
         if (defaultShipping) {
-          setSelectedShippingId(defaultShipping._id);
+          setSelectedShippingId(defaultShipping?._id);
         }
 
+
         if (defaultBilling) {
-          setSelectedBillingId(defaultBilling._id);
+          setSelectedBillingId(defaultBilling?._id);
         }
       } catch (error) {
         console.error("Failed to fetch addresses:", error);
@@ -110,6 +115,9 @@ export default function CartBody() {
 
     fetchAddresses();
   }, [session]);
+
+  console.log("selectedShippingId", selectedShippingId)
+  console.log("selectedBillingId", selectedBillingId)
 
   useEffect(() => {
     setDiscount(0);
@@ -299,6 +307,8 @@ export default function CartBody() {
     setCouponError(null);
     toast.success("Coupon code removed successfully")
   };
+
+  console.log(shippingAddresses)
 
   return (
     <>
