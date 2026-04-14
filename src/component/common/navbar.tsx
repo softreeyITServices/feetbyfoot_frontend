@@ -100,6 +100,7 @@ function DesktopMegaNav({
                 />
               </Link>
             )}
+
             {/* Flyout panel — fixed to full viewport width */}
             <div
               className="fixed left-0 top-[72px] w-screen opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-[60]"
@@ -107,39 +108,44 @@ function DesktopMegaNav({
               aria-label={`${g.name} categories`}
             >
               <div className="bg-[#f4f4f4] border-t border-neutral-300 shadow-xl w-full px-8 py-8 h-[360px] overflow-hidden">
+                {/* ✅ KEY FIX: use inline-grid + auto columns so items only take the space they need and align left */}
                 <div
-                  className="grid gap-6"
-                  style={{ gridTemplateColumns: `repeat(${Math.min(categories.length, 5)}, minmax(0, 1fr))` }}
+                  className="inline-grid gap-6"
+                  style={{
+                    gridTemplateColumns: `repeat(${Math.min(categories.length, 6)}, 160px)`,
+                  }}
                 >
                   {categories.map((c) => {
                     const subs = c.subcategories ?? [];
                     const catHeader = categoryIsHeaderOnly(g, c);
                     const catLink = categoryHref(g, c);
                     return (
-                      <div key={c.id} className="min-w-0">
-                        {/* Image first (Swole Panda style) */}
+                      <div key={c.id} className="w-[160px]">
+                        {/* Image */}
                         {c.image && (
                           catHeader ? (
                             <div className="mb-3 overflow-hidden bg-neutral-100">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
+                              <Image
                                 src={c.image}
+                                width={160}
+                                height={170}
                                 alt={c.name}
                                 className="w-full h-[170px] object-cover"
                               />
                             </div>
                           ) : (
                             <Link href={catLink} className="block mb-3 overflow-hidden bg-neutral-100">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
+                              <Image
                                 src={c.image}
+                                width={160}
+                                height={170}
                                 alt={c.name}
                                 className="w-full h-[170px] object-cover hover:scale-105 transition-transform duration-300"
                               />
                             </Link>
                           )
                         )}
-                        {/* Category name below image */}
+                        {/* Category name */}
                         {catHeader ? (
                           <span className="text-[11px] font-bold text-black uppercase tracking-wide block mb-2 cursor-default">
                             {c.name}
@@ -286,11 +292,13 @@ export default function Navbar() {
         {megaGroups.map((g) => {
           const primary = groupPrimaryHref(g);
           const groupActive = isGroupPathActive(pathname, g);
-          const isOutlet = g.name.toLowerCase() === 'outlet';
+          const isOutlet = g.name.toLowerCase() === "outlet";
           const mobileClass = `text-[11px] tracking-wide uppercase px-2 py-1 shrink-0 whitespace-nowrap transition-colors ${
-            isOutlet 
-              ? "text-[#F93A3A] font-semibold" 
-              : groupActive ? "text-black font-semibold" : "text-[#555] font-medium"
+            isOutlet
+              ? "text-[#F93A3A] font-semibold"
+              : groupActive
+              ? "text-black font-semibold"
+              : "text-[#555] font-medium"
           }`;
           if (groupIsHeaderOnly(g)) {
             return (
