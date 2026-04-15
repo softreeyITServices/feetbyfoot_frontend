@@ -10,6 +10,7 @@ import {
   ORDER_ADMIN_DOWNLOAD_PDF_URL,
   orderAdminSingleDownloadPdfUrl,
   orderCustomerDownloadPdfUrl,
+  API_BASE_URL,
 } from "@/constants/apis";
 
 import {
@@ -105,11 +106,11 @@ class OrdersService {
   ): Promise<GenericMessageResponse> {
     try {
       const response = await httpClient.request<GenericMessageResponse>({
-        url: `${ALL_ORDERS_URL}/${orderId}/cancel`,
+        url: `${API_BASE_URL}/user/orders/${orderId}/cancel`,
         method: "PATCH",
         data: { reason },
         requiresAuth: true,
-      });
+      }); 
 
       return response;
     } catch (error) {

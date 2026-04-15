@@ -38,7 +38,7 @@ class CouponService {
     orderAmount: number;
   }): Promise<ApplyCouponResponse> {
     try {
-      const response =
+      const response :any =
         await httpClient.request<ApplyCouponApiResponse>({
           url: `${COUPONS_URL}/apply`,
           method: "POST",
@@ -46,7 +46,8 @@ class CouponService {
           requiresAuth: true,
         });
 
-      return response.data;
+
+      return response 
     } catch (error) {
       handleApiError(error, "applyCoupon");
     }

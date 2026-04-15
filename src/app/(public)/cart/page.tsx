@@ -143,8 +143,10 @@ export default function CartBody() {
         orderAmount: subtotal,
       });
 
+      console.log("response", response)
+
       setDiscount(response.discount);
-      setCouponId(response.couponId);
+      setCouponId(response.couponCode);
       toast.success("Coupon code added successfully")
     } catch (error: unknown) {
       if (error instanceof Error) {

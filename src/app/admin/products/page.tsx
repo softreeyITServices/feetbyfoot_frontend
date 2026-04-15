@@ -19,6 +19,7 @@ import type {
 const ALLOWED_PRODUCT_LENGTHS = ["ANKLE", "CALF", "NO_SHOW", "CREW"] as const;
 
 type ProductSizeInput = {
+  color: string;
   size: string;
   quantity: number;
   isActive: boolean;
@@ -33,11 +34,12 @@ const normalizeProductSizes = (value: unknown): ProductSizeInput[] => {
         !!item && typeof item === "object"
     )
     .map((item) => ({
+      color: String(item.color ?? "").trim(),
       size: String(item.size ?? "").trim().toUpperCase(),
       quantity: Math.max(0, Number(item.quantity ?? 0)),
       isActive: Boolean(item.isActive ?? true),
     }))
-    .filter((item) => item.size.length > 0 && item.quantity > 0);
+    .filter((item) => item.color.length > 0 && item.size.length > 0 && item.quantity > 0);
 };
 
 const toSlug = (value: string) =>
@@ -159,16 +161,6 @@ function ProductPage() {
     { key: "slug", label: "Slug", type: "text", required: true, cols: 1 },
 
     { key: "brand", label: "Brand", type: "text", required: true, cols: 1 },
-    {
-      key: "colors",
-      label: "Colors",
-      type: "multiselect",
-      required: true,
-      options: colorOptions,
-      placeholder: "Select one or more colors",
-      allowCustom: true,
-      cols: 1,
-    },
 
     { key: "price", label: "Price", type: "number", required: true, cols: 1 },
     { key: "salePrice", label: "Sale Price", type: "number", cols: 1 },
@@ -248,10 +240,11 @@ function ProductPage() {
       type: "sizes",
       required: true,
       cols: 2,
+      options: colorOptions,
       validate: (value) => {
         const normalizedSizes = normalizeProductSizes(value);
         if (normalizedSizes.length === 0) {
-          return "Add at least one valid size with quantity greater than 0";
+          return "Add at least one valid size with color and quantity greater than 0";
         }
         return null;
       },
@@ -319,13 +312,9 @@ function ProductPage() {
       )
       : [];
 
-    const colors = Array.isArray(values.colors)
-      ? values.colors.filter(
-        (value): value is string => typeof value === "string"
-      )
-      : [];
     const length = String(values.length ?? "").trim();
     const sizes = normalizeProductSizes(values.sizes);
+    const colors = [...new Set(sizes.map((s) => s.color).filter(Boolean))];
 
     if (!ALLOWED_PRODUCT_LENGTHS.includes(length as (typeof ALLOWED_PRODUCT_LENGTHS)[number])) {
       toast.error("Length must be ANKLE, CALF, NO_SHOW, or CREW");
@@ -546,12 +535,6 @@ function ProductPage() {
       length: ALLOWED_PRODUCT_LENGTHS.includes(editing.length as (typeof ALLOWED_PRODUCT_LENGTHS)[number])
         ? editing.length
         : "",
-      colors:
-        (editing as Product & { colors?: string[] }).colors?.length
-          ? (editing as Product & { colors?: string[] }).colors
-          : editing.color
-            ? [editing.color]
-            : [],
       categoryTypeIds:
         editing.categoryTypeIds?.length
           ? editing.categoryTypeIds
@@ -560,23 +543,23 @@ function ProductPage() {
             : [],
       sizes:
         editing.sizes?.map((sizeEntry) => ({
+          color: (sizeEntry as ProductSizeInput).color ?? "",
           size: sizeEntry.size ?? "",
           quantity: sizeEntry.quantity ?? 0,
           isActive: sizeEntry.isActive ?? true,
-        })) ?? [{ size: "", quantity: 0, isActive: true }],
+        })) ?? [{ color: "", size: "", quantity: 0, isActive: true }],
     }
     : {
       name: "",
       slug: "",
       brand: "",
-      colors: [],
       price: "",
       salePrice: "",
       currency: "INR",
       categoryId: "",
       categoryTypeIds: [],
       length: "",
-      sizes: [{ size: "", quantity: 0, isActive: true }],
+      sizes: [{ color: "", size: "", quantity: 0, isActive: true }],
       gender: [],
       tags: [],
       imageUrls: [],

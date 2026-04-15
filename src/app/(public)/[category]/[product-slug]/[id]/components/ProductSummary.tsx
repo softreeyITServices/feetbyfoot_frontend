@@ -11,6 +11,8 @@ import { useAppDispatch } from "@/store/hooks";
 import { addToCart } from "@/store/slices/cart.slice";
 import { useState } from "react";
 import { openCart } from "@/store/slices/ui.slice";
+import { useSession } from "next-auth/react";
+import { useRouter, usePathname } from "next/navigation";
 import { RatingStarIcon } from "@/icons/RatingStarIcon";
 
 interface ProductSummaryProps {
@@ -38,11 +40,19 @@ export default function ProductSummary({
   averageRating,
 }: ProductSummaryProps) {
   const dispatch = useAppDispatch();
+  const { data: session } = useSession();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
 
   const handleAddToCart = () => {
+    if (!session?.accessToken) {
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
+    }
+
     if (!selectedSize) {
       alert("Please select a size");
       return;

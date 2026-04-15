@@ -566,7 +566,10 @@ function ColorFieldInput({
   );
 }
 
+const STANDARD_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "FREE"];
+
 type SizeRow = {
+  color: string;
   size: string;
   quantity: number;
   isActive: boolean;
@@ -576,22 +579,26 @@ function SizesFieldInput({
   value,
   onChange,
   error,
+  colorOptions,
 }: {
   value: unknown;
   onChange: (v: SizeRow[]) => void;
   error?: string;
+  colorOptions?: FieldOption[];
 }) {
   const rows: SizeRow[] = Array.isArray(value)
     ? value
       .filter((item): item is Partial<SizeRow> => !!item && typeof item === "object")
       .map((item) => ({
+        color: String(item.color ?? ""),
         size: String(item.size ?? "").toUpperCase(),
         quantity: Number(item.quantity ?? 0),
         isActive: Boolean(item.isActive ?? true),
       }))
     : [];
 
-  const nextRows = rows.length > 0 ? rows : [{ size: "", quantity: 0, isActive: true }];
+  const emptyRow: SizeRow = { color: "", size: "", quantity: 0, isActive: true };
+  const nextRows = rows.length > 0 ? rows : [emptyRow];
 
   const updateRow = (index: number, patch: Partial<SizeRow>) => {
     const updated = nextRows.map((row, idx) =>
@@ -601,12 +608,12 @@ function SizesFieldInput({
   };
 
   const addRow = () => {
-    onChange([...nextRows, { size: "", quantity: 0, isActive: true }]);
+    onChange([...nextRows, { ...emptyRow }]);
   };
 
   const removeRow = (index: number) => {
     const updated = nextRows.filter((_, idx) => idx !== index);
-    onChange(updated.length > 0 ? updated : [{ size: "", quantity: 0, isActive: true }]);
+    onChange(updated.length > 0 ? updated : [{ ...emptyRow }]);
   };
 
   return (
@@ -619,24 +626,60 @@ function SizesFieldInput({
           key={`size-row-${index}`}
           className="grid grid-cols-12 gap-2 items-end"
         >
-          <div className="col-span-12 sm:col-span-4">
+          {/* Color */}
+          <div className="col-span-12 sm:col-span-3">
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+              Color
+            </label>
+            {colorOptions?.length ? (
+              <div className="relative">
+                <select
+                  value={row.color}
+                  onChange={(e) => updateRow(index, { color: e.target.value })}
+                  className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400 appearance-none pr-7 cursor-pointer"
+                >
+                  <option value="" disabled>Select</option>
+                  {colorOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
+              </div>
+            ) : (
+              <input
+                type="text"
+                value={row.color}
+                onChange={(e) => updateRow(index, { color: e.target.value })}
+                placeholder="e.g. Black"
+                className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400"
+              />
+            )}
+          </div>
+
+          {/* Size */}
+          <div className="col-span-12 sm:col-span-3">
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
               Size
             </label>
-            <input
-              type="text"
-              value={row.size}
-              onChange={(e) =>
-                updateRow(index, { size: e.target.value.toUpperCase() })
-              }
-              placeholder="M / L / FREE"
-              className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400"
-            />
+            <div className="relative">
+              <select
+                value={row.size}
+                onChange={(e) => updateRow(index, { size: e.target.value })}
+                className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400 appearance-none pr-7 cursor-pointer"
+              >
+                <option value="" disabled>Select</option>
+                {STANDARD_SIZES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
+            </div>
           </div>
 
-          <div className="col-span-12 sm:col-span-3">
+          {/* Quantity */}
+          <div className="col-span-6 sm:col-span-2">
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
-              Quantity
+              Qty
             </label>
             <input
               type="number"
@@ -650,22 +693,24 @@ function SizesFieldInput({
             />
           </div>
 
-          <div className="col-span-8 sm:col-span-3">
+          {/* Active */}
+          <div className="col-span-4 sm:col-span-2">
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
-              Status
+              Active
             </label>
-            <label className="h-9 px-3 rounded-lg border border-neutral-200 bg-white flex items-center gap-2 text-xs text-neutral-700">
+            <label className="h-9 px-3 rounded-lg border border-neutral-200 bg-white flex items-center gap-2 text-xs text-neutral-700 cursor-pointer">
               <input
                 type="checkbox"
                 checked={row.isActive}
                 onChange={(e) => updateRow(index, { isActive: e.target.checked })}
                 className="h-4 w-4 rounded border-neutral-300 accent-amber-500"
               />
-              Active
+              Yes
             </label>
           </div>
 
-          <div className="col-span-4 sm:col-span-2">
+          {/* Remove */}
+          <div className="col-span-2 sm:col-span-2">
             <button
               type="button"
               onClick={() => removeRow(index)}
@@ -845,6 +890,7 @@ function FieldInput({
         value={value}
         onChange={(next) => onChange(next)}
         error={error}
+        colorOptions={field.options}
       />
     );
   }

@@ -17,7 +17,7 @@ export type Coupon = {
 export type CreateCouponResponse = Coupon;
 
 export type ApplyCouponResponse = {
-  couponId: string;
+  couponCode: string;
   discount: number;
   finalAmount: number;
 };

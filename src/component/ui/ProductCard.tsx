@@ -12,6 +12,8 @@ import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import toast from "react-hot-toast";
 import { wishlistService } from "@/domain/application/services/wishlist.service";
+import { useSession } from "next-auth/react";
+import { useRouter, usePathname } from "next/navigation";
 
 function ProductCard({
   id,
@@ -53,6 +55,9 @@ function ProductCard({
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
   const dispatch = useAppDispatch();
+  const { data: session } = useSession();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const handleSize = (e: string) => {
     setSelectedSize(e);
@@ -60,6 +65,11 @@ function ProductCard({
   };
 
   const handleCart = async () => {
+    if (!session?.accessToken) {
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
+    }
+
     if (!selectedSize) {
       setError("Size not selected");
       return;

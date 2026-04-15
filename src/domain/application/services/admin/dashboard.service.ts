@@ -12,15 +12,14 @@ type InternalApiResponse<T> = {
 export class DashboardService {
   static async getOverview(): Promise<AdminDashboardOverviewResponse> {
     try {
-      const response = await httpClient.request<
+      const response :any= await httpClient.request<
         InternalApiResponse<AdminDashboardOverviewResponse>
       >({
         url: ADMIN_DASHBOARD_OVERVIEW_URL,
         method: "GET",
         requiresAuth: true,
       });
-
-      return response.data;
+      return response;
     } catch (error) {
       throw handleApiError(error, "getDashboardOverview");
     }
