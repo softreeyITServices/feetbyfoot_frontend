@@ -1,5 +1,3 @@
-import Navbar from "@/component/common/navbar";
-import Footer from "@/component/common/Footer";
 import { CmsService } from "@/domain/application/services/admin/cms.service";
 import type { Metadata } from "next";
 import { cache } from "react";
@@ -75,7 +73,6 @@ export default async function ContactPage() {
 
   return (
     <>
-      <Navbar />
 
       <div className="min-h-screen bg-white py-16 px-6">
         <div className="text-center mb-10">
@@ -103,7 +100,6 @@ export default async function ContactPage() {
         </div>
       </div>
 
-      <Footer />
     </>
   );
 }

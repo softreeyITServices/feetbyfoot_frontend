@@ -103,7 +103,7 @@ function DesktopMegaNav({
 
             {/* Flyout panel — fixed to full viewport width */}
             <div
-              className="fixed left-0 top-[72px] w-screen opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-[60]"
+              className="fixed left-0 top-[72px] w-screen opacity-0 invisible -translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200 ease-out z-[60]"
               role="region"
               aria-label={`${g.name} categories`}
             >

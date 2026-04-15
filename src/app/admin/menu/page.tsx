@@ -2,8 +2,20 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
-import { uploadService } from "@/domain/application/services/upload.service";
+import {
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  GripVertical,
+  X,
+  CheckCircle,
+  Layers,
+  Package,
+  FolderOpen,
+  Link2,
+  Settings2,
+  Tag,
+} from "lucide-react";
 import { CategoryService } from "@/domain/application/services/admin/category.service";
 import { CategoryTypeService } from "@/domain/application/services/admin/subcategory.service";
 import type {
@@ -282,13 +294,6 @@ function buildSharedCatalogFromApi(
   }));
 }
 
-function showCategoryImage(cat: FinalCatalogCategory): boolean {
-  return Boolean(cat.fromCatalog) || cat.children.length > 0;
-}
-
-function isSingleMenuCustomCategory(cat: FinalCatalogCategory): boolean {
-  return !cat.fromCatalog && cat.children.length === 0;
-}
 
 export default function AdminMenuCreationPage() {
   const [sharedCatalog, setSharedCatalog] = useState<SourceCatalogCategory[]>(
@@ -362,18 +367,11 @@ export default function AdminMenuCreationPage() {
   const [customError, setCustomError] = useState("");
   const [dragging, setDragging] = useState<DragItem | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
-  /** Left catalog: expanded per group id (absent = collapsed by default) */
-  const [sourceGroupExpanded, setSourceGroupExpanded] = useState<
-    Record<string, boolean>
-  >({});
   const [savingMenu, setSavingMenu] = useState(false);
   const [deleteMenuModalOpen, setDeleteMenuModalOpen] = useState(false);
   const [menuMetaName, setMenuMetaName] = useState("Main menu");
   const [menuPlacement, setMenuPlacement] = useState<MenuPlacement>("top");
   const [menuIsDefault, setMenuIsDefault] = useState(true);
-  const [uploadingCategoryKey, setUploadingCategoryKey] = useState<
-    string | null
-  >(null);
   const [menuList, setMenuList] = useState<MegaMenuListItem[]>([]);
   const [selectedMenuId, setSelectedMenuId] = useState<string>("");
   const [menusLoading, setMenusLoading] = useState(true);
@@ -831,14 +829,6 @@ export default function AdminMenuCreationPage() {
     setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
   };
 
-  const isSourceGroupCollapsed = (groupId: string) =>
-    !sourceGroupExpanded[groupId];
-  const toggleSourceGroupCollapsed = (groupId: string) => {
-    setSourceGroupExpanded((prev) => ({
-      ...prev,
-      [groupId]: !prev[groupId],
-    }));
-  };
 
   const isValidHref = (value: string) => {
     if (value.startsWith("/")) return true;
@@ -1056,44 +1046,6 @@ export default function AdminMenuCreationPage() {
   const categoryKey = (groupId: string, catalogCategoryId: string) =>
     `${groupId}::${catalogCategoryId}`;
 
-  const updateCategoryImage = (
-    groupId: string,
-    catalogCategoryId: string,
-    image: string
-  ) => {
-    setFinalMenu((prev) =>
-      prev.map((g) => {
-        if (g.id !== groupId) return g;
-        return {
-          ...g,
-          categories: g.categories.map((c) =>
-            c.id === catalogCategoryId ? { ...c, image } : c
-          ),
-        };
-      })
-    );
-  };
-
-  const handleCategoryImageUpload = async (
-    groupId: string,
-    catalogCategoryId: string,
-    file?: File
-  ) => {
-    if (!file) return;
-    const key = categoryKey(groupId, catalogCategoryId);
-    try {
-      setUploadingCategoryKey(key);
-      const imageUrl = await uploadService.uploadFile(file);
-      updateCategoryImage(groupId, catalogCategoryId, imageUrl);
-      toast.success("Category image uploaded");
-    } catch (error: unknown) {
-      const message =
-        (error as { message?: string })?.message || "Image upload failed";
-      toast.error(message);
-    } finally {
-      setUploadingCategoryKey(null);
-    }
-  };
 
   const updateSubcategory = (
     groupId: string,
@@ -1120,835 +1072,666 @@ export default function AdminMenuCreationPage() {
     );
   };
 
+  const [activeGroupTab, setActiveGroupTab] = useState<string | null>(null);
+  const activeTabId =
+    finalMenu.length === 0
+      ? null
+      : activeGroupTab && finalMenu.some((g) => g.id === activeGroupTab)
+      ? activeGroupTab
+      : finalMenu[0]?.id ?? null;
+  const activeTabGroup = finalMenu.find((g) => g.id === activeTabId) ?? null;
+  const activeTabIndex = finalMenu.findIndex((g) => g.id === activeTabId);
+
+  const [catalogSearch, setCatalogSearch] = useState("");
+  const [catalogExpandedId, setCatalogExpandedId] = useState<string | null>(null);
+  const [showAddSection, setShowAddSection] = useState(false);
+
+  const filteredCatalog = catalogSearch.trim()
+    ? sharedCatalog.filter(
+        (c) =>
+          c.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
+          c.subcategories.some((s) =>
+            s.name.toLowerCase().includes(catalogSearch.toLowerCase())
+          )
+      )
+    : sharedCatalog;
+
+  /** All source groups share the same catalog — use any to resolve category lookups */
+  const defaultSrcGroupId = sourceGroups[0]?.id ?? "";
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-bold">Menu Creation</h1>
-          <p className="text-sm text-neutral-400">
-            Left: the same <strong>Categories</strong> and <strong>Subcategories</strong> from your
-            admin catalog (API) appear under Men, Women, and Kids — each column only changes the
-            storefront base path for links (<code className="text-[11px]">/mens</code>, etc.). Drag
-            into the final menu on the right. Remove rows with the trash control on the right.
-          </p>
+    <div className="space-y-5 pb-10">
+      {/* ====== PAGE HEADER ====== */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Menu Builder</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Design the navigation menu shown on your website</p>
         </div>
-        <div className="flex shrink-0 flex-row flex-nowrap items-center gap-2 self-start md:self-auto">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={clearFinalMenu}
+            className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 text-gray-600"
+          >
+            Clear All
+          </button>
           <button
             type="button"
             onClick={() => void handleSaveMenu()}
             disabled={savingMenu}
-            className="whitespace-nowrap px-3 py-2 text-xs bg-black text-white rounded-lg hover:bg-neutral-800 disabled:opacity-60 disabled:pointer-events-none"
+            className="px-5 py-2 text-sm bg-black text-white rounded-lg hover:bg-neutral-800 disabled:opacity-60 font-medium"
           >
-            {savingMenu ? "Saving…" : "Save"}
-          </button>
-          <button
-            type="button"
-            onClick={clearFinalMenu}
-            className="whitespace-nowrap px-3 py-2 text-xs border rounded-lg hover:bg-neutral-50"
-          >
-            Clear Final Menu
+            {savingMenu ? "Saving…" : "Save Menu"}
           </button>
         </div>
       </div>
 
-      <section className="rounded-xl border border-neutral-200 bg-white p-4">
-        <div className="mb-3">
-          <h2 className="text-sm font-semibold">Menu details</h2>
-          <p className="text-xs text-neutral-500 mb-3">
-            <strong>Position</strong> is header (top) or footer. Check <strong>Default menu</strong> if
-            this should be the default for that slot when you have more than one. Empty name is stored
-            as &quot;Untitled menu&quot;.
-          </p>
+      {/* ====== MENU SETTINGS ====== */}
+      <div className="bg-white rounded-xl border border-neutral-200 p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Settings2 className="h-4 w-4 text-neutral-500" />
+          <h2 className="text-sm font-semibold text-neutral-800">Menu Settings</h2>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
-          <div className="space-y-1 sm:col-span-2">
-            <label htmlFor="menu-saved-select" className="text-xs text-neutral-600">
-              Saved menu
-            </label>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          {/* Saved menu selector */}
+          <div className="lg:col-span-2 space-y-1.5">
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Editing Menu</label>
+            <div className="flex gap-2">
               <select
-                id="menu-saved-select"
                 value={selectedMenuId || "__new__"}
                 onChange={(e) => void handleMenuSelectionChange(e.target.value)}
                 disabled={menusLoading}
-                className="min-w-0 flex-1 rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400 bg-white disabled:opacity-60"
+                className="flex-1 min-w-0 rounded-lg border border-gray-200 px-3 py-2.5 text-sm bg-white outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:opacity-60"
               >
-                <option value="__new__">New menu (create on Save)</option>
+                <option value="__new__">+ Create new menu</option>
                 {menuList.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {m.name}
-                    {m.isDefault ? " (default)" : ""}
+                    {m.name}{m.isDefault ? " ⭐" : ""}
                   </option>
                 ))}
               </select>
-              {selectedMenuId ? (
+              {selectedMenuId && (
                 <button
                   type="button"
                   onClick={() => setDeleteMenuModalOpen(true)}
-                  disabled={menusLoading}
-                  className="whitespace-nowrap rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50 disabled:pointer-events-none disabled:opacity-60 sm:shrink-0"
+                  className="shrink-0 px-3 py-2 text-xs border border-red-200 text-red-600 rounded-lg hover:bg-red-50"
                 >
-                  Delete menu
+                  Delete
                 </button>
-              ) : null}
+              )}
             </div>
-            <p className="text-[10px] text-neutral-500">
-              Uses admin APIs: list → edit → PATCH; new row uses POST.
-            </p>
           </div>
-          <div className="space-y-1 sm:col-span-2">
-            <label htmlFor="menu-meta-name" className="text-xs text-neutral-600">
-              Menu name
-            </label>
+          {/* Menu name */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Menu Name</label>
             <input
-              id="menu-meta-name"
               type="text"
               value={menuMetaName}
-              onChange={(event) => setMenuMetaName(event.target.value)}
-              placeholder="e.g. Header mega menu"
-              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400"
+              onChange={(e) => setMenuMetaName(e.target.value)}
+              placeholder="e.g. Main Navigation"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
-          <div className="space-y-1">
-            <label htmlFor="menu-meta-placement" className="text-xs text-neutral-600">
-              Position
-            </label>
-            <select
-              id="menu-meta-placement"
-              value={menuPlacement}
-              onChange={(event) =>
-                setMenuPlacement(event.target.value === "footer" ? "footer" : "top")
-              }
-              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400 bg-white"
-            >
-              <option value="top">Top (header)</option>
-              <option value="footer">Footer</option>
-            </select>
+          {/* Position toggle */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Show In</label>
+            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setMenuPlacement("top")}
+                className={`flex-1 py-2.5 text-sm font-medium transition-colors ${menuPlacement === "top" ? "bg-black text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"}`}
+              >
+                Top Nav
+              </button>
+              <button
+                type="button"
+                onClick={() => setMenuPlacement("footer")}
+                className={`flex-1 py-2.5 text-sm font-medium transition-colors border-l border-neutral-200 ${menuPlacement === "footer" ? "bg-black text-white" : "bg-white text-neutral-600 hover:bg-neutral-50"}`}
+              >
+                Footer
+              </button>
+            </div>
           </div>
-          <div className="flex items-end pb-2">
-            <label className="flex items-start gap-2 text-sm text-neutral-800 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={menuIsDefault}
-                onChange={(event) => setMenuIsDefault(event.target.checked)}
-                className="rounded border-neutral-300 mt-0.5 shrink-0"
-              />
-              <span>
-                <span className="text-xs font-medium text-neutral-700 block">Default menu</span>
-                <span className="text-[10px] text-neutral-500 block mt-0.5">
-                  Use as the default for this position (top or footer).
-                </span>
-              </span>
-            </label>
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-neutral-200 bg-white p-4">
-        <div className="mb-3">
-          <h2 className="text-sm font-semibold">Add Custom Menu Item</h2>
-            <p className="text-xs text-neutral-500">
-            <strong>Top-level</strong>: one menu group (single link, no category image).{" "}
-            <strong>Under a group</strong>: adds a custom category — image appears only after it has
-            subcategories (otherwise it stays a single menu link).
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-          <div className="space-y-1">
-            <label htmlFor="custom-menu-name" className="text-xs text-neutral-600">
-              Name
-            </label>
-            <input
-              id="custom-menu-name"
-              type="text"
-              value={customName}
-              onChange={(event) => setCustomName(event.target.value)}
-              placeholder="Ex: Sale"
-              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="custom-menu-href" className="text-xs text-neutral-600">
-              Href <span className="text-neutral-400 font-normal">(optional)</span>
-            </label>
-            <input
-              id="custom-menu-href"
-              type="text"
-              value={customHref}
-              onChange={(event) => setCustomHref(event.target.value)}
-              placeholder="Leave empty for a non-clickable label"
-              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400"
-            />
-          </div>
-          <div className="space-y-1">
-            <label htmlFor="custom-menu-parent" className="text-xs text-neutral-600">
-              Parent
-            </label>
-            <select
-              id="custom-menu-parent"
-              value={customParentId}
-              onChange={(event) => setCustomParentId(event.target.value)}
-              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400"
-            >
-              <option value="root">New top-level group</option>
-              {finalMenu.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-end">
+          {/* Default toggle */}
+          <div className="lg:col-span-4 flex items-center gap-3 pt-1">
             <button
               type="button"
-              onClick={handleAddCustomItem}
-              className="w-full md:w-auto px-4 py-2 text-xs bg-black text-white rounded-lg"
+              onClick={() => setMenuIsDefault(!menuIsDefault)}
+              className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${menuIsDefault ? "bg-black" : "bg-neutral-300"}`}
             >
-              Add Custom Item
+              <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${menuIsDefault ? "translate-x-4" : "translate-x-0"}`} />
             </button>
+            <span className="text-sm text-gray-700">
+              <strong>Set as default</strong>
+              <span className="ml-1.5 text-gray-500 font-normal text-xs">This menu will be used automatically for the selected position</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ====== HOW IT WORKS ====== */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-neutral-500 bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3">
+        <span className="shrink-0 font-semibold text-neutral-700">How it works:</span>
+        <span><strong className="text-neutral-800">1.</strong> Browse items on the left</span>
+        <span className="hidden sm:block text-neutral-300">→</span>
+        <span><strong className="text-neutral-800">2.</strong> Click <strong>+</strong> or drag into your menu (right)</span>
+        <span className="hidden sm:block text-neutral-300">→</span>
+        <span><strong className="text-neutral-800">3.</strong> Press <strong>Save Menu</strong></span>
+      </div>
+
+      {/* ====== MAIN BUILDER ====== */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        {/* ===== LEFT: AVAILABLE ITEMS ===== */}
+        <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-neutral-200 flex items-center gap-3">
+            <Package className="h-4 w-4 text-neutral-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h2 className="text-sm font-semibold text-neutral-800">Catalog Items</h2>
+              <p className="text-xs text-neutral-400">Click <strong>+</strong> to add, or drag into your menu</p>
+            </div>
+            <span className="text-xs text-neutral-400 shrink-0">{sharedCatalog.length} categories</span>
+          </div>
+
+          {/* Search */}
+          <div className="px-3 pt-3 pb-2 border-b border-neutral-100">
+            <div className="relative">
+              <input
+                type="text"
+                value={catalogSearch}
+                onChange={(e) => setCatalogSearch(e.target.value)}
+                placeholder="Search categories…"
+                className="w-full rounded-lg border border-neutral-200 pl-8 pr-3 py-2 text-sm outline-none focus:border-neutral-400 bg-neutral-50"
+              />
+              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+              </svg>
+              {catalogSearch && (
+                <button type="button" onClick={() => setCatalogSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-3 space-y-1.5 min-h-[420px]">
+            {catalogLoading ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
+                <div className="w-8 h-8 border-2 border-gray-200 border-t-neutral-400 rounded-full animate-spin" />
+                <p className="text-sm">Loading your catalog…</p>
+              </div>
+            ) : sharedCatalog.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-center px-6">
+                <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center">
+                  <Package className="h-7 w-7 text-gray-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-700">No categories found</p>
+                  <p className="text-xs text-gray-500 mt-1">Go to <strong>Admin → Categories</strong> to add some first</p>
+                </div>
+              </div>
+            ) : filteredCatalog.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-2 text-center px-6">
+                <p className="text-sm text-neutral-500">No results for &quot;{catalogSearch}&quot;</p>
+                <button type="button" onClick={() => setCatalogSearch("")} className="text-xs text-neutral-400 underline">Clear search</button>
+              </div>
+            ) : (
+              filteredCatalog.map((cat) => {
+                const catKey = `${defaultSrcGroupId}::${cat.id}`;
+                const catAdded = finalCatalogCategoryKeys.has(catKey);
+                const isExpanded = catalogExpandedId === cat.id;
+                return (
+                  <div
+                    key={cat.id}
+                    className={`rounded-lg border transition-all ${catAdded ? "border-neutral-100 bg-neutral-50/50 opacity-70" : "border-neutral-200 bg-white"}`}
+                  >
+                    {/* Category row */}
+                    <div
+                      draggable
+                      onDragStart={onDragStart({ type: "source-catalog-category", groupId: defaultSrcGroupId, catalogCategoryId: cat.id })}
+                      onDragEnd={onDragEnd}
+                      className="flex items-center gap-2 px-2.5 py-2 cursor-grab active:cursor-grabbing select-none"
+                    >
+                      <GripVertical className="h-3.5 w-3.5 text-neutral-300 shrink-0" />
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        {cat.image ? (
+                          <img src={cat.image} alt={cat.name} className="w-7 h-7 rounded object-cover shrink-0 border border-neutral-200" />
+                        ) : (
+                          <div className="w-7 h-7 bg-neutral-100 rounded flex items-center justify-center shrink-0">
+                            <FolderOpen className="h-3.5 w-3.5 text-neutral-400" />
+                          </div>
+                        )}
+                        <span className="text-sm font-medium truncate text-neutral-800">{cat.name}</span>
+                        {catAdded && <CheckCircle className="h-3.5 w-3.5 text-neutral-400 shrink-0" />}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {cat.subcategories.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setCatalogExpandedId(isExpanded ? null : cat.id)}
+                            title={isExpanded ? "Hide subcategories" : "Show subcategories"}
+                            className="w-6 h-6 rounded text-neutral-400 flex items-center justify-center hover:bg-neutral-100 transition-colors"
+                          >
+                            <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-150 ${isExpanded ? "rotate-180" : ""}`} />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => { addCatalogCategoryToFinal(defaultSrcGroupId, cat.id); setActiveGroupTab(activeTabId); }}
+                          disabled={catAdded}
+                          title={catAdded ? "Already in menu" : `Add "${cat.name}" to active section`}
+                          className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
+                            catAdded ? "text-neutral-300 cursor-default" : "bg-black text-white hover:bg-neutral-700"
+                          }`}
+                        >
+                          {catAdded ? <CheckCircle className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Subcategory pills — collapsible */}
+                    {isExpanded && cat.subcategories.length > 0 && (
+                      <div className="px-2.5 pb-2.5 pt-0.5 border-t border-neutral-100 flex flex-wrap gap-1.5 bg-neutral-50/50">
+                        {cat.subcategories.map((sub) => {
+                          const subKey = `${defaultSrcGroupId}::${cat.id}::${sub.id}`;
+                          const subAdded = finalSubcategoryKeys.has(subKey);
+                          return (
+                            <button
+                              key={sub.id}
+                              type="button"
+                              draggable={!subAdded}
+                              onDragStart={onDragStart({ type: "source-subcategory", groupId: defaultSrcGroupId, catalogCategoryId: cat.id, subcategoryId: sub.id })}
+                              onDragEnd={onDragEnd}
+                              onClick={() => {
+                                if (!subAdded) {
+                                  addSubcategoryToFinal(defaultSrcGroupId, cat.id, sub.id);
+                                  setActiveGroupTab(activeTabId);
+                                }
+                              }}
+                              title={subAdded ? "Already added" : "Click or drag to add"}
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                                subAdded
+                                  ? "bg-neutral-100 text-neutral-400 cursor-default"
+                                  : "bg-white border border-neutral-200 text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50 cursor-grab active:cursor-grabbing"
+                              }`}
+                            >
+                              {subAdded ? <CheckCircle className="h-2.5 w-2.5 shrink-0" /> : <Plus className="h-2.5 w-2.5 shrink-0" />}
+                              {sub.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
-        {customError && <p className="mt-2 text-xs text-red-600">{customError}</p>}
-      </section>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <section className="min-w-0 rounded-xl border border-neutral-200 bg-white p-4 min-h-[520px] flex flex-col">
-          <div className="mb-4">
-            <h2 className="text-sm font-semibold">Catalog source (left)</h2>
-            <p className="text-xs text-neutral-500">
-              Data loads from <strong>Categories</strong> and <strong>Subcategories</strong> in admin.
-              The list is identical under each group; only the link base (
-              <code className="text-[10px]">/mens</code>, <code className="text-[10px]">/womens</code>
-              , <code className="text-[10px]">/kids</code>) differs when you build the right-hand menu.
-            </p>
-          </div>
-
-          <div className="space-y-4 flex-1 min-h-0">
-            {catalogLoading ? (
-              <p className="text-sm text-neutral-500 py-6 text-center">Loading catalog…</p>
-            ) : sharedCatalog.length === 0 ? (
-              <p className="text-sm text-neutral-500 py-6 text-center">
-                No active categories found. Add categories and subcategories under{" "}
-                <strong>Admin → Categories</strong>.
-              </p>
-            ) : (
-              sourceGroups.map((group) => (
-              <div key={group.id} className="rounded-lg border border-neutral-200 overflow-hidden">
-                <div className="flex items-stretch border-b border-neutral-200 bg-neutral-50">
-                  <button
-                    type="button"
-                    onClick={() => toggleSourceGroupCollapsed(group.id)}
-                    className="shrink-0 px-2 py-2 border-r border-neutral-200 text-neutral-600 hover:bg-neutral-100 flex items-center justify-center"
-                    title={
-                      isSourceGroupCollapsed(group.id)
-                        ? "Expand catalog group"
-                        : "Collapse catalog group"
-                    }
-                    aria-expanded={!isSourceGroupCollapsed(group.id)}
-                  >
-                    {isSourceGroupCollapsed(group.id) ? (
-                      <ChevronDown className="h-4 w-4" aria-hidden />
-                    ) : (
-                      <ChevronUp className="h-4 w-4" aria-hidden />
-                    )}
-                  </button>
-                  <div
-                    draggable
-                    onDragStart={onDragStart({ type: "source-group", id: group.id })}
-                    onDragEnd={onDragEnd}
-                    className="flex-1 min-w-0 px-3 py-2 text-sm font-medium cursor-grab active:cursor-grabbing flex items-center gap-2 flex-wrap"
-                  >
-                    <span className="text-[10px] uppercase tracking-wide text-neutral-500 shrink-0">
-                      Group
-                    </span>
-                    <span>{group.name}</span>
-                    <span className="text-[10px] text-neutral-400 font-normal">
-                      {group.storefrontPath}
-                    </span>
-                  </div>
-                </div>
-
-                {!isSourceGroupCollapsed(group.id) ? (
-                  <div className="px-3 py-2 bg-white">
-                    <p className="text-[11px] font-semibold text-neutral-700 mb-2">Categories</p>
-                    <div className="space-y-3">
-                      {group.categories.map((cat) => (
-                        <div
-                          key={cat.id}
-                          className="rounded-md border border-neutral-100 bg-neutral-50/80 p-2"
-                        >
-                          <div
-                            draggable
-                            onDragStart={onDragStart({
-                              type: "source-catalog-category",
-                              groupId: group.id,
-                              catalogCategoryId: cat.id,
-                            })}
-                            onDragEnd={onDragEnd}
-                            className="text-sm font-medium text-neutral-900 cursor-grab active:cursor-grabbing mb-2"
-                          >
-                            {cat.name}
-                          </div>
-                          <p className="text-[10px] uppercase tracking-wide text-neutral-500 mb-1.5">
-                            Subcategories
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {cat.subcategories.map((sub) => (
-                              <div
-                                key={sub.id}
-                                draggable
-                                onDragStart={onDragStart({
-                                  type: "source-subcategory",
-                                  groupId: group.id,
-                                  catalogCategoryId: cat.id,
-                                  subcategoryId: sub.id,
-                                })}
-                                onDragEnd={onDragEnd}
-                                className="px-2 py-1 text-xs rounded-md border border-neutral-200 bg-white cursor-grab active:cursor-grabbing"
-                              >
-                                {sub.name}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ))
-            )}
-          </div>
-        </section>
-
-        <section className="min-w-0 rounded-xl border border-neutral-200 bg-white p-4 min-h-[520px] flex flex-col">
-          <div className="mb-4">
-            <h2 className="text-sm font-semibold">Final menu (right)</h2>
-            <p className="text-xs text-neutral-500">
-              Add catalog items only in the dashed <strong>Add zone</strong> below. Reorder using
-              ⠿ handles on rows. Remove groups, categories, or subcategories with the trash button on
-              each row. <strong>Menu labels</strong> for categories and subcategories can be edited
-              here — they only change text in the saved menu and storefront nav, not catalog records,
-              IDs, or slugs.
-            </p>
+        {/* ===== RIGHT: YOUR MENU (TABBED) ===== */}
+        <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden flex flex-col">
+          {/* Panel header */}
+          <div className="px-4 py-3 border-b border-neutral-200 flex items-center gap-3">
+            <Layers className="h-4 w-4 text-neutral-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h2 className="text-sm font-semibold text-neutral-800">Final Menu</h2>
+              <p className="text-xs text-neutral-400">Each tab is a section in the nav bar</p>
+            </div>
           </div>
 
           {finalMenu.length === 0 ? (
+            /* Empty state — full drop target */
             <div
-              onDragOver={(event) => event.preventDefault()}
+              onDragOver={(e) => e.preventDefault()}
               onDrop={handleDropToFinal}
-              className="rounded-lg border-2 border-dashed border-amber-300 bg-amber-50/60 p-6 text-sm text-neutral-600 text-center"
+              className="flex-1 min-h-[420px] flex flex-col items-center justify-center border-2 border-dashed border-neutral-200 m-3 rounded-lg text-center p-8 gap-3 hover:border-neutral-400 hover:bg-neutral-50 transition-all"
             >
-              <p className="font-medium text-neutral-800">Add zone</p>
-              <p className="text-xs text-neutral-500 mt-1">
-                Drop a group, category, or subcategory from the left here to build the menu
-              </p>
+              <Layers className="h-8 w-8 text-neutral-300" />
+              <div>
+                <p className="font-medium text-neutral-600 text-sm">No menu sections yet</p>
+                <p className="text-xs text-neutral-400 mt-1">Click <strong>+</strong> on the left, or drag items here</p>
+              </div>
             </div>
           ) : (
-            <div className="flex-1 min-h-0 flex flex-col">
-              <div
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={handleDropToFinal}
-                className="shrink-0 rounded-lg border-2 border-dashed border-amber-300 bg-amber-50/60 px-3 py-2.5 text-center"
-              >
-                <p className="text-[11px] font-medium text-neutral-800">Add zone</p>
-                <p className="text-[10px] text-neutral-500 mt-0.5">
-                  Drop catalog groups, categories, or subcategories here to append to the menu
-                </p>
-              </div>
-              <div className="mt-3 flex-1 min-h-0 overflow-y-auto pr-1 space-y-3">
+            <div className="flex flex-col flex-1 min-h-[420px]">
+              {/* ---- TAB BAR ---- */}
+              <div className="flex items-end border-b border-neutral-200 bg-neutral-50 overflow-x-auto">
                 {finalMenu.map((group, groupIndex) => (
                   <div
                     key={group.id}
-                    className="rounded-lg border border-neutral-200"
+                    className="relative shrink-0"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      const payload = parseDropPayload(event);
+                      if (!payload || payload.type !== "final-group") return;
+                      reorderGroupByDrop(payload.id, groupIndex);
+                    }}
                   >
-                    <div
-                      onDragOver={(event) => event.preventDefault()}
-                      onDrop={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        const payload = parseDropPayload(event);
-                        if (!payload || payload.type !== "final-group") return;
-                        reorderGroupByDrop(payload.id, groupIndex);
-                      }}
-                      className="px-3 py-2 border-b border-neutral-200 bg-amber-50/60 flex items-center gap-2"
+                    <button
+                      type="button"
+                      onClick={() => setActiveGroupTab(group.id)}
+                      draggable
+                      onDragStart={onDragStart({ type: "final-group", id: group.id })}
+                      onDragEnd={onDragEnd}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-grab active:cursor-grabbing ${
+                        activeTabId === group.id
+                          ? "border-black text-black bg-white"
+                          : "border-transparent text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100"
+                      }`}
                     >
-                      <span
-                        draggable
-                        onDragStart={onDragStart({ type: "final-group", id: group.id })}
-                        onDragEnd={onDragEnd}
-                        title="Drag to reorder groups"
-                        className="cursor-grab active:cursor-grabbing select-none text-neutral-400 px-0.5"
-                      >
-                        ⠿
-                      </span>
-                      <div className="flex-1 min-w-0 space-y-0.5">
-                        <label
-                          htmlFor={`group-name-${group.id}`}
-                          className="text-[10px] uppercase tracking-wide text-neutral-500"
-                        >
-                          Group name
-                        </label>
-                        <input
-                          id={`group-name-${group.id}`}
-                          type="text"
-                          value={group.name}
-                          onChange={(event) =>
-                            updateGroupName(group.id, event.target.value)
-                          }
-                          placeholder="e.g. Men"
-                          className="w-full rounded-md border border-amber-200/80 bg-white px-2 py-1 text-sm font-medium outline-none focus:border-amber-400"
-                        />
-                        {group.href ? (
-                          <span className="text-xs text-neutral-500">({group.href})</span>
-                        ) : group.storefrontPath ? (
-                          <span className="text-xs text-neutral-500">
-                            {group.storefrontPath}
-                          </span>
-                        ) : null}
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => toggleGroupCollapsed(group.id)}
-                          className="p-1 border rounded text-neutral-700 hover:bg-white/70 flex items-center justify-center"
-                          title={isGroupCollapsed(group.id) ? "Expand group" : "Collapse group"}
-                          aria-expanded={!isGroupCollapsed(group.id)}
-                        >
-                          {isGroupCollapsed(group.id) ? (
-                            <ChevronDown className="h-4 w-4" aria-hidden />
-                          ) : (
-                            <ChevronUp className="h-4 w-4" aria-hidden />
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => moveGroup(group.id, "up")}
-                          disabled={groupIndex === 0}
-                          className="px-1 border rounded text-xs disabled:opacity-40"
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => moveGroup(group.id, "down")}
-                          disabled={groupIndex === finalMenu.length - 1}
-                          className="px-1 border rounded text-xs disabled:opacity-40"
-                        >
-                          ↓
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            removeGroupFromFinal(group.id);
-                            setCollapsedGroups((prev) => {
-                              const next = { ...prev };
-                              delete next[group.id];
-                              return next;
-                            });
-                          }}
-                          className="p-1 ml-0.5 border border-red-200 rounded text-red-600 hover:bg-red-50 flex items-center justify-center"
-                          title="Remove group"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                        </button>
-                      </div>
-                    </div>
+                      <GripVertical className="h-3.5 w-3.5 text-neutral-300 shrink-0" />
+                      {group.name}
+                      {group.storefrontPath && (
+                        <span className="text-[10px] text-neutral-400 font-normal">{group.storefrontPath}</span>
+                      )}
+                    </button>
+                  </div>
+                ))}
+                {/* Global drop zone tab */}
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDropToFinal}
+                  className="shrink-0 px-3 py-2.5 text-xs text-neutral-400 border-b-2 border-dashed border-neutral-200 hover:border-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-all cursor-pointer whitespace-nowrap"
+                >
+                  + drop here
+                </div>
+              </div>
 
-                    {!isGroupCollapsed(group.id) && (
-                      <div className="p-2 space-y-2">
-                    {group.categories.length === 0 ? (
+              {/* ---- ACTIVE TAB CONTENT ---- */}
+              {activeTabGroup && (
+                <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                  {/* Section name + controls */}
+                  <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2">
+                    <input
+                      type="text"
+                      value={activeTabGroup.name}
+                      onChange={(e) => updateGroupName(activeTabGroup.id, e.target.value)}
+                      placeholder="Section name"
+                      className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-neutral-800 outline-none border-b border-transparent focus:border-neutral-400"
+                    />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => moveGroup(activeTabGroup.id, "up")}
+                        disabled={activeTabIndex === 0}
+                        title="Move tab left"
+                        className="w-6 h-6 rounded border border-neutral-200 text-neutral-500 flex items-center justify-center disabled:opacity-30 hover:bg-neutral-100"
+                      >
+                        <ChevronUp className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveGroup(activeTabGroup.id, "down")}
+                        disabled={activeTabIndex === finalMenu.length - 1}
+                        title="Move tab right"
+                        className="w-6 h-6 rounded border border-neutral-200 text-neutral-500 flex items-center justify-center disabled:opacity-30 hover:bg-neutral-100"
+                      >
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          removeGroupFromFinal(activeTabGroup.id);
+                          setActiveGroupTab(null);
+                          setCollapsedGroups((p) => { const n = { ...p }; delete n[activeTabGroup.id]; return n; });
+                        }}
+                        title="Remove this section"
+                        className="w-6 h-6 rounded border border-red-200 text-red-500 flex items-center justify-center hover:bg-red-50 ml-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Category drop zone */}
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      const payload = parseDropPayload(event);
+                      if (!payload) return;
+                      if (payload.type === "source-catalog-category") {
+                        addCatalogCategoryToFinal(payload.groupId, payload.catalogCategoryId, activeTabGroup.id);
+                      } else if (payload.type === "source-subcategory") {
+                        addSubcategoryToFinal(payload.groupId, payload.catalogCategoryId, payload.subcategoryId, activeTabGroup.id);
+                      }
+                    }}
+                    className="rounded-lg border-2 border-dashed border-neutral-200 px-3 py-2 text-center hover:border-neutral-400 hover:bg-neutral-50 transition-all"
+                  >
+                    <p className="text-xs text-neutral-400">↓ Drop categories into <strong>{activeTabGroup.name}</strong></p>
+                  </div>
+
+                  {activeTabGroup.categories.length === 0 ? (
+                    <p className="text-xs text-neutral-400 text-center py-4">No categories yet — drop some from the left</p>
+                  ) : (
+                    activeTabGroup.categories.map((cat, catIndex) => (
                       <div
-                        onDragOver={(event) => event.preventDefault()}
+                        key={cat.id}
+                        className="rounded-lg border border-neutral-200 bg-white overflow-hidden"
+                        onDragOver={(e) => e.preventDefault()}
                         onDrop={(event) => {
                           event.preventDefault();
                           event.stopPropagation();
                           const payload = parseDropPayload(event);
-                          if (!payload) return;
-                          if (payload.type === "source-catalog-category") {
-                            addCatalogCategoryToFinal(
-                              payload.groupId,
-                              payload.catalogCategoryId,
-                              group.id
-                            );
-                            return;
-                          }
-                          if (payload.type === "source-subcategory") {
-                            addSubcategoryToFinal(
-                              payload.groupId,
-                              payload.catalogCategoryId,
-                              payload.subcategoryId,
-                              group.id
-                            );
-                          }
+                          if (!payload || payload.type !== "final-catalog-category") return;
+                          if (payload.groupId !== activeTabGroup.id) return;
+                          reorderCatalogCategoryByDrop(activeTabGroup.id, payload.catalogCategoryId, catIndex);
                         }}
-                        className="rounded-md border-2 border-dashed border-neutral-200 bg-neutral-50/80 px-3 py-4 text-center text-[11px] text-neutral-600"
                       >
-                        Drop a catalog category or subcategory here (or use the top{" "}
-                        <strong>Add zone</strong>)
-                      </div>
-                    ) : (
-                      group.categories.map((cat, catIndex) => (
-                        <div
-                          key={cat.id}
-                          className="rounded-md border border-amber-100 bg-amber-50/40 p-2"
-                        >
-                          <div
-                            onDragOver={(event) => event.preventDefault()}
-                            onDrop={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              const payload = parseDropPayload(event);
-                              if (!payload || payload.type !== "final-catalog-category")
-                                return;
-                              if (payload.groupId !== group.id) return;
-                              reorderCatalogCategoryByDrop(
-                                group.id,
-                                payload.catalogCategoryId,
-                                catIndex
-                              );
-                            }}
-                            className="flex items-start gap-2 mb-2"
+                        {/* Category header */}
+                        <div className="flex items-center gap-2 bg-amber-50/60 px-3 py-2 border-b border-amber-100">
+                          <span
+                            draggable
+                            onDragStart={onDragStart({ type: "final-catalog-category", groupId: activeTabGroup.id, catalogCategoryId: cat.id })}
+                            onDragEnd={onDragEnd}
+                            className="cursor-grab active:cursor-grabbing text-neutral-300 shrink-0"
+                            title="Drag to reorder"
                           >
-                            <span
-                              draggable
-                              onDragStart={onDragStart({
-                                type: "final-catalog-category",
-                                groupId: group.id,
-                                catalogCategoryId: cat.id,
-                              })}
-                              onDragEnd={onDragEnd}
-                              className="cursor-grab text-neutral-400 pt-2"
+                            <GripVertical className="h-3.5 w-3.5" />
+                          </span>
+                          <input
+                            type="text"
+                            value={cat.name}
+                            onChange={(e) => updateFinalCategoryName(activeTabGroup.id, cat.id, e.target.value)}
+                            className="flex-1 min-w-0 bg-transparent text-sm font-semibold text-neutral-800 outline-none border-b border-transparent focus:border-amber-400"
+                          />
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => moveCatalogCategory(activeTabGroup.id, cat.id, "up")}
+                              disabled={catIndex === 0}
+                              className="w-5 h-5 rounded border border-neutral-200 text-neutral-500 flex items-center justify-center disabled:opacity-30 hover:bg-neutral-100"
                             >
-                              ⠿
-                            </span>
-                            <div className="flex-1 min-w-0 space-y-0.5">
-                              <label
-                                htmlFor={`cat-menu-label-${group.id}-${cat.id}`}
-                                className="text-[10px] uppercase tracking-wide text-neutral-500"
-                              >
-                                Menu label
-                              </label>
-                              <input
-                                id={`cat-menu-label-${group.id}-${cat.id}`}
-                                type="text"
-                                value={cat.name}
-                                onChange={(event) =>
-                                  updateFinalCategoryName(
-                                    group.id,
-                                    cat.id,
-                                    event.target.value
-                                  )
-                                }
-                                className="w-full rounded-md border border-amber-200/80 bg-white px-2 py-1 text-sm font-medium text-neutral-900 outline-none focus:border-amber-400"
-                              />
-                              {cat.fromCatalog ? (
-                                <p className="text-[10px] text-neutral-400">
-                                  Catalog id: {cat.id} (unchanged)
-                                </p>
-                              ) : null}
-                            </div>
-                            {cat.href && isSingleMenuCustomCategory(cat) ? (
-                              <span className="text-[11px] text-neutral-500 truncate max-w-[120px] shrink-0 self-center pt-1">
-                                {cat.href}
-                              </span>
-                            ) : null}
-                            <div className="flex items-center gap-0.5 shrink-0 self-start pt-1">
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  moveCatalogCategory(group.id, cat.id, "up")
-                                }
-                                disabled={catIndex === 0}
-                                className="px-1 border rounded text-[10px] disabled:opacity-40"
-                              >
-                                ↑
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  moveCatalogCategory(group.id, cat.id, "down")
-                                }
-                                disabled={
-                                  catIndex === group.categories.length - 1
-                                }
-                                className="px-1 border rounded text-[10px] disabled:opacity-40"
-                              >
-                                ↓
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  removeCatalogCategoryFromFinal(
-                                    group.id,
-                                    cat.id
-                                  )
-                                }
-                                className="p-0.5 ml-0.5 border border-red-200 rounded text-red-600 hover:bg-red-50"
-                                title="Remove category"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                              </button>
-                            </div>
+                              <ChevronUp className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveCatalogCategory(activeTabGroup.id, cat.id, "down")}
+                              disabled={catIndex === activeTabGroup.categories.length - 1}
+                              className="w-5 h-5 rounded border border-neutral-200 text-neutral-500 flex items-center justify-center disabled:opacity-30 hover:bg-neutral-100"
+                            >
+                              <ChevronDown className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeCatalogCategoryFromFinal(activeTabGroup.id, cat.id)}
+                              className="w-5 h-5 rounded border border-red-200 text-red-500 flex items-center justify-center hover:bg-red-50 ml-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
                           </div>
-                          {showCategoryImage(cat) ? (
-                            <div className="mb-2 rounded-md border border-neutral-200 bg-white p-2">
-                              <p className="text-[11px] text-neutral-500 mb-1">
-                                Category image
-                              </p>
-                              <div className="flex flex-col sm:flex-row gap-2">
-                                <input
-                                  type="text"
-                                  value={cat.image ?? ""}
-                                  onChange={(event) =>
-                                    updateCategoryImage(
-                                      group.id,
-                                      cat.id,
-                                      event.target.value
-                                    )
-                                  }
-                                  placeholder="Image URL"
-                                  className="w-full rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs outline-none focus:border-neutral-400"
-                                />
-                                <label className="shrink-0 px-3 py-1.5 text-xs border rounded-md cursor-pointer hover:bg-neutral-50">
-                                  {uploadingCategoryKey ===
-                                  categoryKey(group.id, cat.id)
-                                    ? "Uploading..."
-                                    : "Upload"}
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="hidden"
-                                    onChange={(event) =>
-                                      void handleCategoryImageUpload(
-                                        group.id,
-                                        cat.id,
-                                        event.target.files?.[0]
-                                      )
-                                    }
-                                  />
-                                </label>
-                              </div>
-                              {cat.image ? (
-                                <img
-                                  src={cat.image}
-                                  alt={`${cat.name}`}
-                                  className="mt-2 h-16 w-24 object-cover rounded-md border border-neutral-200"
-                                />
-                              ) : null}
-                            </div>
-                          ) : isSingleMenuCustomCategory(cat) ? (
-                            <p className="text-[11px] text-neutral-500 mb-2 px-0.5">
-                              Single menu link — no category image. Add subcategories to enable
-                              category image.
-                            </p>
-                          ) : null}
+                        </div>
+
+                        <div className="p-2.5 space-y-2">
+
+                          {/* Subcategory drop zone */}
                           <div
-                            onDragOver={(event) => event.preventDefault()}
+                            onDragOver={(e) => e.preventDefault()}
                             onDrop={(event) => {
                               event.preventDefault();
                               event.stopPropagation();
                               const payload = parseDropPayload(event);
-                              if (!payload || payload.type !== "source-subcategory")
-                                return;
-                              addSubcategoryToFinal(
-                                payload.groupId,
-                                payload.catalogCategoryId,
-                                payload.subcategoryId,
-                                group.id,
-                                cat.id
-                              );
+                              if (!payload || payload.type !== "source-subcategory") return;
+                              addSubcategoryToFinal(payload.groupId, payload.catalogCategoryId, payload.subcategoryId, activeTabGroup.id, cat.id);
                             }}
-                            className="mb-2 rounded border border-dashed border-amber-300/80 bg-white px-2 py-1.5 text-[10px] text-center text-neutral-500"
+                            className="rounded-md border border-dashed border-neutral-200 px-2 py-1.5 text-center hover:border-amber-300 hover:bg-amber-50/30 transition-all"
                           >
-                            Drop catalog subcategories here
+                            <p className="text-[10px] text-neutral-400">Drop subcategories here</p>
                           </div>
-                          <p className="text-[10px] text-neutral-500 mb-1 px-0.5">
-                            Subcategories
-                          </p>
-                          <div className="flex flex-col gap-2">
-                            {cat.children.length === 0 ? (
-                              <span className="text-[11px] text-neutral-400 px-1">
-                                Use the dashed strip above to add catalog subcategories
-                              </span>
-                            ) : (
-                              cat.children.map((sub, subIndex) => (
+
+                          {/* Subcategory list */}
+                          {cat.children.length > 0 && (
+                            <div className="flex flex-col gap-1">
+                              {cat.children.map((sub, subIndex) => (
                                 <div
                                   key={sub.id}
-                                  className="rounded-md border border-amber-200 bg-white p-2 text-xs"
+                                  className="rounded-md border border-neutral-100 bg-neutral-50 p-2"
+                                  onDragOver={(e) => e.preventDefault()}
+                                  onDrop={(event) => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    const payload = parseDropPayload(event);
+                                    if (!payload || payload.type !== "final-subcategory") return;
+                                    if (payload.groupId !== activeTabGroup.id || payload.catalogCategoryId !== cat.id) return;
+                                    reorderSubcategoryByDrop(activeTabGroup.id, cat.id, payload.subcategoryId, subIndex);
+                                  }}
                                 >
-                                  <div
-                                    onDragOver={(event) => event.preventDefault()}
-                                    onDrop={(event) => {
-                                      event.preventDefault();
-                                      event.stopPropagation();
-                                      const payload = parseDropPayload(event);
-                                      if (
-                                        !payload ||
-                                        payload.type !== "final-subcategory"
-                                      )
-                                        return;
-                                      if (payload.groupId !== group.id) return;
-                                      if (payload.catalogCategoryId !== cat.id)
-                                        return;
-                                      reorderSubcategoryByDrop(
-                                        group.id,
-                                        cat.id,
-                                        payload.subcategoryId,
-                                        subIndex
-                                      );
-                                    }}
-                                    className="flex flex-col gap-1"
-                                  >
-                                    <div className="flex items-start gap-2">
-                                      <span
-                                        draggable
-                                        onDragStart={onDragStart({
-                                          type: "final-subcategory",
-                                          groupId: group.id,
-                                          catalogCategoryId: cat.id,
-                                          subcategoryId: sub.id,
-                                        })}
-                                        onDragEnd={onDragEnd}
-                                        className="cursor-grab text-neutral-400 shrink-0 pt-1.5"
-                                        title="Drop on another row to reorder"
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      draggable
+                                      onDragStart={onDragStart({ type: "final-subcategory", groupId: activeTabGroup.id, catalogCategoryId: cat.id, subcategoryId: sub.id })}
+                                      onDragEnd={onDragEnd}
+                                      className="cursor-grab active:cursor-grabbing text-neutral-300 shrink-0"
+                                    >
+                                      <GripVertical className="h-3.5 w-3.5" />
+                                    </span>
+                                    <Tag className="h-3 w-3 text-neutral-400 shrink-0" />
+                                    <input
+                                      type="text"
+                                      value={sub.name}
+                                      onChange={(e) => updateSubcategory(activeTabGroup.id, cat.id, sub.id, { name: e.target.value })}
+                                      className="flex-1 min-w-0 bg-transparent text-xs font-medium text-neutral-700 outline-none border-b border-transparent focus:border-neutral-300"
+                                    />
+                                    <div className="flex items-center gap-0.5 shrink-0">
+                                      <button
+                                        type="button"
+                                        onClick={() => moveSubcategory(activeTabGroup.id, cat.id, sub.id, "up")}
+                                        disabled={subIndex === 0}
+                                        className="w-5 h-5 rounded border border-neutral-200 text-neutral-500 flex items-center justify-center disabled:opacity-30 hover:bg-neutral-100"
                                       >
-                                        ⠿
-                                      </span>
-                                      <div className="flex-1 min-w-0 space-y-0.5">
-                                        <label
-                                          htmlFor={`sub-menu-label-${group.id}-${cat.id}-${sub.id}`}
-                                          className="text-[10px] text-neutral-500"
-                                        >
-                                          Menu label
-                                        </label>
-                                        <input
-                                          id={`sub-menu-label-${group.id}-${cat.id}-${sub.id}`}
-                                          type="text"
-                                          value={sub.name}
-                                          onChange={(event) =>
-                                            updateSubcategory(
-                                              group.id,
-                                              cat.id,
-                                              sub.id,
-                                              { name: event.target.value }
-                                            )
-                                          }
-                                          className="w-full rounded border border-neutral-200 px-2 py-1 text-xs font-medium text-neutral-900 outline-none focus:border-neutral-400"
-                                        />
-                                      </div>
-                                      <div className="flex items-center gap-0.5 shrink-0 pt-1">
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            moveSubcategory(
-                                              group.id,
-                                              cat.id,
-                                              sub.id,
-                                              "up"
-                                            )
-                                          }
-                                          disabled={subIndex === 0}
-                                          className="px-0.5 border rounded disabled:opacity-40"
-                                        >
-                                          ↑
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            moveSubcategory(
-                                              group.id,
-                                              cat.id,
-                                              sub.id,
-                                              "down"
-                                            )
-                                          }
-                                          disabled={
-                                            subIndex === cat.children.length - 1
-                                          }
-                                          className="px-0.5 border rounded disabled:opacity-40"
-                                        >
-                                          ↓
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            removeSubcategoryFromFinal(
-                                              group.id,
-                                              cat.id,
-                                              sub.id
-                                            )
-                                          }
-                                          className="p-0.5 ml-0.5 border border-red-200 rounded text-red-600 hover:bg-red-50"
-                                          title="Remove subcategory"
-                                        >
-                                          <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                                        </button>
-                                      </div>
+                                        <ChevronUp className="h-3 w-3" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => moveSubcategory(activeTabGroup.id, cat.id, sub.id, "down")}
+                                        disabled={subIndex === cat.children.length - 1}
+                                        className="w-5 h-5 rounded border border-neutral-200 text-neutral-500 flex items-center justify-center disabled:opacity-30 hover:bg-neutral-100"
+                                      >
+                                        <ChevronDown className="h-3 w-3" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => removeSubcategoryFromFinal(activeTabGroup.id, cat.id, sub.id)}
+                                        className="w-5 h-5 rounded border border-red-200 text-red-500 flex items-center justify-center hover:bg-red-50 ml-0.5"
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </button>
                                     </div>
-                                    {sub.href ? (
-                                      <p className="pl-6 text-neutral-500 text-[11px] leading-snug break-all">
-                                        {sub.href}
-                                      </p>
-                                    ) : null}
                                   </div>
-                                  <div className="mt-2 pl-6 flex flex-col sm:flex-row sm:items-end gap-2">
-                                    <div className="flex-1 min-w-0 space-y-0.5">
-                                      <label
-                                        htmlFor={`sub-slug-${group.id}-${cat.id}-${sub.id}`}
-                                        className="text-[10px] text-neutral-500"
-                                      >
-                                        Slug
-                                      </label>
-                                      <input
-                                        id={`sub-slug-${group.id}-${cat.id}-${sub.id}`}
-                                        type="text"
-                                        value={sub.slug ?? ""}
-                                        onChange={(event) =>
-                                          updateSubcategory(
-                                            group.id,
-                                            cat.id,
-                                            sub.id,
-                                            { slug: event.target.value }
-                                          )
-                                        }
-                                        placeholder="e.g. casual-footwear"
-                                        className="w-full rounded border border-neutral-200 px-2 py-1 text-[11px] outline-none focus:border-neutral-400"
-                                      />
-                                    </div>
-                                    <label className="flex items-center gap-2 text-[11px] text-neutral-600 whitespace-nowrap pb-0.5 cursor-pointer">
+                                  {/* Slug row */}
+                                  <div className="mt-1.5 pl-5 flex items-center gap-2">
+                                    <input
+                                      type="text"
+                                      value={sub.slug ?? ""}
+                                      onChange={(e) => updateSubcategory(activeTabGroup.id, cat.id, sub.id, { slug: e.target.value })}
+                                      placeholder="url-slug"
+                                      className="flex-1 min-w-0 rounded border border-neutral-100 px-2 py-1 text-[11px] text-neutral-500 outline-none focus:border-neutral-300 bg-white"
+                                    />
+                                    <label className="flex items-center gap-1.5 text-[11px] text-neutral-500 whitespace-nowrap cursor-pointer">
                                       <input
                                         type="checkbox"
                                         checked={sub.showSlug !== false}
-                                        onChange={(event) =>
-                                          updateSubcategory(
-                                            group.id,
-                                            cat.id,
-                                            sub.id,
-                                            { showSlug: event.target.checked }
-                                          )
-                                        }
+                                        onChange={(e) => updateSubcategory(activeTabGroup.id, cat.id, sub.id, { showSlug: e.target.checked })}
+                                        className="rounded border-neutral-300"
                                       />
-                                      Show slug
+                                      Show in URL
                                     </label>
                                   </div>
                                 </div>
-                              ))
-                            )}
-                          </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      ))
-                    )}
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           )}
-        </section>
+        </div>
+      </div>
+
+      {/* ====== ADD CUSTOM LINK ====== */}
+      <div className="bg-white rounded-xl border border-neutral-200 p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Link2 className="h-4 w-4 text-neutral-500 shrink-0" />
+          <div>
+            <h2 className="text-sm font-semibold text-neutral-800">Add Custom Link</h2>
+            <p className="text-xs text-neutral-400">Add a link not from your catalog — e.g. &quot;Sale&quot;, &quot;Blog&quot;, &quot;About Us&quot;</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-neutral-500">Link Name <span className="text-red-400">*</span></label>
+            <input
+              type="text"
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder="e.g. Sale, About Us"
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-neutral-500">URL <span className="text-neutral-400 font-normal">(optional)</span></label>
+            <input
+              type="text"
+              value={customHref}
+              onChange={(e) => setCustomHref(e.target.value)}
+              placeholder="/sale  or  https://..."
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-neutral-500">Add Under</label>
+            <div className="flex gap-2">
+              <select
+                value={customParentId}
+                onChange={(e) => setCustomParentId(e.target.value)}
+                className="flex-1 min-w-0 rounded-lg border border-neutral-200 px-3 py-2 text-sm bg-white outline-none focus:border-neutral-400"
+              >
+                <option value="root">Top level (new section)</option>
+                {finalMenu.map((g) => (
+                  <option key={g.id} value={g.id}>Under &quot;{g.name}&quot;</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={handleAddCustomItem}
+                className="shrink-0 px-4 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-neutral-800 whitespace-nowrap"
+              >
+                + Add
+              </button>
+            </div>
+          </div>
+        </div>
+        {customError && (
+          <p className="mt-2 text-xs text-red-600">{customError}</p>
+        )}
       </div>
 
       <ConfirmModal
@@ -1956,10 +1739,10 @@ export default function AdminMenuCreationPage() {
         onClose={() => setDeleteMenuModalOpen(false)}
         onConfirm={confirmDeleteMenu}
         variant="danger"
-        title="Delete menu"
+        title="Delete this menu"
         description={
           menuMetaName.trim()
-            ? `Delete “${menuMetaName.trim()}”? This removes the saved menu and cannot be undone.`
+            ? `Delete "${menuMetaName.trim()}"? This removes the saved menu and cannot be undone.`
             : "This removes the saved menu and cannot be undone."
         }
         confirmText="Delete"

@@ -2,7 +2,6 @@
 
 import { CartBasketIcon } from "@/icons/CartBasketIcon";
 import Link from "next/link";
-import Image from "next/image";
 import { useAppDispatch } from "@/store/hooks";
 import { addToCartAsync } from "@/store/slices/cart.slice";
 import { toSlug } from "@/lib/slugConverter";
@@ -47,12 +46,11 @@ function ProductCard({
   wishlistSelect?: boolean;
   onWishlistChange?: (id: string, removed: boolean) => void;
 }) {
-  console.log("[ProductCard] id:", id, "size prop:", size, "isArray:", Array.isArray(size), "imageSrc:", imageSrc, "title:", title, "originalPrice:", originalPrice, "discountedPrice:", discountedPrice);
-
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [isWishlisted, setIsWishlisted] = useState(wishlistSelect ?? false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const dispatch = useAppDispatch();
   const { data: session } = useSession();
@@ -92,6 +90,11 @@ function ProductCard({
 
   /* ---------------- WISHLIST TOGGLE ---------------- */
   const handleWishlist = async () => {
+    if (!session?.accessToken) {
+      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
+    }
+
     try {
       setWishlistLoading(true);
 
@@ -142,13 +145,19 @@ function ProductCard({
         className="relative block aspect-4/5 w-full shrink-0 overflow-hidden rounded-lg bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
         title={title}
       >
-        <Image
-          src={imageSrc}
-          alt={altText}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover object-center"
-        />
+        {!imgError && imageSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageSrc}
+            alt={altText}
+            onError={() => setImgError(true)}
+            className="object-cover object-center w-full h-full"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-xs text-center px-2">
+            {altText}
+          </div>
+        )}
       </Link>
 
       <div className="p-0 pt-5">

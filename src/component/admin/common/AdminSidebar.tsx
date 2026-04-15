@@ -32,11 +32,11 @@ export default function AdminSidebar({ collapsed }: AdminSidebarProps) {
 
   return (
     <aside
-      className={`fixed top-14 left-0 h-[calc(100vh-3.5rem)] 
+      className={`fixed top-14 left-0 h-[calc(100vh-3.5rem)] w-62
         bg-[#111113] border-r border-white/6
-        text-neutral-400 transition-all duration-300 ease-in-out z-40
+        text-neutral-400 transition-transform duration-300 ease-in-out z-40
         flex flex-col
-        ${collapsed ? "w-18" : "w-62"}`}
+        ${collapsed ? "-translate-x-full" : "translate-x-0"}`}
     >
       {/* Nav items */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden mt-3 px-2 flex flex-col gap-0.5">
@@ -59,7 +59,6 @@ export default function AdminSidebar({ collapsed }: AdminSidebarProps) {
               <div key={item.label}>
                 <button
                   onClick={() => toggleMenu(item.label)}
-                  title={collapsed ? item.label : undefined}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-150 group
                     ${
                       active
@@ -73,22 +72,18 @@ export default function AdminSidebar({ collapsed }: AdminSidebarProps) {
                       strokeWidth={active ? 2 : 1.5}
                       className={active ? "text-amber-400" : "text-neutral-500 group-hover:text-neutral-300"}
                     />
-                    {!collapsed && (
-                      <span className="text-[13px] font-medium">{item.label}</span>
-                    )}
+                    <span className="text-[13px] font-medium">{item.label}</span>
                   </div>
 
-                  {!collapsed && (
-                    <ChevronRight
-                      size={13}
-                      className={`text-neutral-600 transition-transform duration-200 ${
-                        isOpen ? "rotate-90" : ""
-                      }`}
-                    />
-                  )}
+                  <ChevronRight
+                    size={13}
+                    className={`text-neutral-600 transition-transform duration-200 ${
+                      isOpen ? "rotate-90" : ""
+                    }`}
+                  />
                 </button>
 
-                {!collapsed && isOpen && (
+                {isOpen && (
                   <div className="ml-7 mt-0.5 mb-1 flex flex-col gap-0.5 border-l border-white/6 pl-3">
                     {item.children.map((child) => {
                       const childActive =
@@ -120,7 +115,6 @@ export default function AdminSidebar({ collapsed }: AdminSidebarProps) {
             <Link
               key={item.label}
               href={item.href!}
-              title={collapsed ? item.label : undefined}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 group
                 ${
                   active
@@ -133,17 +127,14 @@ export default function AdminSidebar({ collapsed }: AdminSidebarProps) {
                 strokeWidth={active ? 2 : 1.5}
                 className={active ? "text-amber-400" : "text-neutral-500 group-hover:text-neutral-300"}
               />
-              {!collapsed && (
-                <span className="text-[13px] font-medium">{item.label}</span>
-              )}
+              <span className="text-[13px] font-medium">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
       {/* Bottom section */}
-      {!collapsed && (
-        <div className="p-3 border-t border-white/6">
+      <div className="p-3 border-t border-white/6">
           <div className="rounded-lg bg-white/4 px-3 py-2.5 flex items-center gap-3">
             <div className="w-6 h-6 rounded-full bg-linear-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0">
               <span className="text-white text-[10px] font-bold">AS</span>
@@ -154,7 +145,6 @@ export default function AdminSidebar({ collapsed }: AdminSidebarProps) {
             </div>
           </div>
         </div>
-      )}
     </aside>
   );
 }

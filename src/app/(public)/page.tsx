@@ -1,6 +1,4 @@
 
-import Navbar from "@/component/common/navbar";
-import Footer from "@/component/common/Footer";
 import BestSelling from "@/component/home/BestSelling";
 import CategoryStrip from "@/component/home/CategoryStrip";
 import HelpCTA from "@/component/home/HelpCTA";
@@ -14,7 +12,6 @@ export const dynamic = "force-dynamic";
 export default function HomePage() {
   return (
     <>
-      <Navbar />
       <HeroBanner />
       <HomeMarquee />
       <CategoryStrip />
@@ -23,7 +20,6 @@ export default function HomePage() {
       <ShopByCategory />
       <HelpCTA />
       <TrendingGallery />
-      <Footer />
     </>
   );
 }

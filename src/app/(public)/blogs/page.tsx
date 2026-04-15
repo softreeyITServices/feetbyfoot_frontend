@@ -1,7 +1,5 @@
 "use client";
 
-import Footer from "@/component/common/Footer";
-import Navbar from "@/component/common/navbar";
 import { BlogService, type Blog } from "@/domain/application/services/admin/blog.service";
 import { safeNextImageSrc } from "@/lib/safeImageSrc";
 import Image from "next/image";
@@ -67,7 +65,6 @@ export default function BlogsPage() {
 
   return (
     <>
-      <Navbar />
       <main className="bg-white">
         <div className="mx-auto max-w-245 px-4 py-10">
           {/* Header (matches screenshot style) */}
@@ -100,7 +97,6 @@ export default function BlogsPage() {
           </section>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle } from "lucide-react";
-import Navbar from "@/component/common/navbar";
-import Footer from "@/component/common/Footer";
 import { useEffect, useState } from "react";
 import { httpClient } from "@/lib/httpClient";
 
@@ -57,7 +55,6 @@ const OrderSuccessPage = ({ searchParams }: Props) => {
 
   return (
     <>
-      <Navbar />
       <div className="bg-gray-50 flex items-center justify-center px-4 py-6">
         <div className="bg-white shadow-lg rounded-2xl p-8 max-w-md w-full text-center">
 
@@ -102,7 +99,6 @@ const OrderSuccessPage = ({ searchParams }: Props) => {
           </div>
         </div>
       </div>
-      <Footer />
     </>
   );
 }

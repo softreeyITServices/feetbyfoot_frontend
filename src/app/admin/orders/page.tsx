@@ -486,10 +486,12 @@ function OrderPage() {
     try {
       const payload: UpdateOrderStatusRequest = {
         status,
-        items: order.items.map((item) => ({
-          orderId: order._id,
-          itemId: item._id,
-        })),
+        items: [
+          {
+            orderId: order._id,
+            itemId: order.items.map((item) => item._id),
+          },
+        ],
       };
 
       await ordersService.updateOrderStatus(payload);

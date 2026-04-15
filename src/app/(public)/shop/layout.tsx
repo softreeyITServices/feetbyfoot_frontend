@@ -1,5 +1,3 @@
-import Navbar from "@/component/common/navbar";
-import Footer from "@/component/common/Footer";
 import Container from "@/component/ui/Container";
 
 export default function ShopLayout({
@@ -9,9 +7,7 @@ export default function ShopLayout({
 }) {
   return (
     <>
-      <Navbar />
       <Container>{children}</Container>
-      <Footer />
     </>
   );
 }

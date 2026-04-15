@@ -8,6 +8,7 @@ import Link from "next/link";
 // import "swiper/css";
 // import "swiper/css/pagination";
 import Container from "../ui/Container";
+import FadeIn from "../ui/FadeIn";
 
 const slides = [
   "/assets/images/promo-winter.png",
@@ -46,7 +47,7 @@ export default function PromoCarousel() {
         <div className="grid grid-cols-1 md:grid-cols-2">
 
           {/* ================= LEFT BANNER ================= */}
-          <div className="relative h-90 md:h-130">
+          <FadeIn direction="left" className="relative h-90 md:h-130">
             <Image
               src="/assets/images/womens-winter-socks.jpg"
               alt="Women's Winter Socks"
@@ -76,10 +77,10 @@ export default function PromoCarousel() {
                 COLLECTION
               </span>
             </div>
-          </div>
+          </FadeIn>
 
           {/* ================= RIGHT BANNER ================= */}
-          <div className="relative h-90 md:h-130 bg-white">
+          <FadeIn direction="right" delay={150} className="relative h-90 md:h-130 bg-white">
             <Image
               src="/assets/images/socks-sale.jpg"
               alt="Socks Sale"
@@ -113,7 +114,7 @@ export default function PromoCarousel() {
               {/* Vertical SOCKS text */}
 
             </div>
-          </div>
+          </FadeIn>
 
         </div>
       </section>

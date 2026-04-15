@@ -4,6 +4,7 @@ import { CallWhatsappIcon } from "@/icons/CallWhatsappIcon";
 import { MailIcon } from "@/icons/MailIcon";
 import { OpenEnvelopeIcon } from "@/icons/OpenEnvelopeIcon";
 import { ChatPhoneIcon } from "@/icons/ChatPhoneIcon";
+import FadeIn from "../ui/FadeIn";
 
 export default function HelpCTA() {
   return (
@@ -12,7 +13,7 @@ export default function HelpCTA() {
         <div className="mx-auto max-w-7xl bg-[#F8D317] rounded-3xl px-10 py-14 flex items-center justify-between gap-10">
 
           {/* LEFT CONTENT */}
-          <div className="max-w-xl">
+          <FadeIn direction="left" className="max-w-xl">
             <p className="text-lg font-semibold tracking-widest text-black mb-3">
               WE&apos;RE HERE FOR YOU
             </p>
@@ -49,10 +50,10 @@ export default function HelpCTA() {
                 +91-9896454666
               </a>
             </div>
-          </div>
+          </FadeIn>
 
           {/* RIGHT IMAGE */}
-          <div className="relative w-[360px] h-[360px] rounded-full overflow-hidden flex-shrink-0">
+          <FadeIn direction="right" delay={150} className="relative w-[360px] h-[360px] rounded-full overflow-hidden flex-shrink-0">
             <Image
               src="/assets/images/home1_img-15.jpg" // ← FIRST IMAGE
               alt="Customer support"
@@ -60,7 +61,7 @@ export default function HelpCTA() {
               className="object-cover"
               priority
             />
-          </div>
+          </FadeIn>
 
         </div>
       </section>

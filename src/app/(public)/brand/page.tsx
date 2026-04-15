@@ -1,5 +1,3 @@
-import Footer from "@/component/common/Footer";
-import Navbar from "@/component/common/navbar";
 import { PlusIcon } from "@/icons/PlusIcon";
 import { LoveIcon } from "@/icons/LoveIcon";
 import { StarIcon } from "@/icons/StarIcon";
@@ -19,7 +17,6 @@ export default async function BrandPage() {
 
   return (
     <>
-      <Navbar />
       <main className="bg-white">
 
         {/* ================= HERO ================= */}
@@ -181,7 +178,6 @@ export default async function BrandPage() {
         </section>
 
       </main>
-      <Footer />
     </>
   );
 }

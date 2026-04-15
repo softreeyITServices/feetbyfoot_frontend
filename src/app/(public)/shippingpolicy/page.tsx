@@ -1,5 +1,3 @@
-import Navbar from "@/component/common/navbar";
-import Footer from "@/component/common/Footer";
 import { CmsService } from "@/domain/application/services/admin/cms.service";
 import type { Metadata } from "next";
 import { cache } from "react";
@@ -29,7 +27,6 @@ export default async function ShippingPolicyPage() {
 
   return (
     <>
-      <Navbar />
       <main className="w-full overflow-x-hidden bg-white">
         <section className="px-4 pt-12 pb-2">
           <div className="mx-auto max-w-282.25 text-center">
@@ -51,7 +48,6 @@ export default async function ShippingPolicyPage() {
           </div>
         )}
       </main>
-      <Footer />
     </>
   );
 }

@@ -4,16 +4,13 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Upload,
   X,
-  FileText,
   Image as ImageIcon,
-  File,
   Check,
   AlertCircle,
   ChevronDown,
   Plus,
   Trash2,
 } from "lucide-react";
-import Image from "next/image";
 
 /* =========================================================
    TYPES
@@ -75,13 +72,6 @@ export interface AdminFormProps {
    FILE PREVIEW
 ========================================================= */
 
-function fileIcon(file: File) {
-  if (file.type.startsWith("image/"))
-    return <ImageIcon size={14} className="text-blue-500" />;
-  if (file.type === "application/pdf")
-    return <FileText size={14} className="text-red-500" />;
-  return <File size={14} className="text-neutral-400" />;
-}
 
 function getDisplayFileName(fileUrl: string) {
   const trimmed = fileUrl.trim();
@@ -149,6 +139,7 @@ function FilePreview({
   onSetBase?: () => void;
 }) {
   const isString = typeof file === "string";
+  const [imgError, setImgError] = useState(false);
 
   const isImage = isString
     ? true
@@ -160,19 +151,21 @@ function FilePreview({
       ? URL.createObjectURL(file)
       : null;
 
+  const showImage = isImage && url && !imgError;
+
   return (
     <div className="flex items-center gap-2.5 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 group">
-      {isImage && url ? (
-        <Image
+      {showImage ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
           src={url}
-          alt={isString ? "image" : file.name}
+          alt={isString ? "image" : (file as globalThis.File).name}
           className="w-8 h-8 rounded-lg object-cover shrink-0"
-          width={200}
-          height={200}
+          onError={() => setImgError(true)}
         />
       ) : (
         <div className="w-8 h-8 bg-neutral-100 rounded-lg flex items-center justify-center shrink-0">
-          {!isString && fileIcon(file)}
+          <ImageIcon size={14} className="text-blue-400" />
         </div>
       )}
 
@@ -761,7 +754,7 @@ function FieldInput({
     return (
       <DropZone
         field={field}
-        value={(value as File[]) ?? []}
+        value={((value as (File | string)[]) ?? []).filter((f) => typeof f !== "string" || f.trim() !== "")}
         onChange={onChange as (files: (File | string)[]) => void}
         error={error}
       />
@@ -940,6 +933,11 @@ export function AdminForm({
       return next;
     });
   };
+
+
+  console.log("fields", fields);
+
+console.log("values",values)
 
   const validate = () => {
     const errs: Record<string, string> = {};

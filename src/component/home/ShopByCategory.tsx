@@ -2,6 +2,7 @@ import Image from "next/image";
 import Container from "../ui/Container";
 import { UpRightArrowIcon } from "@/icons/UpRightArrowIcon";
 import Link from "next/link";
+import FadeIn from "../ui/FadeIn";
 
 export default function ShopByCategory() {
   return (
@@ -12,7 +13,7 @@ export default function ShopByCategory() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
           {/* COLUMN 1 */}
-          <div className="grid grid-cols-1 gap-10 content-start">
+          <FadeIn direction="up" className="grid grid-cols-1 gap-10 content-start">
             <h2 className="text-4xl font-semibold text-green-900 leading-tight">
               Shop By <br /> Category
             </h2>
@@ -33,10 +34,10 @@ export default function ShopByCategory() {
                 </button>
               </Link>
             </div>
-          </div>
+          </FadeIn>
 
           {/* COLUMN 2 (GRID FLOW DOWNWARDS) */}
-          <div className="grid grid-cols-1 gap-6 content-start">
+          <FadeIn direction="up" delay={150} className="grid grid-cols-1 gap-6 content-start">
 
             {/* Gift Packs */}
             <div className="relative rounded-xl overflow-hidden">
@@ -71,10 +72,10 @@ export default function ShopByCategory() {
               </Link>
             </div>
 
-          </div>
+          </FadeIn>
 
           {/* COLUMN 3 (FLOW DOWN, BUT WITH TOP GAP FIRST) */}
-          <div className="grid grid-cols-1 gap-14 content-start">
+          <FadeIn direction="up" delay={300} className="grid grid-cols-1 gap-14 content-start">
 
             {/* TOP GAP FOR STAGGER EFFECT */}
             <div className="h-20"></div>
@@ -95,7 +96,7 @@ export default function ShopByCategory() {
               </Link>
             </div>
 
-          </div>
+          </FadeIn>
 
         </div>
       </Container>

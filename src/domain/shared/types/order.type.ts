@@ -7,9 +7,9 @@ export enum OrderStatus {
   SHIPPED = "SHIPPED",
   DELIVERED = "DELIVERED",
   CANCELLED = "CANCELLED",
-  PARTIALLY_RETURNED = "PARTIALLY_RETURNED",
-  PARTIALLY_EXCHANGED = "PARTIALLY_EXCHANGED",
-  PARTIALLY_DELIVERED = "PARTIALLY_DELIVERED",
+  // PARTIALLY_RETURNED = "PARTIALLY_RETURNED",
+  // PARTIALLY_EXCHANGED = "PARTIALLY_EXCHANGED",
+  // PARTIALLY_DELIVERED = "PARTIALLY_DELIVERED",
   RETURNED = "RETURNED",
   EXCHANGED = "EXCHANGED",
 }
@@ -181,7 +181,7 @@ export interface UpdateOrderStatusRequest {
   paymentStatus?: PaymentStatus;
   items: {
     orderId: string;
-    itemId: string;
+    itemId: string[];
   }[];
 }
 

@@ -80,7 +80,7 @@ export const RATING_URL = API_BASE_URL + "/rating";
 export const ADMIN_ORDERS_URL = API_BASE_URL + "/orders/admin";
 export const ADMIN_EXCHANGE_URL = API_BASE_URL + "/orders/admin/exchange";
 export const ADMIN_RETURN_URL = API_BASE_URL + "/orders/admin/return";
-export const ADMIN_ORDER_STATUS_URL = API_BASE_URL + "/orders/admin/status";
+export const ADMIN_ORDER_STATUS_URL = API_BASE_URL + "/orders/status";
 /** Admin COD payment status → proxies to `PATCH .../Orders/cod-payment-status` */
 export const ADMIN_ORDER_COD_PAYMENT_STATUS_URL =
   API_BASE_URL + "/orders/admin/cod-payment-status";

@@ -1,5 +1,3 @@
-import Navbar from "@/component/common/navbar";
-import Footer from "@/component/common/Footer";
 import Container from "@/component/ui/Container";
 
 export default function CategoryLayout({
@@ -9,11 +7,9 @@ export default function CategoryLayout({
 }) {
   return (
     <>
-      <Navbar />
       <Container>
         {children}
       </Container>
-      <Footer />
     </>
   );
 }

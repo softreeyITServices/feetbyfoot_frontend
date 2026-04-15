@@ -1,5 +1,3 @@
-import Navbar from "@/component/common/navbar";
-import Footer from "@/component/common/Footer";
 import { CmsService } from "@/domain/application/services/admin/cms.service";
 import type { Metadata } from "next";
 import { cache } from "react";
@@ -28,7 +26,6 @@ export default async function WorksOfArtPage() {
 
   return (
     <>
-      <Navbar />
       <main className="w-full overflow-x-hidden bg-white">
         <div className="mx-auto w-full max-w-282.25 px-4 py-10 sm:px-6 lg:px-8">
           {active && html ? (
@@ -41,7 +38,6 @@ export default async function WorksOfArtPage() {
           )}
         </div>
       </main>
-      <Footer />
     </>
   );
 }

@@ -1,5 +1,3 @@
-import Footer from "@/component/common/Footer";
-import Navbar from "@/component/common/navbar";
 import { PlusIcon } from "@/icons/PlusIcon";
 import { LoveIcon } from "@/icons/LoveIcon";
 import { MaterialIcon } from "@/icons/MaterialIcon";
@@ -12,7 +10,6 @@ import { StarIcon } from "@/icons/StarIcon";
 export default function OurStoryPage() {
   return (
     <>
-      <Navbar />
       <main className="bg-white">
         {/* ================= HERO ================= */}
         <section className="pt-12">
@@ -162,7 +159,6 @@ export default function OurStoryPage() {
           </div>
         </section>
       </main>
-      <Footer />
     </>
   );
 }

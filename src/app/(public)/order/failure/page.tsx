@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { XCircle } from "lucide-react";
-import Navbar from "@/component/common/navbar";
-import Footer from "@/component/common/Footer";
 import { useState } from "react";
 
 const OrderFailurePage = () => {
@@ -17,7 +15,6 @@ const OrderFailurePage = () => {
 
   return (
     <>
-      <Navbar />
       <div className="bg-gray-50 flex items-center justify-center px-4 py-10">
         <div className="bg-white shadow-lg rounded-2xl p-8 max-w-md w-full text-center">
 
@@ -54,7 +51,6 @@ const OrderFailurePage = () => {
           </div>
         </div>
       </div>
-      <Footer />
     </>
   );
 };

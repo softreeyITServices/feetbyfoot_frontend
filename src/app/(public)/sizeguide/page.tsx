@@ -1,5 +1,3 @@
-import Navbar from "@/component/common/navbar";
-import Footer from "@/component/common/Footer";
 import { CmsService } from "@/domain/application/services/admin/cms.service";
 import type { Metadata } from "next";
 import { cache } from "react";
@@ -31,7 +29,6 @@ export default async function SizeGuidePage() {
 
   return (
     <>
-      <Navbar />
       <main className="w-full bg-white">
         <div className="mx-auto px-4 pt-12 pb-14">
           <div className="text-center mb-2">
@@ -52,7 +49,6 @@ export default async function SizeGuidePage() {
           </section>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

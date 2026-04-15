@@ -1,7 +1,5 @@
 "use client";
 
-import Footer from "@/component/common/Footer";
-import Navbar from "@/component/common/navbar";
 import {
   BlogService,
   type BlogComment,
@@ -106,13 +104,11 @@ export default function BlogDetailPage() {
   if (blogLoading) {
     return (
       <>
-        <Navbar />
         <main className="bg-white">
           <div className="mx-auto max-w-245 px-4 py-10">
             <p className="text-center text-[14px] text-neutral-500">Loading blog...</p>
           </div>
         </main>
-        <Footer />
       </>
     );
   }
@@ -120,7 +116,6 @@ export default function BlogDetailPage() {
   if (!blog) {
     return (
       <>
-        <Navbar />
         <main className="bg-white">
           <div className="mx-auto max-w-245 px-4 py-10">
             <p className="text-center text-[14px] text-neutral-500">
@@ -128,7 +123,6 @@ export default function BlogDetailPage() {
             </p>
           </div>
         </main>
-        <Footer />
       </>
     );
   }
@@ -147,7 +141,6 @@ export default function BlogDetailPage() {
 
   return (
     <>
-      <Navbar />
       <main className="bg-white">
         <div className="mx-auto max-w-245 px-4 py-10">
           {/* Title */}
@@ -359,7 +352,6 @@ export default function BlogDetailPage() {
           </article>
         </div>
       </main>
-      <Footer />
     </>
   );
 }

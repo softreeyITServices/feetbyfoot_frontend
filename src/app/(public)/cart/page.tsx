@@ -1,7 +1,5 @@
 "use client";
 
-import Navbar from "@/component/common/navbar";
-import Footer from "@/component/common/Footer";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -314,7 +312,6 @@ export default function CartBody() {
 
   return (
     <>
-      <Navbar />
 
       <main className="max-w-7xl mx-auto px-6 py-14">
         <h1 className="text-3xl font-semibold mb-10">Cart</h1>
@@ -590,7 +587,6 @@ export default function CartBody() {
         </div>
       </main>
 
-      <Footer />
     </>
   );
 }
