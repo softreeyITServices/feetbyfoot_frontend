@@ -102,12 +102,15 @@ export const startRazorpayCheckout = async ({
     });
     const createdOrderId = extractCreatedOrderId(data);
 
+    console.log("data",data)
+
     const options: RazorpayOptions = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-      amount: data.totalAmount,
+      amount: data.totalAmount * 100, // Razorpay expects amount in paise
       currency: 'INR',
       name: "FeetByFoot",
-      order_id: data.razorpayOrderId,
+      order_id: data.razorpayOrderId
+,
 
       handler: async (response) => {
         try {
