@@ -41,7 +41,7 @@ export default function ProductModalExample() {
         onClose={() => setOpen(false)}
         title="Create Product"
         description="Fill the product details below"
-        size="lg"
+        size="lg" 
         footer={
           <>
             <button
@@ -87,7 +87,6 @@ export default function ProductModalExample() {
               label: "Length",
               type: "select",
               placeholder: "Select length",
-              required: true,
               options: LENGTH_OPTIONS,
               cols: 1,
             },

@@ -2,59 +2,78 @@
 
 import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
-import { ADMIN_EXCHANGES_URL } from "@/constants/apis";
+import { ADMIN_EXCHANGES_URL, API_BASE_URL } from "@/constants/apis";
 
 /* ================= TYPES ================= */
 
 export type ExchangeStatus =
+  | "REQUESTED"
   | "EXCHANGE_REQUESTED"
   | "EXCHANGE_APPROVED"
-  | "REPLACEMENT_SHIPPED";
+  | "REPLACEMENT_SHIPPED"
+  | "EXCHANGE_REJECTED"
+  | "COMPLETED";
 
-/* ---------- Nested Types ---------- */
-
-export type ExchangeLine = {
-  orderItemId: string;
-  productId: string;
-  fromSize: string;
-  toSize: string;
+export type ExchangeDetails = {
+  _id: string;
+  exchangeId: string;
+  oldSize: string;
+  newSize: string;
+  oldColor?: string;
+  newColor?: string;
   quantity: number;
   reason: string;
+  status: string;
+  requestedAt: string;
+  originalItemId: string;
 };
 
-export type Exchange = {
+export type ExchangeItemInfo = {
   _id: string;
-  exchangeId?: string;
-  userId: string;
+  productId?: string;
+  productName: string;
+  productImage: string;
+  productSlug?: string;
+  size: string;
+  color?: string;
+  quantity: number;
+  unitPrice: number;
+  currency: string;
+  status: string;
+};
+
+export type ExchangeEntry = {
+  details: ExchangeDetails;
+  newItem: ExchangeItemInfo;
+  oldItem: ExchangeItemInfo;
+};
+
+export type ExchangeOrder = {
+  _id: string;
+  customerName: string;
   orderId: string;
   orderNumber: string;
-  lines: ExchangeLine[];
-  status: ExchangeStatus;
-  notes: string;
-  rejectReason: string;
-  courierName: string;
-  pickupAwb: string;
-  replacementAwb: string;
-  adminNotes: string;
-  createdAt: string;
-  updatedAt: string;
-  approvedAt?: string;
-  replacementShippedAt?: string;
+  exchanges: ExchangeEntry[];
 };
 
-/* ---------- API Response Types ---------- */
-
 export type ExchangeListResponse = {
-  page: number;
-  limit: number;
-  total: number;
-  data: Exchange[];
+  data: ExchangeOrder[];
+  message: string;
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 };
 
 export type ApiResponse<T> = {
   success: boolean;
   data: T;
 };
+
+/* keep Exchange as a legacy alias so other imports don't break */
+export type Exchange = ExchangeOrder;
 
 /* =========================================================
    SERVICE
@@ -67,12 +86,10 @@ export class ExchangeService {
   ): Promise<ExchangeListResponse> {
     try {
       const query = params
-        ? "?" + new URLSearchParams(params as any).toString()
+        ? "?" + new URLSearchParams(params as Record<string, string>).toString()
         : "";
 
-      const res :any = await httpClient.request<
-        ApiResponse<ExchangeListResponse>
-      >({
+      const res = await httpClient.request<ExchangeListResponse>({
         url: `${ADMIN_EXCHANGES_URL}${query}`,
         method: "GET",
         requiresAuth: true,
@@ -81,6 +98,23 @@ export class ExchangeService {
       return res;
     } catch (error) {
       throw handleApiError(error, "getExchanges");
+    }
+  }
+
+  /* ---------------- EXCHANGE ACTION ---------------- */
+  static async exchangeAction(
+    orderId: string,
+    payload: { itemId: string; action: string; reason?: string }
+  ): Promise<void> {
+    try {
+      await httpClient.request({
+        url: `${API_BASE_URL}/Admin/${orderId}/exchange-action`,
+        method: "POST",
+        data: payload,
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "exchangeAction");
     }
   }
 

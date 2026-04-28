@@ -15,6 +15,11 @@ export interface CartItem {
   }
 }
 
+export interface AppliedFee {
+  name: string;
+  amount: number;
+}
+
 export interface Cart {
   _id: string;
   userId: string;
@@ -22,8 +27,10 @@ export interface Cart {
   discountAmount: number;
   gstAmount: number;
   platformFee: number;
+  appliedFees: AppliedFee[];
   shippingCost: number;
   shippingMethod: string;
+  effectiveSubtotal: number;
   subtotal: number;
   total: number;
   createdAt: string;

@@ -177,7 +177,6 @@ function ProductPage() {
       key: "length",
       label: "Length",
       type: "select",
-      required: true,
       options: [
         { label: "ANKLE", value: "ANKLE" },
         { label: "CALF", value: "CALF" },
@@ -225,7 +224,6 @@ function ProductPage() {
       key: "tags",
       label: "Tags",
       type: "multiselect",
-      required: true,
       options: [
         { label: "Socks", value: "socks" },
         { label: "Crew", value: "crew" },
@@ -315,11 +313,6 @@ function ProductPage() {
     const length = String(values.length ?? "").trim();
     const sizes = normalizeProductSizes(values.sizes);
     const colors = [...new Set(sizes.map((s) => s.color).filter(Boolean))];
-
-    if (!ALLOWED_PRODUCT_LENGTHS.includes(length as (typeof ALLOWED_PRODUCT_LENGTHS)[number])) {
-      toast.error("Length must be ANKLE, CALF, NO_SHOW, or CREW");
-      return;
-    }
 
     if (sizes.length === 0) {
       toast.error("Add at least one valid size with quantity greater than 0");

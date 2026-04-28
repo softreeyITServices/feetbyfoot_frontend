@@ -38,6 +38,8 @@ export default function CartBody() {
   const dispatch = useAppDispatch();
   const items = useAppSelector((state) => state.cart.items);
 
+  console.log("items", items)
+
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedShippingId, setSelectedShippingId] =
     useState<string | null>(null);

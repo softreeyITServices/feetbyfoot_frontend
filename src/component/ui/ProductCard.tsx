@@ -14,6 +14,19 @@ import { wishlistService } from "@/domain/application/services/wishlist.service"
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 
+const COLOR_CSS_MAP: Record<string, string> = {
+  Mint: "#98FF98",
+  Peach: "#FFDAB9",
+  Charcoal: "#36454F",
+  Bronze: "#CD7F32",
+  Mustard: "#FFDB58",
+  Cream: "#FFFDD0",
+};
+
+function colorToCss(name: string): string {
+  return COLOR_CSS_MAP[name] ?? name.toLowerCase();
+}
+
 function ProductCard({
   id,
   imageSrc,
@@ -37,6 +50,7 @@ function ProductCard({
     size: string;
     quantity: number;
     isActive: boolean;
+    color?: string;
   }[];
   altText: string;
   categories: string;
@@ -46,16 +60,29 @@ function ProductCard({
   wishlistSelect?: boolean;
   onWishlistChange?: (id: string, removed: boolean) => void;
 }) {
+  const colors = [...new Set(size.map((s) => s.color).filter(Boolean))] as string[];
+
+  const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [isWishlisted, setIsWishlisted] = useState(wishlistSelect ?? false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [imgError, setImgError] = useState(false);
 
+  const filteredSizes = selectedColor
+    ? size.filter((s) => s.color === selectedColor)
+    : size;
+
   const dispatch = useAppDispatch();
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+
+  const handleColor = (color: string) => {
+    setSelectedColor(color);
+    setSelectedSize(null);
+    setError("");
+  };
 
   const handleSize = (e: string) => {
     setSelectedSize(e);
@@ -80,6 +107,7 @@ function ProductCard({
         price: discountedPrice,
         image: imageSrc,
         size: selectedSize,
+        color: selectedColor ?? undefined,
         quantity: 1,
       })
     );
@@ -182,11 +210,35 @@ function ProductCard({
           </span>
         </div>
 
-        <SizeSelector
-          sizes={size}
-          selectedSize={selectedSize}
-          onSelectSize={handleSize}
-        />
+        {colors.length > 0 && (
+          <div className="mt-3">
+            <p className="text-sm font-medium mb-2">SELECT COLOR</p>
+            <div className="flex flex-wrap gap-2">
+              {colors.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  title={color}
+                  onClick={() => handleColor(color)}
+                  className={`w-6 h-6 rounded-full border-2 transition-all ${
+                    selectedColor === color
+                      ? "border-black scale-110"
+                      : "border-transparent hover:border-gray-400"
+                  }`}
+                  style={{ backgroundColor: colorToCss(color) }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-3">
+          <SizeSelector
+            sizes={filteredSizes}
+            selectedSize={selectedSize}
+            onSelectSize={handleSize}
+          />
+        </div>
 
         <span className="text-red-500 text-sm">{error}</span>
 

@@ -123,6 +123,9 @@ class ProductService {
       skipAuth: true,
     });
 
+    console.log("products", response );
+
+
     console.log("[productService.getPublicProducts] raw response type:", typeof response);
     console.log("[productService.getPublicProducts] raw response keys:", response && typeof response === "object" ? Object.keys(response) : response);
     console.log("[productService.getPublicProducts] raw response:", JSON.stringify(response)?.slice(0, 500));

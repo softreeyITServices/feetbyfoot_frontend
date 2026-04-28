@@ -19,16 +19,59 @@ interface ExchangeModalProps {
   onSuccess: () => void;
 }
 
-/** Sizes the product still offers in stock, excluding the size already on this line. */
-function exchangeSizeOptions(item: OrderItem | undefined) {
+const COLOR_CSS_MAP: Record<string, string> = {
+  Mint: "#98FF98",
+  Peach: "#FFDAB9",
+  Charcoal: "#36454F",
+  Bronze: "#CD7F32",
+  Mustard: "#FFDB58",
+  Cream: "#FFFDD0",
+};
+
+function colorToCss(name: string): string {
+  return COLOR_CSS_MAP[name] ?? name.toLowerCase();
+}
+
+/** All unique active sizes from the product (including the item's current size). */
+function exchangeSizeOptions(item: OrderItem | undefined): string[] {
   if (!item?.product?.sizes?.length) return [];
   const seen = new Set<string>();
-  return item.product.sizes.filter((s) => {
-    if (!s.isActive || s.quantity <= 0 || s.size === item.size) return false;
-    if (seen.has(s.size)) return false;
+  const result: string[] = [];
+  for (const s of item.product.sizes) {
+    if (!s.isActive || s.quantity <= 0) continue;
+    if (seen.has(s.size)) continue;
     seen.add(s.size);
-    return true;
-  });
+    result.push(s.size);
+  }
+  return result;
+}
+
+/** Unique active colors for a given size (or all sizes if forSize is empty). */
+function exchangeColorOptions(
+  item: OrderItem | undefined,
+  forSize: string
+): string[] {
+  if (!item?.product?.sizes?.length) return [];
+  const pool = forSize
+    ? item.product.sizes.filter((s) => s.size === forSize)
+    : item.product.sizes;
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const s of pool) {
+    if (!s.isActive || s.quantity <= 0 || !s.color) continue;
+    if (seen.has(s.color)) continue;
+    seen.add(s.color);
+    result.push(s.color);
+  }
+  return result;
+}
+
+function isItemExchangeable(item: OrderItem): boolean {
+  if (item.status !== "DELIVERED") return false;
+  if (item.exchangeRequests && item.exchangeRequests.length > 0) return false;
+  const hasSizes = exchangeSizeOptions(item).length > 0;
+  const hasColors = exchangeColorOptions(item, "").length > 0;
+  return hasSizes || hasColors;
 }
 
 export default function ExchangeModal({
@@ -39,51 +82,78 @@ export default function ExchangeModal({
 }: ExchangeModalProps) {
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [newSize, setNewSize] = useState<string>("");
+  const [newColor, setNewColor] = useState<string>("");
   const [reason, setReason] = useState<string>("Size too small");
+  const [notes, setNotes] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notes, setNotes] = useState<string>("");
 
-  const selectedItem = order.items.find(
-    (item) => item._id === selectedItemId
-  );
-
+  const selectedItem = order.items.find((item) => item._id === selectedItemId);
   const orderId = order.orderId;
 
   const sizeChoices = exchangeSizeOptions(selectedItem);
+  // When a new size is chosen show colors for that size; otherwise show all product colors
+  const colorChoices = exchangeColorOptions(selectedItem, newSize);
+
+  const handleSelectItem = (itemId: string) => {
+    setSelectedItemId(itemId);
+    setNewSize("");
+    setNewColor("");
+    setError(null);
+  };
+
+  const handleSelectSize = (size: string) => {
+    setNewSize(size);
+    setNewColor(""); // reset color when size changes so choices refresh
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedItemId || !newSize.trim()) {
-      setError("Please select an item and new size");
-      return;
-    }
-
     if (!selectedItem) {
-      setError("Selected item not found");
+      setError("Please select an item to exchange");
       return;
     }
 
-    const toSize = newSize.trim();
+    if (!newSize.trim()) {
+      setError("Please select a size");
+      return;
+    }
+
+    if (!newColor.trim()) {
+      setError("Please select a color");
+      return;
+    }
+
+    const resolvedOldColor = selectedItem.color || "";
+
+    const unchanged =
+      newSize === selectedItem.size &&
+      newColor === resolvedOldColor;
+
+    if (unchanged) {
+      setError("Please select a different size or color from your current one");
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
       await ordersService.exchangeItems({
-        orderId: orderId,
+        orderId,
         lines: [
           {
             orderItemId: selectedItem._id,
-            productId: selectedItem.productId,
             reason,
-            fromSize: selectedItem.size,
-            toSize,
+            oldSize: selectedItem.size,
+            newSize: newSize,
+            oldColor: resolvedOldColor,
+            newColor: newColor,
             quantity: 1,
           },
         ],
-        notes: notes,
+        notes,
       });
 
       onSuccess();
@@ -92,36 +162,28 @@ export default function ExchangeModal({
         err instanceof Error
           ? err.message
           : "Failed to exchange item. Please try again.";
-      const simple = /not available/i.test(raw)
-        ? "That size is not available for this item. Choose a different size."
-        : raw;
-      setError(simple);
+      setError(
+        /not available/i.test(raw)
+          ? "That size/color is not available. Please choose another."
+          : raw
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleClose = () => {
-    if (!loading) {
-      setSelectedItemId("");
-      setNewSize("");
-      setReason("Size too small");
-      setNotes("");
-      setError(null);
-      onClose();
-    }
+    if (loading) return;
+    setSelectedItemId("");
+    setNewSize("");
+    setNewColor("");
+    setReason("Size too small");
+    setNotes("");
+    setError(null);
+    onClose();
   };
 
-  const hasEligibleItems = order.items.some((item) => {
-    const noPendingExchange =
-      !item.exchangeRequests || item.exchangeRequests.length === 0;
-    return (
-      item.status === "DELIVERED" &&
-      noPendingExchange &&
-      exchangeSizeOptions(item).length > 0
-    );
-  });
-
+  const hasEligibleItems = order.items.some(isItemExchangeable);
 
   return (
     <Modal open={open} onClose={handleClose} title="Exchange Item">
@@ -141,29 +203,21 @@ export default function ExchangeModal({
 
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {order.items.map((item) => {
-              const isDelivered = item.status === "DELIVERED";
+              const exchangeable = isItemExchangeable(item);
               const isExchangeRequested = item.status === "EXCHANGE_REQUESTED";
-
-              const isExchangeable =
-                isDelivered &&
-                !isExchangeRequested &&
-                (!item.exchangeRequests || item.exchangeRequests.length === 0) &&
-                exchangeSizeOptions(item).length > 0;
 
               return (
                 <label
                   key={item._id}
-                  className={`
-        border rounded-lg p-3 flex gap-3 transition relative
-        ${selectedItemId === item._id
+                  className={`border rounded-lg p-3 flex gap-3 transition relative
+                    ${selectedItemId === item._id
                       ? "border-blue-600 bg-blue-50"
                       : isExchangeRequested
                         ? "border-yellow-400 bg-yellow-50"
                         : "border-gray-200"}
-        ${isExchangeable
+                    ${exchangeable
                       ? "cursor-pointer hover:border-blue-400"
-                      : "opacity-80 cursor-not-allowed"}
-      `}
+                      : "opacity-80 cursor-not-allowed"}`}
                 >
                   <input
                     type="radio"
@@ -171,11 +225,10 @@ export default function ExchangeModal({
                     value={item._id}
                     checked={selectedItemId === item._id}
                     onChange={() => {
-                      if (!isExchangeable || loading) return;
-                      setSelectedItemId(item._id);
-                      setNewSize("");
+                      if (!exchangeable || loading) return;
+                      handleSelectItem(item._id);
                     }}
-                    disabled={!isExchangeable || loading}
+                    disabled={!exchangeable || loading}
                     className="hidden"
                   />
 
@@ -188,42 +241,36 @@ export default function ExchangeModal({
                   />
 
                   <div className="flex-1">
-                    <div className="font-medium text-sm">
-                      {item.productName}
-                    </div>
-
+                    <div className="font-medium text-sm">{item.productName}</div>
                     <div className="text-xs text-gray-500">
                       Size: {item.size}
+                      {item.color ? ` · Color: ${item.color}` : ""}
                     </div>
 
-                    <div className="mt-1 flex flex-wrap gap-2 ">
+                    <div className="mt-1 flex flex-wrap gap-2">
                       {isExchangeRequested ? (
                         <div className="mt-1 flex justify-between items-center w-full">
                           <span className="text-xs px-2 py-1 rounded-full bg-yellow-200 text-yellow-800 w-fit">
                             Exchange Requested
                           </span>
-
-                          {item.exchangeRequests && item.exchangeRequests[0].requestedAt && (
+                          {item.exchangeRequests?.[0]?.requestedAt && (
                             <div className="text-xs text-gray-500">
                               Requested on{" "}
-                              {new Date(
-                                item.exchangeRequests[0].requestedAt
-                              ).toLocaleDateString()}
+                              {new Date(item.exchangeRequests[0].requestedAt).toLocaleDateString()}
                             </div>
                           )}
                         </div>
-                      ) : <span className="text-xs px-2 py-1 rounded-full bg-gray-100">
-                        {item.status}
-                      </span>}
+                      ) : (
+                        <span className="text-xs px-2 py-1 rounded-full bg-gray-100">
+                          {item.status}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Exchange Info Section */}
                     {isExchangeRequested && item.exchangeRequests && (
                       <div className="mt-2 p-2 bg-white border border-yellow-200 rounded text-xs text-gray-700">
-                        <div>
-                          <span className="font-medium">Reason:</span>{" "}
-                          {item.exchangeRequests[0].reason}
-                        </div>
+                        <span className="font-medium">Reason:</span>{" "}
+                        {item.exchangeRequests[0].reason}
                       </div>
                     )}
                   </div>
@@ -233,38 +280,96 @@ export default function ExchangeModal({
           </div>
         </div>
 
-        {/* Select New Size */}
+        {/* Size & Color selectors */}
         {selectedItemId && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              New Size (Current: {selectedItem?.size})
-            </label>
+          <>
+            {/* New Size */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                New Size{" "}
+                <span className="text-gray-400 font-normal">
+                  (Current: {selectedItem?.size})
+                </span>
+              </label>
 
-            {sizeChoices.length > 0 ? (
-              <div className="grid grid-cols-3 gap-2">
-                {sizeChoices.map(({ size }) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setNewSize(size)}
-                    disabled={loading}
-                    className={`
-                    px-4 py-2 rounded-md text-sm font-medium transition-all
-                    ${newSize === size
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
-                  `}
-                  >
-                    {size}
-                  </button>
-                ))}
+              {sizeChoices.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {sizeChoices.map((size) => {
+                    const isCurrent = size === selectedItem?.size;
+                    const isSelected = newSize === size;
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => handleSelectSize(size)}
+                        disabled={loading}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all relative
+                          ${isSelected
+                            ? "bg-blue-600 text-white"
+                            : isCurrent
+                              ? "bg-gray-200 text-gray-700 ring-1 ring-gray-400 hover:bg-gray-300"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                      >
+                        {size}
+                        {isCurrent && (
+                          <span className="absolute -top-1.5 -right-1.5 text-[9px] bg-gray-500 text-white rounded-full px-1">
+                            now
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No sizes available.</p>
+              )}
+            </div>
+
+            {/* New Color */}
+            {colorChoices.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New Color{" "}
+                  {selectedItem?.color && (
+                    <span className="text-gray-400 font-normal">
+                      (Current: {selectedItem.color})
+                    </span>
+                  )}
+                </label>
+
+                <div className="flex flex-wrap gap-3">
+                  {colorChoices.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      title={color}
+                      onClick={() =>
+                        setNewColor((prev) => (prev === color ? "" : color))
+                      }
+                      disabled={loading}
+                      className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center
+                        ${newColor === color
+                          ? "border-blue-600 scale-110 ring-2 ring-blue-300"
+                          : color === selectedItem?.color
+                            ? "border-gray-400 opacity-60"
+                            : "border-transparent hover:border-gray-400"}`}
+                      style={{ backgroundColor: colorToCss(color) }}
+                    >
+                      {newColor === color && (
+                        <span className="text-white text-xs font-bold drop-shadow">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {newColor && (
+                  <p className="mt-1 text-xs text-blue-600">
+                    Selected: {newColor}
+                  </p>
+                )}
               </div>
-            ) : (
-              <p className="text-sm text-gray-500">
-                No other sizes are in stock for this item.
-              </p>
             )}
-          </div>
+          </>
         )}
 
         {/* Reason */}
@@ -281,6 +386,7 @@ export default function ExchangeModal({
           >
             <option value="Size too small">Size too small</option>
             <option value="Size too large">Size too large</option>
+            <option value="Wrong color received">Wrong color received</option>
             <option value="Wrong item received">Wrong item received</option>
             <option value="Defective product">Defective product</option>
             <option value="Other">Other</option>
@@ -322,7 +428,7 @@ export default function ExchangeModal({
 
           <button
             type="submit"
-            disabled={loading || !selectedItemId || !newSize.trim()}
+            disabled={loading || !selectedItemId || (!newSize && !newColor)}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? "Processing..." : "Submit Exchange"}

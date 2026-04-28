@@ -46,9 +46,9 @@ export function useCartSync() {
         }
 
         const dbCart = await cartService.getCart();
+        console.log("dbCart", dbCart);
 
         dispatch(setCart(mapCartApiResponseToRedux(dbCart)));
-
       } catch (error) {
         console.error("Cart sync failed:", error);
       }

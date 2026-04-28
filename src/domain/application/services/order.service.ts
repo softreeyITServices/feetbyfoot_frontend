@@ -2,7 +2,6 @@ import { httpClient } from "@/lib/httpClient";
 import { handleApiError } from "@/lib/serviceErrorHandler";
 import {
   ALL_ORDERS_URL,
-  EXCHANGE_URL,
   RETURN_URL,
   ADMIN_ORDER_STATUS_URL,
   ADMIN_ORDER_COD_PAYMENT_STATUS_URL,
@@ -10,6 +9,7 @@ import {
   ORDER_ADMIN_DOWNLOAD_PDF_URL,
   orderAdminSingleDownloadPdfUrl,
   orderCustomerDownloadPdfUrl,
+  orderItemExchangeUrl,
   API_BASE_URL,
 } from "@/constants/apis";
 
@@ -66,11 +66,24 @@ class OrdersService {
     payload: ExchangeRequestPayload,
   ): Promise<GenericMessageResponse> {
     try {
+      const [line] = payload.lines;
+
+      if (!payload.orderId || !line?.orderItemId) {
+        throw new Error("Missing orderId or orderItemId for exchange request");
+      }
+
       const response = await httpClient.request<GenericMessageResponse>({
-        url: EXCHANGE_URL,
+        url: orderItemExchangeUrl(payload.orderId, line.orderItemId),
         method: "POST",
         requiresAuth: true,
-        data: payload,
+        data: {
+          reason: line.reason,
+          oldSize: line.oldSize,
+          newSize: line.newSize,
+          oldColor: line.oldColor,
+          newColor: line.newColor,
+          quantity: line.quantity,
+        },
       });
 
       return response;

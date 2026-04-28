@@ -3,7 +3,7 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 const EXTERNAL_API_BASE_URL = process.env.API_URL;
 
 
-export const REGISTER_URL = API_BASE_URL + "/auth/register";
+export const REGISTER_URL = API_BASE_URL + "/auth/signup";
 // export const LOGIN_URL = API_BASE_URL + "/auth/login"; // verify otp
 
 export const LOGOUT_URL = API_BASE_URL + "/auth/logout";
@@ -83,8 +83,8 @@ export const ADMIN_RETURN_URL = API_BASE_URL + "/orders/admin/return";
 export const ADMIN_ORDER_STATUS_URL = API_BASE_URL + "/orders/status";
 /** Admin COD payment status → proxies to `PATCH .../Orders/cod-payment-status` */
 export const ADMIN_ORDER_COD_PAYMENT_STATUS_URL =
-  API_BASE_URL + "/orders/admin/cod-payment-status";
-export const ADMIN_EXCHANGES_URL = API_BASE_URL + "/admin/exchanges";
+  API_BASE_URL + "/Orders/cod-payment-status";
+export const ADMIN_EXCHANGES_URL = API_BASE_URL + "/Admin/order/exchanges";
 export const ADMIN_UPLOAD_URL = API_BASE_URL + "/upload";
 export const BLOG_COMMENTS_URL = API_BASE_URL + "/blog-comments";
 export const ADMIN_CUSTOMERS_URL = API_BASE_URL + "/admin/customers";
@@ -174,6 +174,23 @@ export function exOrderAdminSingleDownloadPdfUrl(orderMongoId: string): string {
 }
 
 export const EX_EXCHANGE_URL = EXTERNAL_API_BASE_URL + "/user/order/exchange";
+
+export function orderItemExchangeUrl(orderId: string, itemId: string): string {
+  return `${API_BASE_URL}/orders/${encodeURIComponent(orderId)}/items/${encodeURIComponent(itemId)}/exchange`;
+}
+
+export function exOrderItemExchangeUrl(orderId: string, itemId: string): string {
+  return `${exApiV1Base()}/Orders/${encodeURIComponent(orderId)}/items/${encodeURIComponent(itemId)}/exchange`;
+}
+
+export function adminOrderExchangeActionUrl(orderId: string): string {
+  return `${API_BASE_URL}/admin/orders/${encodeURIComponent(orderId)}/exchange-action`;
+}
+
+export function exAdminOrderExchangeActionUrl(orderId: string): string {
+  return `${exApiV1Base()}/Admin/${encodeURIComponent(orderId)}/exchange-action`;
+}
+
 export const EX_RETURN_URL = EXTERNAL_API_BASE_URL + "/user/order/return";
 export const EX_CANCEL_UPDATE_ORDER_URL = EXTERNAL_API_BASE_URL + "/user/orders";
 export const EX_UPDATE_PROFILE_URL = EXTERNAL_API_BASE_URL + "/auth/profile";

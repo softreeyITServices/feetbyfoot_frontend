@@ -10,10 +10,11 @@ import {
 
 class CartService {
   /* ---------------- GET CART ---------------- */
-  async getCart(): Promise<CartResponse> {
+  async getCart(paymentMethod?: string): Promise<CartResponse> {
     try {
+      const url = paymentMethod ? `${CART_URL}?paymentMethod=${encodeURIComponent(paymentMethod)}` : CART_URL;
       const response = await httpClient.request<CartResponse>({
-        url: CART_URL,
+        url,
         method: "GET",
         requiresAuth: true,
       });

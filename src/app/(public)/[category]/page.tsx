@@ -161,6 +161,8 @@ export default async function CategoryPage({
   const { products, total, totalPages } = await productService.getPublicProducts({
     // If the URL doesn't explicitly include gender, default to the route's config.gender.
     // This prevents /mens, /womens, /kids from all showing the same unfiltered product list.
+ 
+
     gender:
       resolvedSearchParams.gender !== undefined
         ? toArray(resolvedSearchParams.gender)
@@ -179,6 +181,8 @@ export default async function CategoryPage({
       : undefined,
     packTypes: toArray(resolvedSearchParams.packType).map((v) => v === "true"),
   });
+
+
 
   // FIX 2: build a base query string that preserves all current filters
   const buildPageHref = (pageNum: number) => {
@@ -211,6 +215,8 @@ export default async function CategoryPage({
       sectionBanners = [];
     }
   }
+
+
 
   return (
     <main className="w-full">

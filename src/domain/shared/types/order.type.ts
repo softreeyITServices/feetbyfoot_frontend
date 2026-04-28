@@ -64,6 +64,7 @@ export interface PaginatedOrdersResponse {
 /* ---------------- PRODUCT SNAPSHOT ---------------- */
 
 export interface ProductSize {
+  color?: string;
   size: string;
   quantity: number;
   isActive: boolean;
@@ -106,6 +107,7 @@ export interface OrderItem {
   productName: string;
   productImage: string;
   productSlug: string;
+  color?: string;
   size: string;
   quantity: number;
   unitPrice: number;
@@ -206,10 +208,11 @@ export interface UpdateOrderStatusResponse {
 
 export type ExchangeItemPayload = {
   orderItemId: string;
-  productId: string;
   reason: string;
-  toSize: string;
-  fromSize: string;
+  oldSize: string;
+  newSize: string;
+  oldColor?: string;
+  newColor?: string;
   quantity: number;
 };
 

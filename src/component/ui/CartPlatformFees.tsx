@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { PlatformFee } from "@/domain/shared/types/platform-fee.type";
-import { platformFeesService } from "@/domain/application/services/platformFees.service";
+import { useEffect, useState } from "react";
+import { AppliedFee } from "@/domain/shared/types/cart.type";
 import { CheckoutPaymentMethod } from "@/lib/payments/razorpay/razorpay.client";
+import { cartService } from "@/domain/application/services/cart.service";
 
 type Props = {
   subtotal: number;
@@ -22,92 +22,71 @@ export default function CartPlatformFees({
   onPaymentMethodChange,
   isCheckoutInProgress = false,
 }: Props) {
-  const [fees, setFees] = useState<PlatformFee[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [appliedFees, setAppliedFees] = useState<AppliedFee[]>([]);
+  const [platformFee, setPlatformFee] = useState<number>(0);
+  const [cartLoading, setCartLoading] = useState(false);
   const hasCartItems = subtotal > 0;
 
-  /* ---------------- FETCH ACTIVE PLATFORM FEES ---------------- */
+  /* ---------------- FETCH CART WITH PAYMENT METHOD ---------------- */
   useEffect(() => {
-    const fetchFees = async () => {
+    if (!hasCartItems) return;
+
+    const fetchCartPricing = async () => {
       try {
-        setLoading(true);
-        const response = await platformFeesService.getActive();
-        setFees(response ?? []);
+        setCartLoading(true);
+        const response: any = await cartService.getCart(paymentMethod);
+        const cart = response?.data;
+        console.log("cart", cart);
+        setAppliedFees(cart?.appliedFees ?? []);
+        setPlatformFee(cart?.platformFee ?? 0);
       } finally {
-        setLoading(false);
+        setCartLoading(false);
       }
     };
 
-    fetchFees();
-  }, []);
+    fetchCartPricing();
+  }, [paymentMethod, hasCartItems]);
 
-  /* ---------------- CALCULATE FEES ---------------- */
-  const calculatedFees = useMemo(() => {
-    if (!hasCartItems) return [];
-
-    return fees.map((fee) => {
-      let amount = 0;
-
-      const meetsMin =
-        !fee.MinAmount || subtotal <= fee.MinAmount;
-
-      if (!meetsMin) return { ...fee, calculatedAmount: 0 };
-
-      if (fee.percentage && fee.percentage > 0) {
-        amount = (subtotal * fee.percentage) / 100;
-      } else if (fee.amount && fee.amount > 0) {
-        amount = fee.amount;
-      }
-
-      return { ...fee, calculatedAmount: amount };
-    });
-  }, [fees, subtotal, hasCartItems]);
-
-  const totalPlatformFees = useMemo(() => {
-    return calculatedFees.reduce(
-      (sum, fee) => sum + fee.calculatedAmount,
-      0
-    );
-  }, [calculatedFees]);
-
-  const totalBeforeDiscount = subtotal + totalPlatformFees;
-  const finalTotal = totalBeforeDiscount - discount;
+  const finalTotal = subtotal + platformFee - discount;
 
   return (
     <div className="bg-gray-50 p-6 rounded-lg h-fit">
-      <h2 className="text-lg font-semibold mb-3">
-        Basket Totals
-      </h2>
+      <h2 className="text-lg font-semibold mb-3">Basket Totals</h2>
 
       <div className="flex justify-between text-sm mb-4 border-t pt-6 border-gray-300">
         <span>Subtotal</span>
         <span>₹{subtotal.toFixed(2)}</span>
       </div>
 
-      {/* Platform Fees */}
+      {/* Platform Fees — skeleton while cart pricing loads */}
       {hasCartItems && (
         <div className="border-t pt-4 border-gray-300">
-          <p className="text-sm font-medium mb-3">
-            Platform Charges
-          </p>
+          <p className="text-sm font-medium mb-3">Platform Charges</p>
 
-          {loading && (
-            <p className="text-xs text-gray-500">
-              Loading fees...
-            </p>
-          )}
-
-          {calculatedFees.map((fee) => (
-            <div
-              key={fee._id}
-              className="flex justify-between text-sm mb-2"
-            >
-              <span>{fee.name}</span>
-              <span>
-                ₹{fee.calculatedAmount.toFixed(2)}
-              </span>
+          {cartLoading ? (
+            <div className="space-y-2 animate-pulse">
+              <div className="flex justify-between">
+                <div className="h-4 bg-gray-200 rounded w-32" />
+                <div className="h-4 bg-gray-200 rounded w-14" />
+              </div>
+              <div className="flex justify-between">
+                <div className="h-4 bg-gray-200 rounded w-24" />
+                <div className="h-4 bg-gray-200 rounded w-14" />
+              </div>
             </div>
-          ))}
+          ) : platformFee === 0 ? (
+            <div className="flex justify-between text-sm mb-2">
+              <span>Platform Fee</span>
+              <span className="text-green-600 font-medium">Free</span>
+            </div>
+          ) : (
+            appliedFees.map((fee, i) => (
+              <div key={i} className="flex justify-between text-sm mb-2">
+                <span>{fee.name}</span>
+                <span>₹{fee.amount.toFixed(2)}</span>
+              </div>
+            ))
+          )}
         </div>
       )}
 
@@ -122,9 +101,11 @@ export default function CartPlatformFees({
       {/* Total */}
       <div className="border-t mt-6 pt-4 flex justify-between items-center border-gray-300">
         <p className="font-semibold">Total</p>
-        <p className="text-xl font-semibold">
-          ₹{finalTotal.toFixed(2)}
-        </p>
+        {cartLoading ? (
+          <div className="h-7 bg-gray-200 rounded w-24 animate-pulse" />
+        ) : (
+          <p className="text-xl font-semibold">₹{finalTotal.toFixed(2)}</p>
+        )}
       </div>
 
       <div className="border-t mt-6 pt-4">

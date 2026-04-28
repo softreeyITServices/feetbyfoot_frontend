@@ -14,6 +14,7 @@ export type CartItem = {
   image: string;
   price: string | number;
   size: string;
+  color?: string;
   quantity: number;
 };
 
@@ -38,6 +39,7 @@ export const addToCartAsync = createAsyncThunk(
       name: string;
       image: string;
       price: string | number;
+      color?: string;
     }
   ) => {
     const normalizedSize = payload.size?.trim();
@@ -173,6 +175,7 @@ const cartSlice = createSlice({
           price: action.payload.price,
           image: action.payload.image,
           size: action.payload.size,
+          color: action.payload.color,
           quantity: action.payload.quantity,
         });
       }
