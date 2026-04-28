@@ -1,4 +1,4 @@
-// src/app/api/admin/exchanges/route.ts
+// src/app/api/orders/admin/exchanges/route.ts
 
 import {
   apiHandler,
@@ -7,8 +7,13 @@ import {
 } from "@/lib/apiHandler";
 import { httpClient } from "@/lib/httpClient";
 import { isHttpClientError } from "@/lib/httpClientError";
-import { EX_ADMIN_EXCHANGE_URL } from "@/constants/apis";
 import { NextRequest } from "next/server";
+
+// ✅ Correct backend route — reads from Orders' embedded exchangeRequests.
+// The /admin/exchanges route (ExchangesAdminController) reads from a
+// separate Exchange collection that is currently empty.
+const EX_EXCHANGES_URL =
+  (process.env.API_URL ?? "") + "/Admin/order/exchanges";
 
 export const GET = apiHandler(async (req: NextRequest) => {
   try {
@@ -19,7 +24,7 @@ export const GET = apiHandler(async (req: NextRequest) => {
     const query = searchParams.toString();
 
     const response = await httpClient.request({
-      url: `${EX_ADMIN_EXCHANGE_URL}?${query}`,
+      url: `${EX_EXCHANGES_URL}?${query}`,
       method: "GET",
       headers: {
         Authorization: authorization || "",

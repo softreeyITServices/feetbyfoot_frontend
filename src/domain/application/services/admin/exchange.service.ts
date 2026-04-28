@@ -57,7 +57,7 @@ export type ExchangeOrder = {
 };
 
 export type ExchangeListResponse = {
-  data: ExchangeOrder[];
+  data: any;
   message: string;
   meta: {
     page: number;

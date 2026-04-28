@@ -33,12 +33,19 @@ type PendingAction =
 /* ================= STATUS STYLE ================= */
 
 const STATUS_STYLE: Record<string, string> = {
-  REQUESTED: "bg-yellow-50 text-yellow-700 border border-yellow-200",
-  EXCHANGE_REQUESTED: "bg-yellow-50 text-yellow-700 border border-yellow-200",
-  EXCHANGE_APPROVED: "bg-blue-50 text-blue-700 border border-blue-200",
+  // Short form (from embedded exchangeRequests in Order)
+  REQUESTED:        "bg-yellow-50 text-yellow-700 border border-yellow-200",
+  APPROVED:         "bg-blue-50 text-blue-700 border border-blue-200",
+  REJECTED:         "bg-red-50 text-red-700 border border-red-200",
+  COMPLETED:        "bg-green-50 text-green-700 border border-green-200",
+  // Long form (from standalone Exchange collection)
+  EXCHANGE_REQUESTED:  "bg-yellow-50 text-yellow-700 border border-yellow-200",
+  EXCHANGE_APPROVED:   "bg-blue-50 text-blue-700 border border-blue-200",
   REPLACEMENT_SHIPPED: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-  EXCHANGE_REJECTED: "bg-red-50 text-red-700 border border-red-200",
-  COMPLETED: "bg-green-50 text-green-700 border border-green-200",
+  EXCHANGE_REJECTED:   "bg-red-50 text-red-700 border border-red-200",
+  PICKUP_CREATED:      "bg-indigo-50 text-indigo-700 border border-indigo-200",
+  REPLACEMENT_CREATED: "bg-purple-50 text-purple-700 border border-purple-200",
+  EXCHANGE_RECEIVED:   "bg-teal-50 text-teal-700 border border-teal-200",
 };
 
 /* ================= ACTION DROPDOWN ================= */
@@ -211,7 +218,7 @@ function ExchangePage() {
       label: "Product",
       render: (row) => (
         <div className="flex items-center gap-2">
-          {row.oldItem?.productImage && (
+          {row.oldItem && typeof row.oldItem === 'object' && row.oldItem.productImage?.startsWith('http') && (
             <Image
               src={row.oldItem.productImage}
               alt={row.oldItem.productName}
@@ -220,7 +227,7 @@ function ExchangePage() {
               className="rounded object-cover"
             />
           )}
-          <span className="text-xs">{row.oldItem?.productName}</span>
+          <span className="text-xs">{typeof row.oldItem === 'object' ? row.oldItem?.productName : '—'}</span>
         </div>
       ),
     },
@@ -364,7 +371,7 @@ function ExchangePage() {
             <div>
               <p className="font-semibold mb-2">Original Item</p>
               <div className="border rounded-lg p-3 flex gap-3">
-                {selected.oldItem?.productImage && (
+                {selected.oldItem && typeof selected.oldItem === 'object' && selected.oldItem.productImage?.startsWith('http') && (
                   <Image
                     src={selected.oldItem.productImage}
                     alt={selected.oldItem.productName}
@@ -387,7 +394,7 @@ function ExchangePage() {
             <div>
               <p className="font-semibold mb-2">Replacement Item</p>
               <div className="border rounded-lg p-3 flex gap-3">
-                {selected.newItem?.productImage && (
+                {selected.newItem && typeof selected.newItem === 'object' && selected.newItem.productImage?.startsWith('http') && (
                   <Image
                     src={selected.newItem.productImage}
                     alt={selected.newItem.productName}

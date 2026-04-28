@@ -241,7 +241,7 @@ export function DataTable<T extends { id: string | number }>({
 
               {columns.map((col) => (
                 <th
-                  key={String(col.key)}
+                  key={`${String(col.key)}-${col.label}`}
                   onClick={() => col.sortable && handleSort(col.key)}
                   className="px-4 py-3 text-left text-[11px] font-semibold text-neutral-500 uppercase tracking-wider"
                 >
@@ -280,7 +280,7 @@ export function DataTable<T extends { id: string | number }>({
                 )}
 
                 {columns.map((col) => (
-                  <td key={String(col.key)} className="px-4 py-3 text-xs">
+                  <td key={`${String(col.key)}-${col.label}`} className="px-4 py-3 text-xs">
                     {col.render
                       ? col.render(row)
                       : String(row[col.key] ?? "—")}

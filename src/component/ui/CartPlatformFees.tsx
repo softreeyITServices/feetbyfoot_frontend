@@ -36,7 +36,6 @@ export default function CartPlatformFees({
         setCartLoading(true);
         const response: any = await cartService.getCart(paymentMethod);
         const cart = response?.data;
-        console.log("cart", cart);
         setAppliedFees(cart?.appliedFees ?? []);
         setPlatformFee(cart?.platformFee ?? 0);
       } finally {
