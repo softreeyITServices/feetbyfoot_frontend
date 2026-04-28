@@ -11,7 +11,7 @@ import { openCart, closeCart } from "@/store/slices/ui.slice";
 import { WishlistIcon } from "@/icons/WishlistIcon";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { productService } from "@/domain/application/services/product.service";
 import type { MenuCategory, MenuGroup } from "@/domain/shared/types/product.type";
 import {
@@ -55,7 +55,7 @@ function DesktopMegaNav({
         const primary = groupPrimaryHref(g);
         const groupActive = isGroupPathActive(pathname, g);
         const headerOnly = groupIsHeaderOnly(g);
-        const groupLabelClass = `text-[12px] tracking-[0.08em] uppercase px-2 lg:px-3 py-2 whitespace-nowrap transition-colors ${
+        const groupLabelClass = `text-xs xl:text-sm tracking-[0.08em] uppercase px-1.5 lg:px-3 py-2 whitespace-nowrap transition-colors ${
           groupActive
             ? "text-black font-semibold"
             : "text-[#555] font-medium hover:text-black"
@@ -107,12 +107,11 @@ function DesktopMegaNav({
               role="region"
               aria-label={`${g.name} categories`}
             >
-              <div className="bg-[#f4f4f4] border-t border-neutral-300 shadow-xl w-full px-8 py-8 h-[360px] overflow-hidden">
-                {/* ✅ KEY FIX: use inline-grid + auto columns so items only take the space they need and align left */}
+              <div className="bg-[#f4f4f4] border-t border-neutral-300 shadow-xl w-full px-4 sm:px-8 py-6 sm:py-8 max-h-[70vh] overflow-y-auto">
                 <div
-                  className="inline-grid gap-6"
+                  className="grid gap-4 sm:gap-6 mx-auto max-w-7xl"
                   style={{
-                    gridTemplateColumns: `repeat(${Math.min(categories.length, 6)}, 160px)`,
+                    gridTemplateColumns: `repeat(auto-fit, minmax(140px, 160px))`,
                   }}
                 >
                   {categories.map((c) => {
@@ -120,40 +119,40 @@ function DesktopMegaNav({
                     const catHeader = categoryIsHeaderOnly(g, c);
                     const catLink = categoryHref(g, c);
                     return (
-                      <div key={c.id} className="w-[160px]">
+                      <div key={c.id} className="min-w-[140px] w-full">
                         {/* Image */}
                         {c.image && (
                           catHeader ? (
-                            <div className="mb-3 overflow-hidden bg-neutral-100">
+                            <div className="mb-3 overflow-hidden bg-neutral-100 rounded">
                               <Image
                                 src={c.image}
                                 width={160}
                                 height={170}
                                 alt={c.name}
-                                className="w-full h-[170px] object-cover"
+                                className="w-full h-[120px] sm:h-[170px] object-cover"
                               />
                             </div>
                           ) : (
-                            <Link href={catLink} className="block mb-3 overflow-hidden bg-neutral-100">
+                            <Link href={catLink} className="block mb-3 overflow-hidden bg-neutral-100 rounded">
                               <Image
                                 src={c.image}
                                 width={160}
                                 height={170}
                                 alt={c.name}
-                                className="w-full h-[170px] object-cover hover:scale-105 transition-transform duration-300"
+                                className="w-full h-[120px] sm:h-[170px] object-cover hover:scale-105 transition-transform duration-300"
                               />
                             </Link>
                           )
                         )}
                         {/* Category name */}
                         {catHeader ? (
-                          <span className="text-[11px] font-bold text-black uppercase tracking-wide block mb-2 cursor-default">
+                          <span className="text-[10px] sm:text-[11px] font-bold text-black uppercase tracking-wide block mb-2 cursor-default">
                             {c.name}
                           </span>
                         ) : (
                           <Link
                             href={catLink}
-                            className="text-[11px] font-bold text-black uppercase tracking-wide hover:underline block mb-2"
+                            className="text-[10px] sm:text-[11px] font-bold text-black uppercase tracking-wide hover:underline block mb-2"
                           >
                             {c.name}
                           </Link>
@@ -165,13 +164,13 @@ function DesktopMegaNav({
                             return (
                               <li key={s.id}>
                                 {subHeader ? (
-                                  <span className="text-xs text-gray-500 cursor-default">
+                                  <span className="text-[11px] sm:text-xs text-gray-500 cursor-default">
                                     {s.name}
                                   </span>
                                 ) : (
                                   <Link
                                     href={subcategoryHref(g, c, s)}
-                                    className="text-xs text-gray-600 hover:text-black"
+                                    className="text-[11px] sm:text-xs text-gray-600 hover:text-black"
                                   >
                                     {s.name}
                                   </Link>
@@ -193,6 +192,192 @@ function DesktopMegaNav({
   );
 }
 
+function MobileMenuDrawer({
+  isOpen,
+  onClose,
+  pathname,
+  megaGroups,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  pathname: string;
+  megaGroups: MenuGroup[];
+}) {
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        className={`fixed inset-0 bg-black/50 z-[70] transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onClose}
+      />
+
+      {/* Drawer */}
+      <div
+        className={`fixed top-0 left-0 h-full w-[85%] max-w-[380px] bg-white z-[80] transform transition-transform duration-300 ease-in-out overflow-y-auto ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="sticky top-0 bg-white border-b border-neutral-200 px-4 py-4 flex items-center justify-between">
+          <Link href="/" onClick={onClose} className="flex items-center gap-2">
+            <Image
+              src="/assets/images/logo.png"
+              alt="Feet by Foot"
+              width={30}
+              height={30}
+            />
+          </Link>
+          <button
+            onClick={onClose}
+            aria-label="Close menu"
+            className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav className="px-4 py-4">
+          {megaGroups.map((g) => {
+            const categories = g.categories ?? [];
+            const hasFlyout = categories.length > 0;
+            const primary = groupPrimaryHref(g);
+            const groupActive = isGroupPathActive(pathname, g);
+            const isExpanded = expandedGroups.has(g.id);
+            const isOutlet = g.name.toLowerCase() === "outlet";
+
+            if (!hasFlyout && !groupIsHeaderOnly(g)) {
+              return (
+                <Link
+                  key={g.id}
+                  href={primary}
+                  onClick={onClose}
+                  className={`block py-3 px-2 text-sm font-medium transition-colors border-b border-neutral-100 ${
+                    isOutlet
+                      ? "text-[#F93A3A]"
+                      : groupActive
+                      ? "text-black"
+                      : "text-gray-700 hover:text-black"
+                  }`}
+                >
+                  {g.name}
+                </Link>
+              );
+            }
+
+            return (
+              <div key={g.id} className="border-b border-neutral-100">
+                <button
+                  onClick={() => (hasFlyout ? toggleGroup(g.id) : null)}
+                  className={`w-full flex items-center justify-between py-3 px-2 text-sm font-medium transition-colors ${
+                    isOutlet
+                      ? "text-[#F93A3A]"
+                      : groupActive
+                      ? "text-black"
+                      : "text-gray-700 hover:text-black"
+                  }`}
+                >
+                  <span>{g.name}</span>
+                  {hasFlyout && (
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
+                    />
+                  )}
+                </button>
+
+                {hasFlyout && (
+                  <div
+                    className={`overflow-hidden transition-all duration-300 ${
+                      isExpanded ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <div className="pl-4 pb-3 space-y-3">
+                      {categories.map((c) => {
+                        const catHeader = categoryIsHeaderOnly(g, c);
+                        const catLink = categoryHref(g, c);
+                        const subs = c.subcategories ?? [];
+
+                        return (
+                          <div key={c.id}>
+                            {catHeader ? (
+                              <span className="block py-2 text-xs font-semibold uppercase text-gray-800">
+                                {c.name}
+                              </span>
+                            ) : (
+                              <Link
+                                href={catLink}
+                                onClick={onClose}
+                                className="block py-2 text-xs font-semibold uppercase text-gray-800 hover:text-black"
+                              >
+                                {c.name}
+                              </Link>
+                            )}
+                            {subs.length > 0 && (
+                              <ul className="pl-3 space-y-1">
+                                {subs.map((s) => {
+                                  const subHeader = subcategoryIsHeaderOnly(g, s);
+                                  return (
+                                    <li key={s.id}>
+                                      {subHeader ? (
+                                        <span className="block py-1 text-[11px] text-gray-400">
+                                          {s.name}
+                                        </span>
+                                      ) : (
+                                        <Link
+                                          href={subcategoryHref(g, c, s)}
+                                          onClick={onClose}
+                                          className="block py-1 text-[11px] text-gray-500 hover:text-black"
+                                        >
+                                          {s.name}
+                                        </Link>
+                                      )}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+      </div>
+    </>
+  );
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -203,6 +388,7 @@ export default function Navbar() {
   const searchRef = useRef<HTMLFormElement | null>(null);
   const [megaMenuReady, setMegaMenuReady] = useState(false);
   const [megaGroups, setMegaGroups] = useState<MenuGroup[]>([]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const cartItems = useAppSelector((state) => state.cart.items);
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -252,6 +438,11 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [searchOpen]);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   const handleCart = (e: React.MouseEvent) => {
     e.preventDefault();
     dispatch(openCart());
@@ -272,6 +463,10 @@ export default function Navbar() {
     setSearchOpen(false);
   };
 
+  const handleMobileSearch = () => {
+    router.push("/shop");
+  };
+
   const hasMegaNav = megaMenuReady && megaGroups.length > 0;
 
   let desktopNavBody: React.ReactNode;
@@ -285,71 +480,31 @@ export default function Navbar() {
     desktopNavBody = null;
   }
 
-  let mobileNavBody: React.ReactNode;
-  if (megaMenuReady && hasMegaNav) {
-    mobileNavBody = (
-      <nav className="flex md:hidden items-center gap-2 overflow-x-auto max-w-[45%] sm:max-w-[55%] scrollbar-thin pb-0.5">
-        {megaGroups.map((g) => {
-          const primary = groupPrimaryHref(g);
-          const groupActive = isGroupPathActive(pathname, g);
-          const isOutlet = g.name.toLowerCase() === "outlet";
-          const mobileClass = `text-[11px] tracking-wide uppercase px-2 py-1 shrink-0 whitespace-nowrap transition-colors ${
-            isOutlet
-              ? "text-[#F93A3A] font-semibold"
-              : groupActive
-              ? "text-black font-semibold"
-              : "text-[#555] font-medium"
-          }`;
-          if (groupIsHeaderOnly(g)) {
-            return (
-              <span
-                key={g.id}
-                className={`${mobileClass} cursor-default`}
-                role="presentation"
-              >
-                {g.name}
-              </span>
-            );
-          }
-          return (
-            <Link key={g.id} href={primary} className={mobileClass}>
-              {g.name}
-            </Link>
-          );
-        })}
-      </nav>
-    );
-  } else if (!megaMenuReady) {
-    mobileNavBody = (
-      <div
-        className="flex md:hidden items-center gap-1.5 max-w-[40%] overflow-hidden"
-        aria-label="Loading navigation"
-      >
-        {[1, 2, 3].map((i) => (
-          <span
-            key={i}
-            className="h-6 w-10 shrink-0 rounded bg-neutral-200 animate-pulse"
-          />
-        ))}
-      </div>
-    );
-  } else {
-    mobileNavBody = null;
-  }
-
   return (
     <>
       <header className="bg-[#f4f4f4] sticky top-0 z-50">
-        <div className="max-w-[90rem] mx-auto px-4 lg:px-8 h-[72px] flex items-center justify-between gap-3">
+        <div className="max-w-[90rem] mx-auto px-3 sm:px-4 lg:px-8 h-[60px] sm:h-[72px] flex items-center justify-between gap-2 sm:gap-3">
+          {/* Mobile Menu Button - Left */}
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open menu"
+            className="md:hidden p-2 -ml-2 hover:bg-neutral-200 rounded-full transition-colors shrink-0"
+          >
+            <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+          </button>
+
+          {/* Logo - Centered on mobile, left on desktop */}
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <Image
               src="/assets/images/logo.png"
               alt="Feet by Foot"
-              width={36}
-              height={36}
+              width={30}
+              height={30}
+              className="sm:w-[36px] sm:h-[36px]"
             />
           </Link>
 
+          {/* Desktop Navigation */}
           <nav
             className="hidden md:flex items-center gap-1 lg:gap-2 min-w-0 justify-center flex-1 min-h-8"
             aria-busy={!megaMenuReady}
@@ -357,19 +512,15 @@ export default function Navbar() {
             {desktopNavBody}
           </nav>
 
-          {mobileNavBody}
-
-          <div className="flex items-center gap-5 lg:gap-7 shrink-0 text-gray-800">
-            <Link href="/login" aria-label="Account" className="hover:text-black transition-colors">
-              <ProfileIcon width={21} height={21} fill="currentColor" />
-            </Link>
-
+          {/* Right Side Icons */}
+          <div className="flex items-center gap-3 sm:gap-5 lg:gap-7 shrink-0 text-gray-800">
+            {/* Desktop Search */}
             <form
               ref={searchRef}
               onSubmit={handleSearchSubmit}
               className={`hidden md:flex items-center rounded-full transition-all duration-200 ${
                 searchOpen
-                  ? "w-60 border border-gray-300 bg-white px-3 py-1.5"
+                  ? "w-40 lg:w-60 border border-gray-300 bg-white px-3 py-1.5"
                   : "w-10 justify-center p-2 hover:text-black cursor-pointer"
               }`}
             >
@@ -379,7 +530,7 @@ export default function Navbar() {
                 className="shrink-0"
                 onClick={() => setSearchOpen((prev) => !prev)}
               >
-                <SearchIcon width={20} height={20} fill="currentColor" />
+                <SearchIcon width={18} height={18} className="lg:w-[20px] lg:h-[20px]" fill="currentColor" />
               </button>
               {searchOpen && (
                 <input
@@ -392,32 +543,40 @@ export default function Navbar() {
               )}
             </form>
 
+            {/* Mobile Search */}
             <button
               aria-label="Search"
-              className="md:hidden hover:text-black transition-colors"
-              onClick={() => router.push("/shop")}
+              className="md:hidden hover:text-black transition-colors p-1"
+              onClick={handleMobileSearch}
             >
-              <SearchIcon width={20} height={20} fill="currentColor" />
+              <SearchIcon width={18} height={18} className="sm:w-[20px] sm:h-[20px]" fill="currentColor" />
             </button>
 
-            <Link href="/wishlists" aria-label="Wishlists" className="hover:text-black transition-colors hidden lg:block">
-              <WishlistIcon width={24} height={24} fill="currentColor" />
+            {/* Account */}
+            <Link href="/login" aria-label="Account" className="hover:text-black transition-colors p-1 hidden sm:block">
+              <ProfileIcon width={19} height={19} className="lg:w-[21px] lg:h-[21px]" fill="currentColor" />
             </Link>
 
+            {/* Wishlist */}
+            <Link href="/wishlists" aria-label="Wishlists" className="hover:text-black transition-colors hidden lg:block">
+              <WishlistIcon width={22} height={22} className="lg:w-[24px] lg:h-[24px]" fill="currentColor" />
+            </Link>
+
+            {/* Cart */}
             <button
               aria-label="Cart"
               onClick={handleCart}
-              className="relative hover:text-black transition-colors"
+              className="relative hover:text-black transition-colors p-1"
             >
-              <CartIcon width={21} height={21} fill="currentColor" />
+              <CartIcon width={19} height={19} className="lg:w-[21px] lg:h-[21px]" fill="currentColor" />
 
               {cartCount > 0 && (
                 <span
                   className="
-                    absolute -top-2.5 -right-2.5
+                    absolute -top-1 -right-1 sm:-top-2.5 sm:-right-2.5
                     bg-[#F93A3A] text-white
-                    text-[10px] font-bold
-                    w-[18px] h-[18px]
+                    text-[9px] sm:text-[10px] font-bold
+                    w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]
                     flex items-center justify-center
                     rounded-full
                   "
@@ -429,6 +588,14 @@ export default function Navbar() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Menu Drawer */}
+      <MobileMenuDrawer
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        pathname={pathname}
+        megaGroups={hasMegaNav ? megaGroups : []}
+      />
 
       <CartDrawer
         isOpen={openCartState}
