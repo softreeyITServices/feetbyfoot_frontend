@@ -173,13 +173,17 @@ function OrderLineItemDetail({
           />
           {item.waybill && !hideWaybill && (
             <div className="flex items-center justify-between pt-1 mt-1 border-t border-neutral-100">
-              {/* <DetailRow label="Waybill" value={<span className="font-mono text-indigo-600 font-bold">{item.waybill}</span>} />
+              <DetailRow 
+                label={["RETURN_REQUESTED", "RETURN_APPROVED", "RETURN_RECEIVED"].includes(item.status) ? "Return Waybill" : "Waybill"} 
+                value={<span className="font-mono text-indigo-600 font-bold">{item.waybill}</span>} 
+              />
               <button 
                 onClick={() => (window as any).setAdminTrackingWaybill(item.waybill)}
-                className="text-[10px] text-white bg-indigo-600 px-2 py-0.5 rounded hover:bg-indigo-700 font-bold"
+                className="text-[10px] text-white bg-indigo-600 px-2 py-0.5 rounded hover:bg-indigo-700 font-bold shadow-sm flex items-center gap-1"
               >
-                Track ↗
-              </button> */}
+                <span>Track</span>
+                <span>↗</span>
+              </button>
             </div>
           )}
         </div>
@@ -377,18 +381,14 @@ function OrderDetailsBody({ order }: { order: OrderRow }) {
 
       <DetailSection title={`All Item Details (${order.items.length})`}>
         <div className="space-y-3">
-          {(() => {
-            const seenWaybills = new Set();
-            return order.items.map((item, i) => (
-              <OrderLineItemDetail 
-                key={item._id} 
-                item={item} 
-                index={i} 
-                hideWaybill={item.waybill ? seenWaybills.has(item.waybill) : false}
-                onSeen={() => item.waybill && seenWaybills.add(item.waybill)}
-              />
-            ));
-          })()}
+          {order.items.map((item, i) => (
+            <OrderLineItemDetail 
+              key={item._id} 
+              item={item} 
+              index={i} 
+              hideWaybill={true}
+            />
+          ))}
         </div>
       </DetailSection>
 

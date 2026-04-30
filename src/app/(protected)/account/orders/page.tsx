@@ -279,26 +279,27 @@ export default function OrdersPage() {
                         // Collect tracking info for THIS item
                         const itemTracks: any[] = [];
                         
-                        // 1. Original Shipment (Hide if currently in exchange/return process to avoid confusion)
+                        // 1. Shipment Tracking (Forward or Reverse)
                         const isExchanging = item.exchangeRequests && item.exchangeRequests.length > 0;
-                        const isInReturn = ["RETURN_REQUESTED", "RETURN_APPROVED"].includes(status);
+                        const isReturning = ["RETURN_REQUESTED", "RETURN_APPROVED", "RETURN_RECEIVED"].includes(item.status);
                         
-                        // Hide old waybill if it's an active exchange/return or if it's being repacked
-                        // But SHOW it if status is SHIPPED (as it's now the NEW waybill)
-                        const hideOriginalWaybill = (isExchanging && !["SHIPPED", "DELIVERED", "COMPLETED"].includes(status)) || isInReturn || status === "PACKED";
+                        // Hide original waybill if it's an active exchange (not yet shipped) 
+                        // or if it's a return (as the waybill now refers to the PICKUP)
+                        const hideOriginalWaybill = (isExchanging && !["SHIPPED", "DELIVERED", "COMPLETED"].includes(item.status)) || status === "PACKED";
 
                         if (item.waybill && !hideOriginalWaybill && !seenWaybills.has(item.waybill)) {
                           seenWaybills.add(item.waybill);
+                          const isReverse = isReturning;
                           itemTracks.push({
                             waybill: item.waybill,
                             trackingUrl: item.trackingUrl,
-                            label: "Order Delivery",
-                            isReverse: false,
+                            label: isReverse ? "Return Pickup" : "Order Delivery",
+                            isReverse: isReverse,
                             status: item.status
                           });
                         }
 
-                        // 2. Exchange Requests (Show both Pickup and Replacement)
+                        // 2. Exchange Requests (Show both Pickup and Replacement if distinct)
                         if (item.exchangeRequests && item.exchangeRequests.length > 0) {
                           item.exchangeRequests.forEach((req) => {
                             // Show Pickup Link ONLY if replacement hasn't shipped yet
