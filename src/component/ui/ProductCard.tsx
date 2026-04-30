@@ -89,6 +89,8 @@ function ProductCard({
     setError("");
   };
 
+  const [loading, setLoading] = useState(false);
+
   const handleCart = async () => {
     if (!session?.accessToken) {
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
@@ -100,20 +102,27 @@ function ProductCard({
       return;
     }
 
-    dispatch(
-      addToCartAsync({
-        id,
-        name: title,
-        price: discountedPrice,
-        image: imageSrc,
-        size: selectedSize,
-        color: selectedColor ?? undefined,
-        quantity: 1,
-      })
-    );
+    try {
+      setLoading(true);
+      await dispatch(
+        addToCartAsync({
+          id,
+          name: title,
+          price: discountedPrice,
+          image: imageSrc,
+          size: selectedSize,
+          color: selectedColor ?? undefined,
+          quantity: 1,
+        })
+      ).unwrap();
 
-    setSelectedSize(null);
-    dispatch(openCart());
+      setSelectedSize(null);
+      dispatch(openCart());
+    } catch (err: any) {
+      setError(err.message || "Failed to add to cart");
+    } finally {
+      setLoading(false);
+    }
   };
 
   /* ---------------- WISHLIST TOGGLE ---------------- */
@@ -243,11 +252,12 @@ function ProductCard({
         <span className="text-red-500 text-sm">{error}</span>
 
         <button
-          className="mt-4 w-full bg-black text-white py-2 hover:bg-gray-800 flex items-center justify-evenly gap-2"
+          className="mt-4 w-full bg-black text-white py-2 hover:bg-gray-800 flex items-center justify-evenly gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed"
           onClick={handleCart}
+          disabled={loading}
         >
           <CartBasketIcon width={13} height={15} fill="#fff" />
-          <span>ADD TO BASKET</span>
+          <span>{loading ? "ADDING..." : "ADD TO BASKET"}</span>
         </button>
       </div>
     </div>

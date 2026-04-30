@@ -10,6 +10,10 @@ export type ExchangeStatus =
   | "REQUESTED"
   | "EXCHANGE_REQUESTED"
   | "EXCHANGE_APPROVED"
+  | "PACKED"
+  | "SHIPPED"
+  | "DELIVERED"
+  | "EXCHANGED"
   | "REPLACEMENT_SHIPPED"
   | "EXCHANGE_REJECTED"
   | "COMPLETED";
@@ -26,6 +30,8 @@ export type ExchangeDetails = {
   status: string;
   requestedAt: string;
   originalItemId: string;
+  pickupAwb?: string;
+  replacementAwb?: string;
 };
 
 export type ExchangeItemInfo = {
@@ -40,6 +46,7 @@ export type ExchangeItemInfo = {
   unitPrice: number;
   currency: string;
   status: string;
+  waybill?: string;
 };
 
 export type ExchangeEntry = {
@@ -57,7 +64,7 @@ export type ExchangeOrder = {
 };
 
 export type ExchangeListResponse = {
-  data: any;
+  data: ExchangeOrder[];
   message: string;
   meta: {
     page: number;
@@ -229,6 +236,44 @@ export class ExchangeService {
       });
     } catch (error) {
       throw handleApiError(error, "updateExchangeStatus");
+    }
+  }
+
+  /* ---------------- UPDATE ITEM STATUS (PACKED / SHIPPED / DELIVERED) ---------------- */
+  static async updateItemStatus(
+    orderId: string,
+    itemId: string,
+    status: "PACKED" | "SHIPPED" | "DELIVERED"
+  ): Promise<void> {
+    try {
+      await httpClient.request({
+        url: `${API_BASE_URL}/Orders/status`,
+        method: "PATCH",
+        data: {
+          status,
+          items: [{ orderId, itemId: [itemId] }],
+        },
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "updateItemStatus");
+    }
+  }
+
+  /* ---------------- COMPLETE EXCHANGE ---------------- */
+  static async completeExchange(
+    orderId: string,
+    itemId: string
+  ): Promise<void> {
+    try {
+      await httpClient.request({
+        url: `${API_BASE_URL}/Admin/${orderId}/exchange-complete/${itemId}`,
+        method: "POST",
+        data: {},
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "completeExchange");
     }
   }
 }

@@ -139,9 +139,8 @@ class OrdersService {
   ): Promise<GenericMessageResponse> {
     try {
       const response = await httpClient.request<GenericMessageResponse>({
-        url: `${ALL_ORDERS_URL}/${orderId}/update`,
+        url: `${API_BASE_URL}/user/orders/${orderId}/update?addressId=${addressId}`,
         method: "PATCH",
-        data: { addressId },
         requiresAuth: true,
       });
 

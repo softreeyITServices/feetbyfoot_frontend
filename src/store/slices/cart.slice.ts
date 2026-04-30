@@ -6,6 +6,7 @@ import {
 import { cartService } from "@/domain/application/services/cart.service";
 import { RootState } from "@/store";
 import { getSession } from "next-auth/react";
+import { mapCartApiResponseToRedux } from "@/domain/shared/mappers/cartMapper";
 
 export type CartItem = {
   id: string;        // productId
@@ -29,6 +30,35 @@ const initialState: CartState = {
   isAuthenticatedMode: false,
 };
 
+export const migrateCartAsync = createAsyncThunk(
+  "cart/migrateCartAsync",
+  async (items: CartItem[]) => {
+    const session = await getSession();
+    const isAuth = !!session?.accessToken;
+
+    if (!isAuth || items.length === 0) return null;
+
+    try {
+      // ✅ Push each local item to the server
+      for (const item of items) {
+        await cartService.addItem({
+          productId: item.id,
+          size: item.size,
+          quantity: item.quantity,
+          color: item.color,
+        });
+      }
+
+      // ✅ Fetch the final merged cart from server
+      const updatedCart = await cartService.getCart();
+      return mapCartApiResponseToRedux(updatedCart);
+    } catch (error) {
+      console.error("Cart migration failed:", error);
+      throw error;
+    }
+  }
+);
+
 export const addToCartAsync = createAsyncThunk(
   "cart/addToCartAsync",
   async (
@@ -51,16 +81,24 @@ export const addToCartAsync = createAsyncThunk(
     const isAuth = !!session?.accessToken;
 
     if (isAuth) {
-      await cartService.addItem({
+      const response = await cartService.addItem({
         productId: payload.id,
         size: normalizedSize,
         quantity: payload.quantity,
       });
+      // Return the backend's idea of the cart items
+      return {
+        items: mapCartApiResponseToRedux(response),
+        isAuth: true
+      };
     }
 
     return {
-      ...payload,
-      size: normalizedSize,
+      item: {
+        ...payload,
+        size: normalizedSize,
+      },
+      isAuth: false
     };
   }
 );
@@ -160,28 +198,32 @@ const cartSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(addToCartAsync.fulfilled, (state, action) => {
-      const existing = state.items.find(
-        item =>
-          item.id === action.payload.id &&
-          item.size === action.payload.size
-      );
+      const { items, item, isAuth } = action.payload as any;
 
-      if (existing) {
-        existing.quantity += action.payload.quantity;
-      } else {
-        state.items.push({
-          id: action.payload.id,
-          name: action.payload.name,
-          price: action.payload.price,
-          image: action.payload.image,
-          size: action.payload.size,
-          color: action.payload.color,
-          quantity: action.payload.quantity,
-        });
+      if (isAuth && items) {
+        // 🔥 Backend is source of truth
+        state.items = items;
+      } else if (item) {
+        // Guest mode - local logic
+        const existing = state.items.find(
+          (i) => i.id === item.id && i.size === item.size
+        );
+
+        if (existing) {
+          existing.quantity += item.quantity;
+        } else {
+          state.items.push(item);
+        }
       }
 
       if (!state.isAuthenticatedMode) {
         saveCartToStorage(state.items);
+      }
+    });
+    builder.addCase(migrateCartAsync.fulfilled, (state, action) => {
+      if (action.payload) {
+        state.items = action.payload;
+        state.isAuthenticatedMode = true;
       }
     });
   }

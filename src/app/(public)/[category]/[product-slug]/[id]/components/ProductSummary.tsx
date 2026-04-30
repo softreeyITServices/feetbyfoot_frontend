@@ -8,7 +8,7 @@ import { ComfortToeIcon } from "@/icons/ComfortToeIcon";
 import { HassleFreeIcon } from "@/icons/HassleFreeIcon";
 import { MoneyBackIcon } from "@/icons/MoneyBackIcon";
 import { useAppDispatch } from "@/store/hooks";
-import { addToCart } from "@/store/slices/cart.slice";
+import { addToCartAsync } from "@/store/slices/cart.slice";
 import { useState } from "react";
 import { openCart } from "@/store/slices/ui.slice";
 import { useSession } from "next-auth/react";
@@ -26,6 +26,7 @@ interface ProductSummaryProps {
     sizes: {
       _id?: string;
       size: string;
+      color?: string;
       quantity: number;
       isActive: boolean;
     }[];
@@ -45,11 +46,34 @@ export default function ProductSummary({
   const pathname = usePathname();
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
 
-  const handleAddToCart = () => {
+  // Derive unique colors from all variants
+  const uniqueColors = Array.from(
+    new Set(product.sizes.map((s) => s.color).filter(Boolean))
+  ) as string[];
+
+  // Filter sizes available for the selected color
+  const sizesForColor = selectedColor
+    ? product.sizes.filter((s) => s.color === selectedColor)
+    : product.sizes;
+
+  // Check if currently selected combination is out of stock
+  const selectedVariant = product.sizes.find(
+    (s) => s.size === selectedSize && (!selectedColor || s.color === selectedColor)
+  );
+  const isOutOfStock = !!selectedVariant && (selectedVariant.quantity <= 0 || !selectedVariant.isActive);
+  const [loading, setLoading] = useState(false);
+
+  const handleAddToCart = async () => {
     if (!session?.accessToken) {
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
+    }
+
+    if (hasColors && !selectedColor) {
+      alert("Please select a color");
       return;
     }
 
@@ -58,19 +82,34 @@ export default function ProductSummary({
       return;
     }
 
-    dispatch(
-      addToCart({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image: product.baseImage,
-        size: selectedSize,
-        quantity,
-      })
-    );
+    if (isOutOfStock) {
+      alert("This size/color combination is out of stock");
+      return;
+    }
 
-    dispatch(openCart());
+    try {
+      setLoading(true);
+      await dispatch(
+        addToCartAsync({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.baseImage,
+          size: selectedSize,
+          color: selectedColor ?? undefined,
+          quantity,
+        })
+      ).unwrap();
+
+      dispatch(openCart());
+    } catch (error: any) {
+      alert(error.message || "Failed to add to cart");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const hasColors = uniqueColors.length > 0;
 
   const scrollToReviews = () => {
     window.location.hash = "reviews";
@@ -122,11 +161,41 @@ export default function ProductSummary({
         {product.description}
       </p>
 
+      {/* Color Selector */}
+      {hasColors && (
+        <div className="mb-4">
+          <p className="text-sm font-medium mb-2">SELECT COLOR</p>
+          <div className="flex flex-wrap gap-2">
+            {uniqueColors.map((color) => (
+              <button
+                key={color}
+                onClick={() => { setSelectedColor(color); setSelectedSize(null); }}
+                title={color}
+                className={`w-8 h-8 rounded-full border-2 transition ${
+                  selectedColor === color
+                    ? "border-black scale-110"
+                    : "border-transparent hover:border-gray-400"
+                }`}
+                style={{ backgroundColor: color.toLowerCase() }}
+              />
+            ))}
+          </div>
+          {selectedColor && (
+            <p className="text-xs text-gray-500 mt-1">{selectedColor}</p>
+          )}
+        </div>
+      )}
+
       <SizeSelector
-        sizes={product.sizes}
+        sizes={sizesForColor}
         selectedSize={selectedSize}
         onSelectSize={setSelectedSize}
       />
+
+      {/* Out of Stock indicator */}
+      {isOutOfStock && (
+        <p className="mt-2 text-sm font-semibold text-red-500">⚠ Out of Stock</p>
+      )}
 
       <div className="flex gap-4 mt-6 items-center">
         <QuantitySelector
@@ -136,10 +205,15 @@ export default function ProductSummary({
 
         <button
           onClick={handleAddToCart}
-          className="px-10 bg-black text-white py-3 hover:bg-gray-800 flex items-center gap-2"
+          disabled={isOutOfStock || loading}
+          className={`px-10 py-3 flex items-center gap-2 transition ${
+            isOutOfStock || loading
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-black text-white hover:bg-gray-800"
+          }`}
         >
-          <CartBasketIcon width={13} height={15} fill="#fff" />
-          <span>ADD TO BASKET</span>
+          <CartBasketIcon width={13} height={15} fill={isOutOfStock || loading ? "#9ca3af" : "#fff"} />
+          <span>{loading ? "ADDING..." : isOutOfStock ? "OUT OF STOCK" : "ADD TO BASKET"}</span>
         </button>
       </div>
 

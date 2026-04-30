@@ -47,6 +47,7 @@ export const WISHLIST_URL = API_BASE_URL + "/wishlist";
 export const PAYMENT_VERIFY = API_BASE_URL + "/payments/verify"
 export const ADDRESS_URL = API_BASE_URL + "/address";
 export const PLATFORM_FEES_URL = API_BASE_URL + "/platform-fees";
+export const DELIVERY_URL = API_BASE_URL + "/delivery";
 
 export const ALL_ORDERS_URL = API_BASE_URL + "/orders";
 
@@ -69,7 +70,7 @@ export function orderAdminSingleDownloadPdfUrl(orderMongoId: string): string {
 }
 
 export const EXCHANGE_URL = API_BASE_URL + "/orders/exchange";
-export const RETURN_URL = API_BASE_URL + "/orders/return";
+export const RETURN_URL = API_BASE_URL + "/user/order/return";
 export const CANCEL_UPDATE_ORDER_URL = API_BASE_URL + "/orders";
 export const CONTACT_URL = API_BASE_URL + "/contact";
 export const BANNERS_URL = API_BASE_URL + "/banners";
@@ -79,7 +80,7 @@ export const RATING_URL = API_BASE_URL + "/rating";
 // Admin APIs
 export const ADMIN_ORDERS_URL = API_BASE_URL + "/orders/admin";
 export const ADMIN_EXCHANGE_URL = API_BASE_URL + "/orders/admin/exchange";
-export const ADMIN_RETURN_URL = API_BASE_URL + "/orders/admin/return";
+export const ADMIN_RETURN_URL = API_BASE_URL + "/Admin/order/return";
 export const ADMIN_ORDER_STATUS_URL = API_BASE_URL + "/orders/status";
 /** Admin COD payment status → proxies to `PATCH .../Orders/cod-payment-status` */
 export const ADMIN_ORDER_COD_PAYMENT_STATUS_URL =
@@ -152,6 +153,7 @@ export const EX_WISHLIST_URL = EXTERNAL_API_BASE_URL + "/wishlist";
 export const EX_PAYMENT_VERIFY = EXTERNAL_API_BASE_URL + "/payments/verify";
 export const EX_ADDRESS_URL = EXTERNAL_API_BASE_URL + "/address";
 export const EX_PLATFORM_FEES_URL = EXTERNAL_API_BASE_URL + "/platform-fees";
+export const EX_DELIVERY_URL = EXTERNAL_API_BASE_URL + "/delivery";
 export const EX_ALL_ORDERS_URL = EXTERNAL_API_BASE_URL + "/orders";
 
 function exApiV1Base(): string {
@@ -189,6 +191,27 @@ export function adminOrderExchangeActionUrl(orderId: string): string {
 
 export function exAdminOrderExchangeActionUrl(orderId: string): string {
   return `${exApiV1Base()}/Admin/${encodeURIComponent(orderId)}/exchange-action`;
+}
+
+// Return Admin APIs
+export function adminReturnActionUrl(orderId: string): string {
+  return `${API_BASE_URL}/Admin/${encodeURIComponent(orderId)}/return-action`;
+}
+export function adminReturnReceivedUrl(orderId: string): string {
+  return `${API_BASE_URL}/Admin/${encodeURIComponent(orderId)}/return-received`;
+}
+export function adminRefundUrl(orderId: string): string {
+  return `${API_BASE_URL}/Admin/${encodeURIComponent(orderId)}/refund`;
+}
+
+export function exAdminReturnActionUrl(orderId: string): string {
+  return `${exApiV1Base()}/Admin/${encodeURIComponent(orderId)}/return-action`;
+}
+export function exAdminReturnReceivedUrl(orderId: string): string {
+  return `${exApiV1Base()}/Admin/${encodeURIComponent(orderId)}/return-received`;
+}
+export function exAdminRefundUrl(orderId: string): string {
+  return `${exApiV1Base()}/Admin/${encodeURIComponent(orderId)}/refund`;
 }
 
 export const EX_RETURN_URL = EXTERNAL_API_BASE_URL + "/user/order/return";

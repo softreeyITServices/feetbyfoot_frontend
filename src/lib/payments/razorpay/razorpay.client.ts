@@ -115,6 +115,8 @@ export const startRazorpayCheckout = async ({
       handler: async (response) => {
         try {
           // ✅ Step 2: Verify payment
+          // Razorpay returns: razorpay_payment_id, razorpay_order_id, razorpay_signature
+          // Backend DTO expects: razorpayPaymentId, razorpayOrderId, razorpaySignature
           const verifyResponse = await httpClient.request<{
             orderId: string;
           }>({
@@ -122,7 +124,9 @@ export const startRazorpayCheckout = async ({
             method: "POST",
             requiresAuth: true,
             data: {
-              ...response,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature,
               address_id: addressId,
             },
           });

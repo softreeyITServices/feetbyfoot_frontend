@@ -83,6 +83,7 @@ export default function ExchangeModal({
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [newSize, setNewSize] = useState<string>("");
   const [newColor, setNewColor] = useState<string>("");
+  const [quantity, setQuantity] = useState<number>(1);
   const [reason, setReason] = useState<string>("Size too small");
   const [notes, setNotes] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -99,6 +100,7 @@ export default function ExchangeModal({
     setSelectedItemId(itemId);
     setNewSize("");
     setNewColor("");
+    setQuantity(1);
     setError(null);
   };
 
@@ -150,7 +152,7 @@ export default function ExchangeModal({
             newSize: newSize,
             oldColor: resolvedOldColor,
             newColor: newColor,
-            quantity: 1,
+            quantity,
           },
         ],
         notes,
@@ -177,6 +179,7 @@ export default function ExchangeModal({
     setSelectedItemId("");
     setNewSize("");
     setNewColor("");
+    setQuantity(1);
     setReason("Size too small");
     setNotes("");
     setError(null);
@@ -205,6 +208,10 @@ export default function ExchangeModal({
             {order.items.map((item) => {
               const exchangeable = isItemExchangeable(item);
               const isExchangeRequested = item.status === "EXCHANGE_REQUESTED";
+              const isExchangeApproved = item.status === "EXCHANGE_APPROVED";
+              const isReplacementShipped = item.status === "REPLACEMENT_SHIPPED";
+              
+              const currentExchange = item.exchangeRequests?.[item.exchangeRequests.length - 1];
 
               return (
                 <label
@@ -212,12 +219,12 @@ export default function ExchangeModal({
                   className={`border rounded-lg p-3 flex gap-3 transition relative
                     ${selectedItemId === item._id
                       ? "border-blue-600 bg-blue-50"
-                      : isExchangeRequested
-                        ? "border-yellow-400 bg-yellow-50"
+                      : (isExchangeRequested || isExchangeApproved)
+                        ? "border-amber-400 bg-amber-50/30"
                         : "border-gray-200"}
                     ${exchangeable
                       ? "cursor-pointer hover:border-blue-400"
-                      : "opacity-80 cursor-not-allowed"}`}
+                      : "opacity-90 cursor-not-allowed"}`}
                 >
                   <input
                     type="radio"
@@ -233,7 +240,13 @@ export default function ExchangeModal({
                   />
 
                   <Image
-                    src={item.productImage}
+                    src={
+                      item.productImage &&
+                      typeof item.productImage === "string" &&
+                      (item.productImage.startsWith("http") || item.productImage.startsWith("/"))
+                        ? item.productImage
+                        : "/assets/images/logo.png"
+                    }
                     alt={item.productName}
                     className="w-16 h-16 object-cover rounded-md"
                     width={200}
@@ -245,32 +258,81 @@ export default function ExchangeModal({
                     <div className="text-xs text-gray-500">
                       Size: {item.size}
                       {item.color ? ` · Color: ${item.color}` : ""}
+                      <span className="mx-1">·</span>
+                      Qty Ordered: {item.quantity}
                     </div>
 
-                    <div className="mt-1 flex flex-wrap gap-2">
-                      {isExchangeRequested ? (
-                        <div className="mt-1 flex justify-between items-center w-full">
-                          <span className="text-xs px-2 py-1 rounded-full bg-yellow-200 text-yellow-800 w-fit">
+                    <div className="mt-2 flex flex-wrap gap-2 items-center justify-between">
+                      <div className="flex flex-wrap gap-2">
+                        {isExchangeRequested ? (
+                          <span className="text-[10px] px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 font-medium">
                             Exchange Requested
                           </span>
-                          {item.exchangeRequests?.[0]?.requestedAt && (
-                            <div className="text-xs text-gray-500">
-                              Requested on{" "}
-                              {new Date(item.exchangeRequests[0].requestedAt).toLocaleDateString()}
-                            </div>
-                          )}
+                        ) : isExchangeApproved ? (
+                          <span className="text-[10px] px-2 py-1 rounded-full bg-green-100 text-green-800 font-medium">
+                            Exchange Approved
+                          </span>
+                        ) : isReplacementShipped ? (
+                          <span className="text-[10px] px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
+                            Replacement Shipped
+                          </span>
+                        ) : (
+                          <span className="text-[10px] px-2 py-1 rounded-full bg-gray-100 text-gray-600 font-medium">
+                            {item.status}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* NEW: Tracking Link inside the Modal */}
+                      {currentExchange?.pickupAwb && (
+                        <div className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-amber-200">
+                          <span className="text-[10px] font-mono text-gray-600">
+                            Pickup: {currentExchange.pickupAwb}
+                          </span>
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (currentExchange.pickupAwb?.startsWith("MOCK")) {
+                                alert("This is a MOCK tracking ID for development purposes. Real tracking will be available once the live API is connected.");
+                              } else {
+                                window.open(`https://www.delhivery.com/track/package/${currentExchange.pickupAwb}`, "_blank");
+                              }
+                            }}
+                            className="text-[10px] text-blue-600 font-bold hover:underline"
+                          >
+                            Track →
+                          </button>
                         </div>
-                      ) : (
-                        <span className="text-xs px-2 py-1 rounded-full bg-gray-100">
-                          {item.status}
-                        </span>
+                      )}
+
+                      {(currentExchange?.replacementAwb || (isReplacementShipped && item.waybill)) && (
+                        <div className="flex items-center gap-2 bg-blue-50 px-2 py-1 rounded border border-blue-200 mt-1">
+                          <span className="text-[10px] font-mono text-blue-700">
+                            Shipment: {currentExchange?.replacementAwb || item.waybill}
+                          </span>
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const awb = currentExchange?.replacementAwb || item.waybill;
+                              if (awb?.startsWith("MOCK")) {
+                                alert("This is a MOCK tracking ID for development purposes. Real tracking will be available once the live API is connected.");
+                              } else {
+                                window.open(`https://www.delhivery.com/track/package/${awb}`, "_blank");
+                              }
+                            }}
+                            className="text-[10px] text-blue-600 font-bold hover:underline"
+                          >
+                            Track →
+                          </button>
+                        </div>
                       )}
                     </div>
 
-                    {isExchangeRequested && item.exchangeRequests && (
-                      <div className="mt-2 p-2 bg-white border border-yellow-200 rounded text-xs text-gray-700">
-                        <span className="font-medium">Reason:</span>{" "}
-                        {item.exchangeRequests[0].reason}
+                    {item.exchangeRequests && item.exchangeRequests.length > 0 && (
+                      <div className="mt-2 p-2 bg-white/50 border border-gray-100 rounded text-[11px] text-gray-600">
+                        <span className="font-medium">Reason:</span> {currentExchange?.reason}
                       </div>
                     )}
                   </div>
@@ -369,6 +431,34 @@ export default function ExchangeModal({
                 )}
               </div>
             )}
+          {/* Quantity */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantity{" "}
+                <span className="text-gray-400 font-normal">
+                  (Max: {selectedItem?.quantity ?? 1})
+                </span>
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  disabled={loading || quantity <= 1}
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  −
+                </button>
+                <span className="w-6 text-center font-medium text-sm">{quantity}</span>
+                <button
+                  type="button"
+                  disabled={loading || quantity >= (selectedItem?.quantity ?? 1)}
+                  onClick={() => setQuantity((q) => Math.min(selectedItem?.quantity ?? 1, q + 1))}
+                  className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  +
+                </button>
+              </div>
+            </div>
           </>
         )}
 

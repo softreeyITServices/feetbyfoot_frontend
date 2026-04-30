@@ -18,7 +18,9 @@ import { OrderPdfDownloadIcon } from "@/component/ui/tables/order/OrderPdfDownlo
 import { AdminModal } from "@/component/admin/AdminModal";
 import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
 import toast from "react-hot-toast";
-import { FileDown, Loader2 } from "lucide-react";
+import { FileDown, Loader2, MapPin } from "lucide-react";
+import { TrackingModal } from "@/component/ui/modals/TrackingModal";
+
 
 const isCodOrder = (order: Order) =>
   String(order.paymentMethod).toUpperCase() === "COD";
@@ -89,12 +91,39 @@ function ExchangeBlock({ ex }: { ex: ExchangeHistoryItem }) {
       <DetailRow label="Reason" value={ex.reason} />
       <DetailRow label="Requested" value={formatDateTime(ex.requestedAt)} />
       <DetailRow label="Approved" value={formatDateTime(ex.approvedAt)} />
-      <DetailRow label="Replacement AWB" value={ex.replacementAwb} />
+      <div className="flex items-center justify-between">
+        <DetailRow label="Replacement AWB" value={ex.replacementAwb} />
+        {ex.replacementAwb && (
+          <button 
+            onClick={() => (window as any).setAdminTrackingWaybill(ex.replacementAwb)}
+            className="text-[10px] text-indigo-600 font-bold hover:underline"
+          >
+            Track ↗
+          </button>
+        )}
+      </div>
     </div>
   );
 }
 
-function OrderLineItemDetail({ item, index }: { item: OrderItem; index: number }) {
+function OrderLineItemDetail({ 
+  item, 
+  index,
+  hideWaybill,
+  onSeen
+}: { 
+  item: OrderItem; 
+  index: number;
+  hideWaybill?: boolean;
+  onSeen?: () => void;
+}) {
+  // If we are showing the waybill for the first time, notify the parent
+  useEffect(() => {
+    if (item.waybill && !hideWaybill && onSeen) {
+      onSeen();
+    }
+  }, [item.waybill, hideWaybill, onSeen]);
+
   return (
     <div className="rounded-lg border border-neutral-200 overflow-hidden">
       <div className="bg-neutral-100 px-3 py-2 text-xs font-semibold text-neutral-800 flex flex-wrap items-center gap-2 justify-between">
@@ -142,8 +171,20 @@ function OrderLineItemDetail({ item, index }: { item: OrderItem; index: number }
             label="Line total"
             value={formatMoney(item.unitPrice * item.quantity, item.currency)}
           />
+          {item.waybill && !hideWaybill && (
+            <div className="flex items-center justify-between pt-1 mt-1 border-t border-neutral-100">
+              {/* <DetailRow label="Waybill" value={<span className="font-mono text-indigo-600 font-bold">{item.waybill}</span>} />
+              <button 
+                onClick={() => (window as any).setAdminTrackingWaybill(item.waybill)}
+                className="text-[10px] text-white bg-indigo-600 px-2 py-0.5 rounded hover:bg-indigo-700 font-bold"
+              >
+                Track ↗
+              </button> */}
+            </div>
+          )}
         </div>
       </div>
+
 
       {item.product && (
         <div className="px-3 pb-3 border-t border-neutral-100 pt-3">
@@ -209,6 +250,15 @@ function OrderLineItemDetail({ item, index }: { item: OrderItem; index: number }
 
 function OrderDetailsBody({ order }: { order: OrderRow }) {
   const addr = order.shippingAddress;
+  
+  // Group items by waybill
+  const shipmentsMap: Record<string, OrderItem[]> = {};
+  order.items.forEach(item => {
+    if (item.waybill) {
+      if (!shipmentsMap[item.waybill]) shipmentsMap[item.waybill] = [];
+      shipmentsMap[item.waybill].push(item);
+    }
+  });
 
   return (
     <div className="space-y-5 text-sm">
@@ -252,6 +302,40 @@ function OrderDetailsBody({ order }: { order: OrderRow }) {
         )}
       </DetailSection>
 
+      {/* Grouped Shipments */}
+      {Object.keys(shipmentsMap).length > 0 && (
+        <DetailSection title={`Shipments (${Object.keys(shipmentsMap).length})`}>
+          <div className="space-y-4">
+            {Object.entries(shipmentsMap).map(([waybill, items], idx) => (
+              <div key={waybill} className="border border-indigo-100 rounded-lg overflow-hidden">
+                <div className="bg-indigo-50 px-3 py-2 flex items-center justify-between border-b border-indigo-100">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-indigo-500 font-bold uppercase">Package {idx + 1}</span>
+                    <span className="text-xs font-mono font-bold text-indigo-900">{waybill}</span>
+                  </div>
+                  <button 
+                    onClick={() => (window as any).setAdminTrackingWaybill(waybill)}
+                    className="bg-indigo-600 text-white px-3 py-1 rounded text-[11px] font-bold hover:bg-indigo-700 transition-colors shadow-sm"
+                  >
+                    Track Package ↗
+                  </button>
+                </div>
+                <div className="p-2 space-y-1">
+                  {items.map(it => (
+                    <div key={it._id} className="flex items-center gap-2 text-[11px] text-neutral-600">
+                      <span className="w-1.5 h-1.5 bg-indigo-300 rounded-full"></span>
+                      <span className="font-medium">{it.productName}</span>
+                      <span className="text-neutral-400">({it.size} x {it.quantity})</span>
+                      <span className={`ml-auto px-1.5 rounded text-[9px] font-bold ${STATUS_STYLE[it.status]}`}>{it.status}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </DetailSection>
+      )}
+
       <DetailSection title="Amounts">
         <DetailRow label="Subtotal" value={formatMoney(order.subtotal)} />
         <DetailRow
@@ -291,11 +375,20 @@ function OrderDetailsBody({ order }: { order: OrderRow }) {
         <DetailRow label="Longitude" value={addr.longitude} />
       </DetailSection>
 
-      <DetailSection title={`Line items (${order.items.length})`}>
+      <DetailSection title={`All Item Details (${order.items.length})`}>
         <div className="space-y-3">
-          {order.items.map((item, i) => (
-            <OrderLineItemDetail key={item._id} item={item} index={i} />
-          ))}
+          {(() => {
+            const seenWaybills = new Set();
+            return order.items.map((item, i) => (
+              <OrderLineItemDetail 
+                key={item._id} 
+                item={item} 
+                index={i} 
+                hideWaybill={item.waybill ? seenWaybills.has(item.waybill) : false}
+                onSeen={() => item.waybill && seenWaybills.add(item.waybill)}
+              />
+            ));
+          })()}
         </div>
       </DetailSection>
 
@@ -306,6 +399,7 @@ function OrderDetailsBody({ order }: { order: OrderRow }) {
     </div>
   );
 }
+
 
 /* ================= TYPES ================= */
 
@@ -363,58 +457,61 @@ function StatusDropdown({
   row: OrderRow;
   onChange: (status: OrderStatus) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
+  // Define the next logical step for each status
+  const NEXT_STEP: Partial<Record<OrderStatus, { status: OrderStatus; label: string; style: string }>> = {
+    [OrderStatus.CONFIRMED]:           { status: OrderStatus.PACKED,    label: "📦 Mark as Packed",    style: "text-purple-700 hover:bg-purple-50 border-purple-200" },
+    [OrderStatus.PACKED]:              { status: OrderStatus.SHIPPED,   label: "🚚 Mark as Shipped",   style: "text-indigo-700 hover:bg-indigo-50 border-indigo-200" },
+    [OrderStatus.SHIPPED]:             { status: OrderStatus.DELIVERED, label: "📬 Mark as Delivered", style: "text-emerald-700 hover:bg-emerald-50 border-emerald-200" },
+    [OrderStatus.PARTIALLY_DELIVERED]: { status: OrderStatus.DELIVERED, label: "📬 Mark as Delivered", style: "text-emerald-700 hover:bg-emerald-50 border-emerald-200" },
+  };
 
-  // ✅ Handle outside click
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
+  // Statuses that can be cancelled (before delivery)
+  const canCancel = [
+    OrderStatus.CONFIRMED,
+    OrderStatus.PACKED,
+    OrderStatus.SHIPPED,
+    OrderStatus.PARTIALLY_DELIVERED,
+  ].includes(row.orderStatus as OrderStatus);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  const next = NEXT_STEP[row.orderStatus as OrderStatus];
+
+  // Terminal states — no action button
+  if (!next && !canCancel) {
+    return (
+      <span className="text-xs text-neutral-400 italic">
+        {row.orderStatus === OrderStatus.DELIVERED ? "Delivered" :
+         row.orderStatus === OrderStatus.CANCELLED  ? "Cancelled" :
+         row.orderStatus === OrderStatus.RETURNED   ? "Returned"  :
+         row.orderStatus === OrderStatus.EXCHANGED  ? "Exchanged" : "—"}
+      </span>
+    );
+  }
 
   return (
-    <div ref={ref} className="relative inline-block text-left">
-      {/* Trigger */}
-      <button
-        onClick={() => setOpen((p) => !p)}
-        className="px-3 py-1 text-xs rounded-lg border border-neutral-300 bg-white flex items-center gap-2 hover:bg-neutral-50"
-      >
-        {row.orderStatus}
-        <span className="text-xs">▾</span>
-      </button>
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {/* Next step action */}
+      {next && (
+        <button
+          onClick={() => onChange(next.status)}
+          className={`px-2.5 py-1 text-xs rounded-lg border bg-white font-medium transition-colors ${next.style}`}
+        >
+          {next.label}
+        </button>
+      )}
 
-      {/* Dropdown */}
-      {open && (
-        <div className="absolute right-0 z-50 mt-2 w-44 bg-white border border-neutral-200 rounded-lg shadow-lg">
-          <div className="py-1 max-h-60 overflow-auto">
-            {Object.values(OrderStatus).map((status) => (
-              <button
-                key={status}
-                onClick={() => {
-                  onChange(status);
-                  setOpen(false);
-                }}
-                className={`w-full text-left px-3 py-2 text-xs hover:bg-neutral-100 flex justify-between ${row.orderStatus === status ? "font-semibold" : ""
-                  }`}
-              >
-                {status}
-                {row.orderStatus === status && "✓"}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* Cancel button — always visible for pre-delivery orders */}
+      {canCancel && (
+        <button
+          onClick={() => onChange(OrderStatus.CANCELLED)}
+          className="px-2.5 py-1 text-xs rounded-lg border border-red-200 bg-white text-red-600 font-medium hover:bg-red-50 transition-colors"
+        >
+          ✕ Cancel
+        </button>
       )}
     </div>
   );
 }
+
 
 /* ================= PAGE ================= */
 
@@ -429,6 +526,14 @@ function OrderPage() {
   const [codPaymentRemarks, setCodPaymentRemarks] = useState("");
   const [codTransactionIdInput, setCodTransactionIdInput] = useState("");
   const [codPaymentLoading, setCodPaymentLoading] = useState(false);
+  const [trackingWaybill, setTrackingWaybill] = useState<string | null>(null);
+
+  // Expose state for nested components (simpler than passing props through multiple levels here)
+  useEffect(() => {
+    (window as any).setAdminTrackingWaybill = setTrackingWaybill;
+    return () => { delete (window as any).setAdminTrackingWaybill; };
+  }, []);
+
 
   const [filters, setFilters] = useState({
     paymentStatus: "",
@@ -922,7 +1027,15 @@ function OrderPage() {
           </div>
         )}
       </AdminModal>
+
+      {trackingWaybill && (
+        <TrackingModal
+          waybill={trackingWaybill}
+          onClose={() => setTrackingWaybill(null)}
+        />
+      )}
     </div>
+
   );
 }
 

@@ -7,9 +7,9 @@ export enum OrderStatus {
   SHIPPED = "SHIPPED",
   DELIVERED = "DELIVERED",
   CANCELLED = "CANCELLED",
-  // PARTIALLY_RETURNED = "PARTIALLY_RETURNED",
-  // PARTIALLY_EXCHANGED = "PARTIALLY_EXCHANGED",
-  // PARTIALLY_DELIVERED = "PARTIALLY_DELIVERED",
+  PARTIALLY_RETURNED = "PARTIALLY_RETURNED",
+  PARTIALLY_EXCHANGED = "PARTIALLY_EXCHANGED",
+  PARTIALLY_DELIVERED = "PARTIALLY_DELIVERED",
   RETURNED = "RETURNED",
   EXCHANGED = "EXCHANGED",
 }
@@ -31,7 +31,13 @@ export enum OrderItemStatus {
   DELIVERED = "DELIVERED",
   CANCELLED = "CANCELLED",
   RETURN_REQUESTED = "RETURN_REQUESTED",
+  RETURN_APPROVED = "RETURN_APPROVED",
+  RETURN_RECEIVED = "RETURN_RECEIVED",
+  RETURNED = "RETURNED",
   EXCHANGE_REQUESTED = "EXCHANGE_REQUESTED",
+  EXCHANGE_APPROVED = "EXCHANGE_APPROVED",
+  REPLACEMENT_SHIPPED = "REPLACEMENT_SHIPPED",
+  COMPLETED = "COMPLETED",
 }
 
 export enum ExchangeStatus {
@@ -97,6 +103,7 @@ export interface ExchangeHistoryItem {
   requestedAt: string;
   approvedAt?: string;
   replacementAwb?: string;
+  pickupAwb?: string;
 }
 
 /* ---------------- CORE ORDER ITEM ---------------- */
@@ -112,11 +119,16 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   currency: string;
+  returnRequestedQuantity?: number;
+  returnedQuantity?: number;
 
   status: OrderItemStatus;
 
   returnRequest?: ReturnRequestInfo;
   exchangeRequests?: ExchangeHistoryItem[];
+
+  waybill?: string;
+  trackingUrl?: string;
 
   product?: ProductSnapshot; // snapshot at order time
 }
@@ -228,6 +240,7 @@ export type ReturnItemPayload = {
   orderId: string;
   itemId: string;
   reason: string;
+  quantity?: number;
 };
 
 export type ReturnRequestPayload = {

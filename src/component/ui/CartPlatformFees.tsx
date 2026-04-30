@@ -12,6 +12,7 @@ type Props = {
   paymentMethod: CheckoutPaymentMethod;
   onPaymentMethodChange: (method: CheckoutPaymentMethod) => void;
   isCheckoutInProgress?: boolean;
+  isDisabled?: boolean;
 };
 
 export default function CartPlatformFees({
@@ -21,6 +22,7 @@ export default function CartPlatformFees({
   paymentMethod,
   onPaymentMethodChange,
   isCheckoutInProgress = false,
+  isDisabled = false,
 }: Props) {
   const [appliedFees, setAppliedFees] = useState<AppliedFee[]>([]);
   const [platformFee, setPlatformFee] = useState<number>(0);
@@ -136,7 +138,7 @@ export default function CartPlatformFees({
       <button
         className={`w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded mt-6 font-medium disabled:opacity-60 disabled:cursor-not-allowed ${finalTotal > 0 ? "pointer-events-auto" : "pointer-events-none"}`}
         onClick={() => handlePayment()}
-        disabled={isCheckoutInProgress || finalTotal <= 0}
+        disabled={isCheckoutInProgress || finalTotal <= 0 || isDisabled}
       >
         {isCheckoutInProgress
           ? "Processing..."

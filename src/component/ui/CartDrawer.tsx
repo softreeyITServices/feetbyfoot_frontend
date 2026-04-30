@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { X, Trash2 } from "lucide-react";
 import { CartBasketIcon } from "@/icons/CartBasketIcon";
@@ -28,10 +29,17 @@ export default function CartDrawer({
   isOpen,
   onClose,
 }: CartDrawerProps) {
+  const [mounted, setMounted] = useState(false);
   const dispatch = useAppDispatch();
   const items = useAppSelector(state => state.cart.items);
   const Router = useRouter()
   const { data: session } = useSession();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   const getPrice = (price: string | number): number => {
     if (typeof price === "number") return price;
@@ -152,12 +160,19 @@ export default function CartDrawer({
               className="flex gap-4"
             >
               <Image
-                src={item.image}
+                src={
+                  item.image &&
+                  typeof item.image === "string" &&
+                  (item.image.startsWith("http") || item.image.startsWith("/"))
+                    ? item.image
+                    : "/assets/images/logo.png"
+                }
                 alt={item.name}
                 width={80}
                 height={80}
                 className="rounded-md border"
               />
+
 
               <div className="flex-1">
                 <p className="text-sm font-medium">

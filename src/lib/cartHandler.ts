@@ -20,16 +20,22 @@ export const handleIncreaseCart = async ({
   onLocalUpdate,
   refreshBackend,
 }: CartActionParams) => {
-  if (isAuthenticated && itemId) {
-    await cartService.updateItem(itemId, {
-      productId: id,
-      size,
-      quantity: quantity + 1,
-    });
+  // 1. Optimistic Update (Instant UI change)
+  onLocalUpdate();
 
-    await refreshBackend();
-  } else {
-    onLocalUpdate();
+  // 2. Background Sync
+  if (isAuthenticated && itemId) {
+    try {
+      await cartService.updateItem(itemId, {
+        productId: id,
+        size,
+        quantity: quantity + 1,
+      });
+      await refreshBackend();
+    } catch (error) {
+      console.error("Failed to sync cart increase:", error);
+      // Rollback would happen on the next refreshBackend or page reload
+    }
   }
 };
 
@@ -45,16 +51,20 @@ export const handleDecreaseCart = async ({
 }: CartActionParams) => {
   if (quantity <= 1) return;
 
-  if (isAuthenticated && itemId) {
-    await cartService.updateItem(itemId, {
-      productId: id,
-      size,
-      quantity: quantity - 1,
-    });
+  // 1. Optimistic Update
+  onLocalUpdate();
 
-    await refreshBackend();
-  } else {
-    onLocalUpdate();
+  if (isAuthenticated && itemId) {
+    try {
+      await cartService.updateItem(itemId, {
+        productId: id,
+        size,
+        quantity: quantity - 1,
+      });
+      await refreshBackend();
+    } catch (error) {
+      console.error("Failed to sync cart decrease:", error);
+    }
   }
 };
 
@@ -67,19 +77,17 @@ export const handleRemoveCart = async ({
   onLocalUpdate,
   refreshBackend,
 }: CartActionParams) => {
-  if (isAuthenticated && itemId) {
-    await cartService.deleteItems({
-      items: [
-        {
-          productId: id,
-          size,
-          itemId,
-        },
-      ],
-    });
+  // 1. Optimistic Update
+  onLocalUpdate();
 
-    await refreshBackend();
-  } else {
-    onLocalUpdate();
+  if (isAuthenticated && itemId) {
+    try {
+      await cartService.deleteItems({
+        items: [{ productId: id, size, itemId }],
+      });
+      await refreshBackend();
+    } catch (error) {
+      console.error("Failed to sync cart removal:", error);
+    }
   }
 };

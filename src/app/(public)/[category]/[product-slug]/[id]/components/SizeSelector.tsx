@@ -3,6 +3,7 @@
 interface Size {
   _id?: string;
   size: string;
+  color?: string;
   quantity: number;
   isActive: boolean;
 }
@@ -26,28 +27,32 @@ export default function SizeSelector({
 
       <div className="flex flex-wrap gap-3">
         {(sizes ?? []).map((item, index) => {
-          const disabled = !item.isActive || item.quantity === 0;
+          const disabled = !item.isActive || item.quantity <= 0;
 
           return (
-            <button
-              key={item._id || index}
-              disabled={disabled}
-              onClick={() => onSelectSize(item.size)}
-              className={`border px-4 py-2 text-sm transition
-                ${
-                  selectedSize === item.size
-                    ? "border-black"
-                    : "border-gray-300"
-                }
-                ${
-                  disabled
-                    ? "opacity-40 cursor-not-allowed"
-                    : "hover:border-black"
-                }
-              `}
-            >
-              {item.size}
-            </button>
+            <div key={item._id || index} className="flex flex-col items-center gap-0.5">
+              <button
+                disabled={disabled}
+                onClick={() => onSelectSize(item.size)}
+                className={`border px-4 py-2 text-sm transition
+                  ${
+                    selectedSize === item.size
+                      ? "border-black bg-black text-white"
+                      : "border-gray-300 text-gray-800"
+                  }
+                  ${
+                    disabled
+                      ? "opacity-40 cursor-not-allowed line-through"
+                      : "hover:border-black"
+                  }
+                `}
+              >
+                {item.size}
+              </button>
+              {disabled && (
+                <span className="text-[10px] text-red-400">Out of stock</span>
+              )}
+            </div>
           );
         })}
       </div>

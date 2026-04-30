@@ -5,6 +5,7 @@ import "./globals.css";
 import ReduxProvider from "@/store/ReduxProvider";
 import CartSyncProvider from "@/domain/application/providers/CartSyncProvider";
 import { AuthProvider } from "@/domain/application/providers/Authproviders";
+import RazorpayScript from "@/component/common/RazorpayScript";
 
 
 export const poppins = Poppins({
@@ -38,13 +39,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
 
-        {/* ✅ Razorpay Script (correct way) */}
-        <Script
-          src="https://checkout.razorpay.com/v1/checkout.js"
-          strategy="afterInteractive"
-        />
-
         <AuthProvider>
+          <RazorpayScript />
           <ReduxProvider>
             <CartSyncProvider>
               {children}

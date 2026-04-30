@@ -51,6 +51,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
     children: [
       { label: "All Orders", href: "/admin/orders" },
       { label: "Exchanges", href: "/admin/orders/exchange" },
+      { label: "Returns", href: "/admin/orders/returns" },
     ],
   },
   {

@@ -4,5 +4,9 @@ import { PaymentStatus } from "@/domain/shared/types/order.type";
 export function canDownloadOrderInvoicePdf(order: {
   paymentStatus: PaymentStatus;
 }): boolean {
-  return order.paymentStatus === PaymentStatus.PAID;
+  return [
+    PaymentStatus.PAID,
+    PaymentStatus.REFUNDED,
+    PaymentStatus.PARTIALLY_REFUNDED,
+  ].includes(order.paymentStatus);
 }

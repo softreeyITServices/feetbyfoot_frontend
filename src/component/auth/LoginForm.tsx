@@ -7,10 +7,14 @@ import Input from "../ui/Input";
 import { authService } from "@/domain/application/services/auth.service";
 import { signIn } from "next-auth/react";
 import { validate, ValidType } from "@/lib/emailPhoneValidator";
+import { useAppDispatch } from "@/store/hooks";
+import { migrateCartAsync } from "@/store/slices/cart.slice";
+import { store } from "@/store";
 
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
 
   const [identifier, setIdentifier] = useState("");
   const [otp, setOtp] = useState("");
@@ -144,6 +148,13 @@ export default function LoginForm() {
 
       if (result?.ok) {
         setSuccess("Login successful! Redirecting...");
+        
+        // 🔥 Migrate guest cart to server
+        const guestItems = store.getState().cart.items;
+        if (guestItems.length > 0) {
+          await dispatch(migrateCartAsync(guestItems));
+        }
+
         const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
 
         setTimeout(() => {

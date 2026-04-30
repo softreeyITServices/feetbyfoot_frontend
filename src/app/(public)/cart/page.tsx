@@ -28,6 +28,7 @@ import {
 } from "@/lib/cartHandler";
 import { couponService } from "@/domain/application/services/coupon.service";
 import toast from "react-hot-toast";
+import { DeliveryService } from "@/domain/application/services/delivery.service";
 
 
 
@@ -56,6 +57,9 @@ export default function CartBody() {
   const [paymentMethod, setPaymentMethod] =
     useState<CheckoutPaymentMethod>("ONLINE");
   const [isCheckoutInProgress, setIsCheckoutInProgress] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isServiceable, setIsServiceable] = useState<boolean | null>(null);
+  const [isCheckingServiceability, setIsCheckingServiceability] = useState(false);
 
   /* ---------------- PRICE HELPER ---------------- */
   const getPrice = (price: string | number): number => {
@@ -113,8 +117,23 @@ export default function CartBody() {
       }
     };
 
+    const syncCartWithBackend = async () => {
+      if (status === "authenticated") {
+        try {
+          setIsSyncing(true);
+          const dbCart = await cartService.getCart();
+          dispatch(setCart(mapCartApiResponseToRedux(dbCart)));
+        } catch (error) {
+          console.error("Failed to sync cart on mount:", error);
+        } finally {
+          setIsSyncing(false);
+        }
+      }
+    };
+
     fetchAddresses();
-  }, [session]);
+    syncCartWithBackend();
+  }, [session, status, dispatch]);
 
   console.log("selectedShippingId", selectedShippingId)
   console.log("selectedBillingId", selectedBillingId)
@@ -123,6 +142,32 @@ export default function CartBody() {
     setDiscount(0);
     setCouponId(null);
   }, [items]);
+
+  /* ---------------- CHECK SERVICEABILITY ---------------- */
+  useEffect(() => {
+    const checkServiceability = async () => {
+      if (!selectedShippingId) {
+        setIsServiceable(null);
+        return;
+      }
+
+      const selectedAddr = addresses.find((a) => a._id === selectedShippingId);
+      if (!selectedAddr) return;
+
+      try {
+        setIsCheckingServiceability(true);
+        const res = await DeliveryService.checkServiceability(selectedAddr.pincode);
+        setIsServiceable(!!(res.delivery_codes && res.delivery_codes.length > 0));
+      } catch (error) {
+        console.error("Failed to check serviceability:", error);
+        setIsServiceable(null);
+      } finally {
+        setIsCheckingServiceability(false);
+      }
+    };
+
+    checkServiceability();
+  }, [selectedShippingId, addresses]);
 
   const shippingAddresses = addresses.filter(
     (a) => a.type === "Shipping"
@@ -169,19 +214,25 @@ export default function CartBody() {
   const handleIncrease = async (
     id: string,
     size: string,
-    quantity: number,
+    quantity: number, // we'll use items.find for accuracy
     itemId?: string
   ) => {
+    // 🔥 Get latest quantity from current state to prevent race conditions
+    const currentItem = items.find(i => i.id === id && i.size === size);
+    const latestQty = currentItem?.quantity ?? quantity;
+
+    setIsSyncing(true);
     await handleIncreaseCart({
       id,
       size,
-      quantity,
+      quantity: latestQty,
       itemId,
       isAuthenticated: !!session,
       onLocalUpdate: () =>
-        dispatch(updateQuantity({ id, size, quantity: quantity + 1 })),
+        dispatch(updateQuantity({ id, size, quantity: latestQty + 1 })),
       refreshBackend: refreshBackendCart,
     });
+    setIsSyncing(false);
   };
 
   const handleDecrease = async (
@@ -190,21 +241,27 @@ export default function CartBody() {
     quantity: number,
     itemId?: string
   ) => {
-    if (quantity <= 1) {
+    // 🔥 Get latest quantity from current state
+    const currentItem = items.find(i => i.id === id && i.size === size);
+    const latestQty = currentItem?.quantity ?? quantity;
+
+    if (latestQty <= 1) {
       await handleRemove(id, size, itemId);
       return;
     }
 
+    setIsSyncing(true);
     await handleDecreaseCart({
       id,
       size,
-      quantity,
+      quantity: latestQty,
       itemId,
       isAuthenticated: !!session,
       onLocalUpdate: () =>
-        dispatch(updateQuantity({ id, size, quantity: quantity - 1 })),
+        dispatch(updateQuantity({ id, size, quantity: latestQty - 1 })),
       refreshBackend: refreshBackendCart,
     });
+    setIsSyncing(false);
   };
 
   const handleRemove = async (
@@ -212,6 +269,7 @@ export default function CartBody() {
     size: string,
     itemId?: string
   ) => {
+    setIsSyncing(true);
     await handleRemoveCart({
       id,
       size,
@@ -221,6 +279,7 @@ export default function CartBody() {
         dispatch(removeFromCart({ id, size })),
       refreshBackend: refreshBackendCart,
     });
+    setIsSyncing(false);
   };
 
   /* ---------------- PAYMENT ---------------- */
@@ -342,12 +401,19 @@ export default function CartBody() {
                     {/* Product */}
                     <div className="flex gap-4">
                       <Image
-                        src={item.image}
+                        src={
+                          item.image &&
+                          typeof item.image === "string" &&
+                          (item.image.startsWith("http") || item.image.startsWith("/"))
+                            ? item.image
+                            : "/assets/images/logo.png"
+                        }
                         alt={item.name}
                         width={80}
                         height={80}
                         className="rounded"
                       />
+
                       <div>
                         <p className="font-medium">{item.name}</p>
                         <p className="text-sm text-gray-500">
@@ -503,15 +569,31 @@ export default function CartBody() {
                       onChange={() => setSelectedShippingId(addr._id)}
                     />
 
-                    <div className="text-sm">
-                      <p className="font-medium">{addr.fullName}</p>
+                    <div className="text-sm flex-1">
+                      <div className="flex justify-between items-start">
+                        <p className="font-medium">{addr.fullName}</p>
+                        {selectedShippingId === addr._id && isCheckingServiceability && (
+                          <span className="text-[10px] text-gray-500 animate-pulse">Checking...</span>
+                        )}
+                        {selectedShippingId === addr._id && isServiceable === false && (
+                          <span className="text-[10px] text-red-500 font-bold italic">NOT SERVICEABLE</span>
+                        )}
+                        {selectedShippingId === addr._id && isServiceable === true && (
+                          <span className="text-[10px] text-green-600 font-bold">✓ SERVICEABLE</span>
+                        )}
+                      </div>
                       <p>{addr.addressLine1}</p>
                       <p>
                         {addr.city}, {addr.state} - {addr.pincode}
                       </p>
-                      {addr.isDefault && (
-                        <span className="text-xs text-green-600">Default</span>
-                      )}
+                      <div className="flex gap-3 items-center mt-1">
+                        {addr.isDefault && (
+                          <span className="text-xs text-green-600">Default</span>
+                        )}
+                        {selectedShippingId === addr._id && isServiceable === false && (
+                          <p className="text-[10px] text-red-600 font-medium">⚠️ We cannot deliver to this pincode</p>
+                        )}
+                      </div>
                     </div>
                   </label>
                 ))}
@@ -583,7 +665,8 @@ export default function CartBody() {
               handlePayment={handlePayment}
               paymentMethod={paymentMethod}
               onPaymentMethodChange={setPaymentMethod}
-              isCheckoutInProgress={isCheckoutInProgress}
+              isCheckoutInProgress={isCheckoutInProgress || isSyncing}
+              isDisabled={isServiceable === false || isCheckingServiceability}
             />
           )}
         </div>

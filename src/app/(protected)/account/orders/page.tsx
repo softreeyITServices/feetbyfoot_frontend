@@ -26,6 +26,8 @@ import UpdateAddressModal from "@/component/ui/modals/UpdateAddressModal";
 import CancelOrderModal from "@/component/ui/modals/CancelOrderModal";
 import { useLayout } from "@/domain/application/context/LayoutContext";
 import RateProductModal from "@/component/ui/modals/RateProductModal";
+import { TrackingModal } from "@/component/ui/modals/TrackingModal";
+
 
 interface FormattedOrder {
   orderId: string;
@@ -62,7 +64,9 @@ export default function OrdersPage() {
 
   const [meta, setMeta] = useState<OrderMeta>();
 
-  const [exchangeOrder, setExchangeOrder] = useState<ExchangeOrderData | null>(null);
+  const [exchangeOrder, setExchangeOrder] = useState<ExchangeOrderData | null>(
+    null,
+  );
   const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
 
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
@@ -76,6 +80,8 @@ export default function OrdersPage() {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [ratingOrder, setRatingOrder] = useState<FormattedOrder | null>(null);
+  const [trackingWaybill, setTrackingWaybill] = useState<string | null>(null);
+
 
   const fetchingRef = useRef(false);
   const { setTitle, setSubtitle } = useLayout();
@@ -88,11 +94,10 @@ export default function OrdersPage() {
     setLoading(true);
 
     try {
-      const response: PaginatedOrders =
-        await ordersService.getOrders({
-          page,
-          perPage: pageSize,
-        });
+      const response: PaginatedOrders = await ordersService.getOrders({
+        page,
+        perPage: pageSize,
+      });
       setOrders(response?.data ?? []);
       setMeta(response?.meta);
       setError(null);
@@ -110,13 +115,13 @@ export default function OrdersPage() {
   }, [fetchOrders]);
 
   useEffect(() => {
-    setTitle('My Orders');
-    setSubtitle('View and manage your past orders.');
+    setTitle("My Orders");
+    setSubtitle("View and manage your past orders.");
   }, []);
 
   /* ---------------- EXCHANGE HANDLERS ---------------- */
   const openExchangeModal = (row: FormattedOrder) => {
-    console.log(row.items)
+    console.log(row.items);
     setExchangeOrder({
       orderId: row.orderId,
       items: row.items,
@@ -149,7 +154,7 @@ export default function OrdersPage() {
     status: order.orderStatus,
     paymentStatus: order.paymentStatus,
     items: order.items,
-    addressId: order.shippingAddress?._id
+    addressId: order.shippingAddress?._id,
   }));
 
   const totalPages = meta?.totalPages ?? 1;
@@ -181,7 +186,6 @@ export default function OrdersPage() {
     await fetchOrders();
   };
 
-
   const openReturnModal = (order: ReturnOrderData) => {
     setReturnOrder(order);
     setIsReturnModalOpen(true);
@@ -197,7 +201,6 @@ export default function OrdersPage() {
     fetchOrders(); // or whatever you use to refresh
   };
 
-
   return (
     <div className="px-6">
       <div className="max-w-5xl mx-auto">
@@ -208,9 +211,7 @@ export default function OrdersPage() {
         )}
 
         {loading && (
-          <p className="text-gray-500 text-center">
-            Loading orders...
-          </p>
+          <p className="text-gray-500 text-center">Loading orders...</p>
         )}
 
         {!loading && orders.length === 0 && !error && (
@@ -224,8 +225,8 @@ export default function OrdersPage() {
             </h2>
 
             <p className="text-gray-500 max-w-md mb-8">
-              It looks like you haven&apos;t made any orders yet.
-              When you do, they will appear here.
+              It looks like you haven&apos;t made any orders yet. When you do,
+              they will appear here.
             </p>
 
             <button
@@ -268,67 +269,141 @@ export default function OrdersPage() {
               },
               {
                 header: "Items",
-                accessor: (row) => (
-                  <div className="space-y-2">
-                    {row.items.map((item) => {
-                      const status = item.status;
+                accessor: (row) => {
+                  return (
+                    <div className="space-y-4">
+                      {(() => {
+                        const seenWaybills = new Set();
+                        return row.items.map((item) => {
+                        
+                        // Collect tracking info for THIS item
+                        const itemTracks: any[] = [];
+                        
+                        // 1. Original Shipment (Hide if currently in exchange/return process to avoid confusion)
+                        const isExchanging = item.exchangeRequests && item.exchangeRequests.length > 0;
+                        const isInReturn = ["RETURN_REQUESTED", "RETURN_APPROVED"].includes(status);
+                        
+                        // Hide old waybill if it's an active exchange/return or if it's being repacked
+                        // But SHOW it if status is SHIPPED (as it's now the NEW waybill)
+                        const hideOriginalWaybill = (isExchanging && !["SHIPPED", "DELIVERED", "COMPLETED"].includes(status)) || isInReturn || status === "PACKED";
 
-                      const showBadge =
-                        status === "RETURN_REQUESTED" ||
-                        status === "EXCHANGE_REQUESTED" ||
-                        status === "CANCELLED";
-
-                      const getBadgeStyle = () => {
-                        switch (status) {
-                          case "RETURN_REQUESTED":
-                            return "bg-amber-100 text-amber-700";
-                          case "EXCHANGE_REQUESTED":
-                            return "bg-blue-100 text-blue-700";
-                          case "CANCELLED":
-                            return "bg-red-100 text-red-700";
-                          default:
-                            return "";
+                        if (item.waybill && !hideOriginalWaybill && !seenWaybills.has(item.waybill)) {
+                          seenWaybills.add(item.waybill);
+                          itemTracks.push({
+                            waybill: item.waybill,
+                            trackingUrl: item.trackingUrl,
+                            label: "Order Delivery",
+                            isReverse: false,
+                            status: item.status
+                          });
                         }
-                      };
 
-                      const getReadableStatus = () => {
-                        switch (status) {
-                          case "RETURN_REQUESTED":
-                            return "Return Requested";
-                          case "EXCHANGE_REQUESTED":
-                            return "Exchange Requested";
-                          case "CANCELLED":
-                            return "Cancelled";
-                          default:
-                            return status;
+                        // 2. Exchange Requests (Show both Pickup and Replacement)
+                        if (item.exchangeRequests && item.exchangeRequests.length > 0) {
+                          item.exchangeRequests.forEach((req) => {
+                            // Show Pickup Link ONLY if replacement hasn't shipped yet
+                            if (req.pickupAwb && !req.replacementAwb && !seenWaybills.has(req.pickupAwb)) {
+                              seenWaybills.add(req.pickupAwb);
+                              itemTracks.push({
+                                waybill: req.pickupAwb,
+                                trackingUrl: item.trackingUrl,
+                                label: "Exchange Pickup",
+                                isReverse: true,
+                                status: req.status,
+                              });
+                            }
+                            // Show Replacement Link if exists
+                            if (req.replacementAwb && !seenWaybills.has(req.replacementAwb)) {
+                              seenWaybills.add(req.replacementAwb);
+                              itemTracks.push({
+                                waybill: req.replacementAwb,
+                                trackingUrl: item.trackingUrl,
+                                label: "Replacement Shipment",
+                                isReverse: false,
+                                status: req.status,
+                              });
+                            }
+                          });
                         }
-                      };
 
-                      return (
-                        <div key={item._id} className="text-sm">
-                          <div className="flex items-center justify-between">
-                            <div className="font-medium text-gray-800">
-                              {item.productName} ({item.size})
+                        const getBadgeStyle = (s: string) => {
+                          switch (s) {
+                            case "RETURN_REQUESTED":
+                            case "RETURN_APPROVED":
+                            case "RETURN_RECEIVED":
+                              return "bg-amber-100 text-amber-700";
+                            case "EXCHANGE_REQUESTED":
+                            case "EXCHANGE_APPROVED":
+                            case "REPLACEMENT_SHIPPED":
+                              return "bg-blue-100 text-blue-700";
+                            case "RETURNED":
+                            case "COMPLETED":
+                              return "bg-green-100 text-green-700";
+                            case "CANCELLED":
+                              return "bg-red-100 text-red-700";
+                            default:
+                              return "bg-gray-100 text-gray-700 border border-gray-200";
+                          }
+                        };
+
+                        const getReadableStatus = (s: string) => {
+                          return s.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+                        };
+
+                        return (
+                          <div key={item._id} className="text-sm border-b border-gray-50 pb-3 last:border-0 last:pb-0">
+                            <div className="flex flex-col gap-1">
+                              <div className="flex items-center justify-between">
+                                <p className="font-medium text-gray-900">
+                                  {item.productName} ({item.size})
+                                </p>
+                              </div>
+                              {status !== "DELIVERED" && status !== "SHIPPED" && (
+                                <span className={`w-fit text-[10px] px-2 py-0.5 rounded-full font-medium ${getBadgeStyle(status)}`}>
+                                  {getReadableStatus(status)}
+                                </span>
+                              )}
                             </div>
 
-
+                            {/* Item-specific Tracking Links */}
+                            <div className="space-y-2 mt-2">
+                              {itemTracks.map((track, idx) => (
+                                <div
+                                  key={`${track.waybill}-${idx}`}
+                                  className={`flex flex-col gap-1 p-2 rounded border ${
+                                    track.isReverse 
+                                      ? "bg-gray-50/80 border-gray-200" 
+                                      : "bg-blue-50/50 border-blue-100/50"
+                                  }`}
+                                >
+                                  <p className={`text-[10px] font-bold uppercase tracking-wider ${
+                                    track.isReverse ? "text-gray-500" : "text-blue-600"
+                                  }`}>
+                                    {track.label}
+                                  </p>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-mono text-gray-600">
+                                      {track.waybill}
+                                    </span>
+                                    <button
+                                      onClick={() => setTrackingWaybill(track.waybill)}
+                                      className={`text-[11px] font-medium flex items-center gap-1 hover:underline ${
+                                        track.isReverse ? "text-gray-700" : "text-blue-700 font-bold"
+                                      }`}
+                                    >
+                                      Track {track.isReverse ? "Pickup" : "Order"} →
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-
-                          {showBadge && (
-                            <div className="text-xs text-gray-500 pt-2">
-                              <span
-                                className={`text-xs px-2 py-1 rounded-full font-medium ${getBadgeStyle()}`}
-                              >
-                                {getReadableStatus()}
-                              </span>
-
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                        );
+                      });
+                    })()}
                   </div>
-                ),
+                  );
+                },
               },
               {
                 header: "Total",
@@ -339,7 +414,7 @@ export default function OrdersPage() {
                 accessor: (row) => (
                   <span
                     className={`px-2 py-1 text-xs rounded ${getStatusBadgeClasses(
-                      row.status
+                      row.status,
                     )}`}
                   >
                     {row.status}
@@ -358,7 +433,7 @@ export default function OrdersPage() {
                     onDownload={() =>
                       ordersService.downloadCustomerInvoicePdf(
                         row.orderId,
-                        row.orderNumber
+                        row.orderNumber,
                       )
                     }
                   />
@@ -369,24 +444,48 @@ export default function OrdersPage() {
                 accessor: (row) => {
                   const actions = [];
 
-                  // Exchange only if delivered
-                  if (row.status === "DELIVERED") {
-                    actions.push({
-                      label: "Exchange Item",
-                      onClick: () => openExchangeModal(row),
-                    });
+                  const isPartiallyDelivered = [
+                    "DELIVERED",
+                    "PARTIALLY_DELIVERED",
+                    "PARTIALLY_RETURNED",
+                    "PARTIALLY_EXCHANGED",
+                  ].includes(row.status);
+
+                  // Exchange only if delivered or partially delivered
+                  if (isPartiallyDelivered) {
+                    // Only show if at least one item is actually in DELIVERED status
+                    const hasExchangableItems = row.items.some(
+                      (item) => item.status === "DELIVERED",
+                    );
+                    if (hasExchangableItems) {
+                      actions.push({
+                        label: "Exchange Item",
+                        onClick: () => openExchangeModal(row),
+                      });
+                    }
                   }
 
-                  // Return only if delivered
-                  if (row.status === "DELIVERED") {
-                    actions.push({
-                      label: "Return Item",
-                      onClick: () => handleReturn(row),
+                  // Return only if delivered or partially delivered
+                  if (isPartiallyDelivered) {
+                    // Only show if at least one item is returnable (DELIVERED status + quantity left)
+                    const hasReturnableItems = row.items.some((item) => {
+                      const returnable =
+                        item.quantity -
+                        (item.returnRequestedQuantity || 0) -
+                        (item.returnedQuantity || 0);
+                      return item.status === "DELIVERED" && returnable > 0;
                     });
+
+                    if (hasReturnableItems) {
+                      actions.push({
+                        label: "Return Item",
+                        onClick: () => handleReturn(row),
+                      });
+                    }
                   }
 
                   // Change address only if processing
-                  if (row.status === 'CONFIRMED' || row.status === 'PACKED') {
+                  if (row.status === "CONFIRMED" || row.status === "PACKED") {
                     actions.push({
                       label: "Change Address",
                       onClick: () => handleAddressChange(row),
@@ -394,14 +493,14 @@ export default function OrdersPage() {
                   }
 
                   // Cancel only if not delivered
-                  if (row.status === 'CONFIRMED' || row.status === 'PACKED') {
+                  if (row.status === "CONFIRMED" || row.status === "PACKED") {
                     actions.push({
                       label: "Cancel Order",
                       onClick: () => handleCancel(row),
                       danger: true,
                     });
                   }
-                  if (row.status === "DELIVERED") {
+                  if (isPartiallyDelivered) {
                     actions.push({
                       label: "Rate Product",
                       onClick: () => handleRating(row),
@@ -415,8 +514,7 @@ export default function OrdersPage() {
 
                   return <RowActionMenu actions={actions} />;
                 },
-              }
-
+              },
             ]}
           />
         )}
@@ -487,8 +585,14 @@ export default function OrdersPage() {
             }}
           />
         )}
-
       </div>
+      {trackingWaybill && (
+        <TrackingModal
+          waybill={trackingWaybill}
+          onClose={() => setTrackingWaybill(null)}
+        />
+      )}
     </div>
   );
 }
+
