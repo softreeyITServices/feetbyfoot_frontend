@@ -97,7 +97,7 @@ function ReturnsPage() {
     setActionLoading(true);
     try {
       const itemIds = pending.row.items.map(item => item._id);
-      const targetOrderId = pending.row.order_id || (pending.row as any).orderId;
+      const targetOrderId = pending.row.orderId;
 
       if (pending.type === "APPROVE" || pending.type === "REJECT") {
         if (pending.type === "REJECT" && !form.rejectReason) {
@@ -364,7 +364,7 @@ function ReturnsPage() {
               <div className="flex justify-between items-start border-b pb-2 mb-2">
                  <div>
                    <p className="text-[10px] uppercase text-neutral-500 font-bold">Return ID</p>
-                   <p className="font-mono text-xs">{pending.row.returnId}</p>
+                   <p className="font-mono text-xs">{pending.row._id}</p>
                  </div>
                  <div className="text-right">
                    <p className="text-[10px] uppercase text-neutral-500 font-bold">Order No</p>

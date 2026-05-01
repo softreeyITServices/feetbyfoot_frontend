@@ -2,7 +2,26 @@
 
 import React, { useEffect, useState } from "react";
 import { DeliveryService } from "@/domain/application/services/delivery.service";
-import { TrackingResponse } from "@/domain/shared/types/order.type";
+
+type TrackingResponse = {
+  ShipmentData?: Array<{
+    Shipment?: {
+      Status?: {
+        Status?: string;
+        Instructions?: string;
+        Scans?: Array<{
+          ScanDetail?: {
+            Scan?: string;
+            ScanDateTime?: string;
+            Location?: string;
+            Instructions?: string;
+          };
+        }>;
+      };
+      ExpectedDeliveryDate?: string;
+    };
+  }>;
+};
 import { 
   Package, 
   Truck, 

@@ -12,6 +12,7 @@ interface SessionProviderProps {
 export function SessionProvider({ children }: SessionProviderProps) {
   return (
     <NextAuthSessionProvider
+      basePath="/services/auth"
       refetchInterval={5 * 60}
       refetchOnWindowFocus={true}
     >

@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/services/auth/[...nextauth]/route";
 import WishlistPageClient from "./WishlistPageClient";
 
 export default async function WishlistPage() {

@@ -8,7 +8,7 @@ import Link from "next/link";
 import SortDropdown from "@/component/ui/SortDropdown";
 import { wishlistService } from "@/domain/application/services/wishlist.service";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/services/auth/[...nextauth]/route";
 import { SectionBannerService } from "@/domain/application/services/admin/sectionBanner.service";
 
 

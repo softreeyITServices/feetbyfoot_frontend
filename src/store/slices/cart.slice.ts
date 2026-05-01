@@ -9,8 +9,8 @@ import { getSession } from "next-auth/react";
 import { mapCartApiResponseToRedux } from "@/domain/shared/mappers/cartMapper";
 
 export type CartItem = {
-  id: string;        // productId
-  itemId?: string;   // 🔥 backend _id
+  id: string; // productId
+  itemId?: string; // 🔥 backend _id
   name: string;
   image: string;
   price: string | number;
@@ -18,7 +18,6 @@ export type CartItem = {
   color?: string;
   quantity: number;
 };
-
 
 type CartState = {
   items: CartItem[];
@@ -45,7 +44,6 @@ export const migrateCartAsync = createAsyncThunk(
           productId: item.id,
           size: item.size,
           quantity: item.quantity,
-          color: item.color,
         });
       }
 
@@ -56,22 +54,20 @@ export const migrateCartAsync = createAsyncThunk(
       console.error("Cart migration failed:", error);
       throw error;
     }
-  }
+  },
 );
 
 export const addToCartAsync = createAsyncThunk(
   "cart/addToCartAsync",
-  async (
-    payload: {
-      id: string;
-      size: string;
-      quantity: number;
-      name: string;
-      image: string;
-      price: string | number;
-      color?: string;
-    }
-  ) => {
+  async (payload: {
+    id: string;
+    size: string;
+    quantity: number;
+    name: string;
+    image: string;
+    price: string | number;
+    color?: string;
+  }) => {
     const normalizedSize = payload.size?.trim();
     if (!normalizedSize) {
       throw new Error("Size selection is required before adding to cart.");
@@ -89,7 +85,7 @@ export const addToCartAsync = createAsyncThunk(
       // Return the backend's idea of the cart items
       return {
         items: mapCartApiResponseToRedux(response),
-        isAuth: true
+        isAuth: true,
       };
     }
 
@@ -98,16 +94,15 @@ export const addToCartAsync = createAsyncThunk(
         ...payload,
         size: normalizedSize,
       },
-      isAuth: false
+      isAuth: false,
     };
-  }
+  },
 );
 
 const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-
     /* 🔥 Switch to backend mode */
     setAuthMode(state, action: PayloadAction<boolean>) {
       state.isAuthenticatedMode = action.payload;
@@ -129,9 +124,7 @@ const cartSlice = createSlice({
       }
 
       const existing = state.items.find(
-        item =>
-          item.id === action.payload.id &&
-          item.size === normalizedSize
+        (item) => item.id === action.payload.id && item.size === normalizedSize,
       );
 
       if (existing) {
@@ -154,12 +147,10 @@ const cartSlice = createSlice({
         id: string;
         size: string;
         quantity: number;
-      }>
+      }>,
     ) {
       const item = state.items.find(
-        i =>
-          i.id === action.payload.id &&
-          i.size === action.payload.size
+        (i) => i.id === action.payload.id && i.size === action.payload.size,
       );
 
       if (item && action.payload.quantity > 0) {
@@ -171,16 +162,10 @@ const cartSlice = createSlice({
       }
     },
 
-    removeFromCart(
-      state,
-      action: PayloadAction<{ id: string; size: string }>
-    ) {
+    removeFromCart(state, action: PayloadAction<{ id: string; size: string }>) {
       state.items = state.items.filter(
-        item =>
-          !(
-            item.id === action.payload.id &&
-            item.size === action.payload.size
-          )
+        (item) =>
+          !(item.id === action.payload.id && item.size === action.payload.size),
       );
 
       if (!state.isAuthenticatedMode) {
@@ -206,7 +191,7 @@ const cartSlice = createSlice({
       } else if (item) {
         // Guest mode - local logic
         const existing = state.items.find(
-          (i) => i.id === item.id && i.size === item.size
+          (i) => i.id === item.id && i.size === item.size,
         );
 
         if (existing) {
@@ -226,8 +211,7 @@ const cartSlice = createSlice({
         state.isAuthenticatedMode = true;
       }
     });
-  }
-
+  },
 });
 
 export const {

@@ -1,6 +1,6 @@
 // lib/guards.ts
 
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/services/auth/[...nextauth]/route";
 import { getServerSession } from "next-auth";
 
 export async function requireRole(role: string) {
