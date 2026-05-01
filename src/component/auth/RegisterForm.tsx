@@ -26,13 +26,7 @@ export default function RegisterForm() {
     formValues.phone.trim();
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    let { name, value } = e.target;
-
-    // Smart auto-correct for phone field
-    if (name === "phone" && /^\d{10}$/.test(value)) {
-      value = `+91${value}`;
-    }
-
+    const { name, value } = e.target;
     setFormValues((prev) => ({
       ...prev,
       [name]: value,
