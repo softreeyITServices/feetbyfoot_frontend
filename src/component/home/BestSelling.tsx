@@ -25,17 +25,17 @@ export default async function BestSelling() {
 
   return (
     <Container>
-      <section className="flex flex-col gap-8 py-12">
+      <section className="flex flex-col gap-6 sm:gap-8 py-8 sm:py-10 md:py-12">
         <FadeIn direction="up" className="text-center">
-          <h2 className="inline-block bg-yellow-400 px-6 py-2 text-4xl font-bold">
+          <h2 className="inline-block bg-yellow-400 px-4 sm:px-6 py-1.5 sm:py-2 text-2xl sm:text-3xl md:text-4xl font-bold">
             Best Selling
           </h2>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-sm sm:text-base text-gray-600">
             Preorder now to receive exclusive deals & gifts
           </p>
         </FadeIn>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
           {products.map((product, index) => (
             <FadeIn key={product._id} direction="up" delay={index * 100}>
               <ProductCard
