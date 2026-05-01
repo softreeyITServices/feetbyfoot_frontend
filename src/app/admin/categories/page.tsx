@@ -331,7 +331,11 @@ export default function AdminCategoriesPage() {
         onConfirm={confirmDelete}
         loading={deleting}
         title="Delete Category"
-        description={`Delete "${deleteTarget?.name}"?`}
+        description={
+          deleteTarget?.isActive
+            ? `Delete "${deleteTarget?.name}"?`
+            : `Permanently delete "${deleteTarget?.name}" (already inactive)?`
+        }
       />
 
       <SubcategoryModal
