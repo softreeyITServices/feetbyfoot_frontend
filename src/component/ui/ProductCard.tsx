@@ -157,7 +157,8 @@ function ProductCard({
     setIsWishlisted(wishlistSelect ?? false);
   }, [wishlistSelect]);
 
-  const productHref = `/${toSlug(categories)}/${toSlug(title)}/${id}`;
+  const categorySlug = toSlug(categories) || "products";
+  const productHref = `/${categorySlug}/${toSlug(title)}/${id}`;
 
   return (
     <div className="rounded-xl bg-white border border-gray-200 p-3 relative">

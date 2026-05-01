@@ -45,7 +45,11 @@ export default async function BestSelling() {
                 size={product.sizes}
                 imageSrc={product.imageUrls?.[0] ?? "/placeholder.png"}
                 altText={product.name}
-                categories={product.tags?.join(", ") ?? ""}
+                categories={
+                  product.tags?.length
+                    ? product.tags.join(", ")
+                    : product.brand || "Socks"
+                }
                 title={product.name}
                 originalPrice={product.price?.toFixed(2) ?? "0.00"}
                 discountedPrice={product.salePrice?.toFixed(2) ?? "0.00"}

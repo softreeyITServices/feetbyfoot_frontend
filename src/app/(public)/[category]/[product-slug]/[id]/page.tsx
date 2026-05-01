@@ -25,6 +25,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const response = await productService.getProductById(id);
+  console.log("response", response);
   const ratingResponse = await ratingService.getRatingsByProductId(id);
 
   const { product } = response;

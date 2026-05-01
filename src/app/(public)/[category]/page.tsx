@@ -47,10 +47,6 @@ const CATEGORY_CONFIG = {
   },
 } as const;
 
-/** Same box for API banners and static fallback (4:1 hero strip). */
-const CATEGORY_BANNER_WIDTH = 1200;
-const CATEGORY_BANNER_HEIGHT = 300;
-
 function CategoryBannerPicture({
   src,
   alt,
@@ -61,19 +57,16 @@ function CategoryBannerPicture({
   unoptimized?: boolean;
 }) {
   return (
-    <div
-      className="relative w-full overflow-hidden rounded-xl"
-      style={{
-        aspectRatio: `${CATEGORY_BANNER_WIDTH} / ${CATEGORY_BANNER_HEIGHT}`,
-      }}
-    >
+    <div className="w-full overflow-hidden rounded-2xl shadow-md">
       <Image
         src={src}
         alt={alt}
-        fill
-        className="object-cover object-center"
-        sizes="(max-width: 1280px) 100vw, 1200px"
+        width={1400}
+        height={350}
+        className="w-full h-auto block"
+        sizes="(max-width: 1280px) 100vw, 1400px"
         unoptimized={unoptimized}
+        priority
       />
     </div>
   );
@@ -231,7 +224,7 @@ export default async function CategoryPage({
       </div>
 
       {/* Banner: section banners from admin when present, else static fallback */}
-      <section className="max-w-7xl mx-auto px-4 mt-6">
+      <section className="max-w-7xl mx-auto px-4 mt-6 mb-2">
         {sectionBanners.length > 0 ? (
           <div className="flex flex-col gap-4">
             {sectionBanners.map((b) => (

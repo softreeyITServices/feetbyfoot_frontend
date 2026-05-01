@@ -90,18 +90,18 @@ export default function PromoCarousel() {
             />
 
             {/* Text Overlay */}
-            <div className="flex flex-row absolute inset-0 -ml-10">
-              <span className="collection-outline text-5xl absolute top-1/2 -translate-y-1/2 rotate-[-270deg] tracking-[0.4em] opacity-60">
+            <div className="flex flex-row absolute inset-0">
+              <span className="collection-outline text-5xl absolute top-1/2 -translate-y-1/2 -ml-14 rotate-[-270deg] tracking-[0.4em] opacity-60 font-sans">
                 SOCKS
               </span>
-              <div className="flex flex-col absolute inset-0 justify-center px-30 md:px-40 text-[#1b5e3c]">
+              <div className="flex flex-col absolute inset-0 justify-center px-30 md:px-20 text-[#1b5e3c]">
                 <span className="text-sm tracking-widest uppercase mb-4">
                   2026 Season Sale
                 </span>
 
                 <h2 className="text-4xl md:text-5xl font-normal leading-tight mb-10">
                   Up To <br />
-                  <span className="font-normal">70% Off</span>
+                  <span className="font-normal">70% <br /> Off</span>
                 </h2>
 
                 <Link

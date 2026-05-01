@@ -6,14 +6,14 @@ import HeroBanner from "@/component/home/HeroBanner";
 import PromoSection from "@/component/home/PromoSection";
 import ShopByCategory from "@/component/home/ShopByCategory";
 import TrendingGallery from "@/component/home/TrendingGallery";
-import HomeMarquee from "@/component/home/HomeMarquee";
+import { Marquee } from "@/component/ui/Marquee";
 export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   return (
     <>
       <HeroBanner />
-      <HomeMarquee />
+      <Marquee />
       <CategoryStrip />
       <BestSelling />
       <PromoSection />
