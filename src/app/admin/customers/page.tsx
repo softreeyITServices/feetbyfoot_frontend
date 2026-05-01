@@ -9,6 +9,7 @@ import type {
   AdminCustomer,
   CustomerOrder,
 } from "@/domain/shared/types/admin/customer";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 type CustomerRow = AdminCustomer & { id: string };
 
@@ -48,10 +49,12 @@ export default function CustomersPage() {
       );
       setTotalPages(1); // Set to 1 as API does not provide pagination
     } catch (error: unknown) {
-      toast.error(
-        (error as { message?: string })?.message ||
-          "Failed to load customers"
-      );
+      if (!isGetRequestError(error)) {
+        toast.error(
+          (error as { message?: string })?.message ||
+            "Failed to load customers"
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -70,10 +73,12 @@ export default function CustomersPage() {
         setOrdersPage(response.pagination.page);
         setOrdersTotalPages(Math.max(1, response.pagination.totalPages || 1));
       } catch (error: unknown) {
-        toast.error(
-          (error as { message?: string })?.message ||
-            "Failed to load customer orders"
-        );
+        if (!isGetRequestError(error)) {
+          toast.error(
+            (error as { message?: string })?.message ||
+              "Failed to load customer orders"
+          );
+        }
       } finally {
         setOrdersLoading(false);
       }

@@ -9,8 +9,8 @@ export default async function BrandPage() {
   let bannerUrl: string | null = null;
 
   try {
-    const banners = await SectionBannerService.getBySectionKey("brand");
-    bannerUrl = banners?.[0]?.image ?? null;
+    const banners = await SectionBannerService.getBySectionKey("BRAND");
+    bannerUrl = banners.find((banner) => banner.isActive)?.image ?? null;
   } catch {
     // Silently fall back to no banner image
   }

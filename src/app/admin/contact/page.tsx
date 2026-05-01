@@ -6,6 +6,7 @@ import { AdminModal } from "@/component/admin/AdminModal";
 import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
 import toast from "react-hot-toast";
 import { contactService } from "@/domain/application/services/contact.service";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 /* ================= TYPES ================= */
 
@@ -43,8 +44,10 @@ export default function ContactPage() {
       const res = await contactService.getContacts();
 
       setData(res.map((x) => ({ ...x, id: x._id, name: x.fullName })));
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to fetch contacts");
+    } catch (err: unknown) {
+      if (!isGetRequestError(err)) {
+        toast.error((err as { message?: string })?.message || "Failed to fetch contacts");
+      }
     } finally {
       setLoading(false);
     }

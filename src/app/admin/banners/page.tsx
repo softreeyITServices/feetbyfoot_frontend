@@ -8,6 +8,7 @@ import { bannerService } from "@/domain/application/services/banner.service";
 import { uploadService } from "@/domain/application/services/upload.service"; // ✅ added
 import toast from "react-hot-toast";
 import { createPortal } from "react-dom";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 /* ================= TYPES ================= */
 
@@ -142,7 +143,9 @@ export default function BannerPage() {
       console.log('res',res)
       setData(res.data?.map((x:any) => ({ ...x, id: x._id })));
     } catch (err: any) {
-      toast.error(err?.message || "Failed to fetch banners");
+      if (!isGetRequestError(err)) {
+        toast.error(err?.message || "Failed to fetch banners");
+      }
     } finally {
       setLoading(false);
     }

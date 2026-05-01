@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CmsService } from "@/domain/application/services/admin/cms.service";
 import { Pencil, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 type Cms = {
   _id: string;
@@ -28,7 +29,9 @@ export default function CmsListPage() {
       // ✅ safe handling
       setCmsList(Array.isArray(res) ? res : []);
     } catch (error) {
-      toast.error("Failed to fetch CMS pages");
+      if (!isGetRequestError(error)) {
+        toast.error("Failed to fetch CMS pages");
+      }
     } finally {
       setLoading(false);
     }

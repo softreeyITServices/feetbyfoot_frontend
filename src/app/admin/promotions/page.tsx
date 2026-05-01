@@ -7,6 +7,7 @@ import { AdminModal } from "@/component/admin/AdminModal";
 import { AdminForm, FormField } from "@/component/admin/Adminform";
 import { couponService } from "@/domain/application/services/coupon.service";
 import type { Coupon } from "@/domain/shared/types/coupon.type";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 interface CouponRow {
   id: string;
@@ -144,7 +145,9 @@ export default function PromotionsPage() {
       const items = await couponService.getAllActiveCoupons();
       setRows(mapCoupons(items));
     } catch (error: unknown) {
-      toast.error((error as { message?: string })?.message || "Failed to load coupons");
+      if (!isGetRequestError(error)) {
+        toast.error((error as { message?: string })?.message || "Failed to load coupons");
+      }
     } finally {
       setLoading(false);
     }

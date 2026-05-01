@@ -13,6 +13,7 @@ import {
 import toast from "react-hot-toast";
 import Image from "next/image";
 import { TrackingModal } from "@/component/ui/modals/TrackingModal";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 
 /* ================= TYPES ================= */
@@ -221,7 +222,9 @@ function ExchangePage() {
       setData(rows);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load exchanges");
+      if (!isGetRequestError(err)) {
+        toast.error("Failed to load exchanges");
+      }
     } finally {
       setLoading(false);
     }

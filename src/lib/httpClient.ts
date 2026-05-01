@@ -3,6 +3,18 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import type { Session } from "next-auth";
 
 const isBrowser = typeof window !== "undefined";
+let authRedirectInProgress = false;
+
+async function signOutToHome() {
+  if (!isBrowser || authRedirectInProgress) return;
+
+  authRedirectInProgress = true;
+  const { signOut } = await import("next-auth/react");
+  await signOut({
+    redirect: true,
+    callbackUrl: "/",
+  });
+}
 
 class HttpClient {
   private client: AxiosInstance;
@@ -26,6 +38,10 @@ class HttpClient {
           return config;
         }
 
+        const authConfig = config as typeof config & {
+          requiresAuth?: boolean;
+        };
+
         if (!isBrowser && config.headers?.["X-Server-Token"]) {
           const token = config.headers["X-Server-Token"] as string;
           delete config.headers["X-Server-Token"];
@@ -34,6 +50,7 @@ class HttpClient {
         }
         if (!isBrowser) return config;
         const requiresAuth = config.headers?.["X-Requires-Auth"] === "true";
+        authConfig.requiresAuth = requiresAuth;
 
         if (requiresAuth) {
           delete config.headers["X-Requires-Auth"];
@@ -51,17 +68,14 @@ class HttpClient {
 
           if (
             errorCode === "RefreshTokenExpired" ||
+            errorCode === "RefreshAccessTokenError" ||
             errorCode === "DeviceMismatch" ||
             errorCode === "TokenTooOld" ||
             errorCode === "RefreshLimitExceeded" ||
             errorCode === "MissingTokens"
           ) {
-            const { signOut } = await import("next-auth/react");
-            await signOut({
-              redirect: true,
-              callbackUrl: "/",
-            });
-            throw new Error("Session expired");
+            await signOutToHome();
+            return Promise.reject(new Error("Session expired"));
           }
 
           const accessToken = (session as Session & { accessToken?: string })
@@ -72,6 +86,7 @@ class HttpClient {
           }
         } catch (err) {
           console.error("[HTTP] Request interceptor error:", err);
+          return Promise.reject(err);
         }
 
         return config;
@@ -90,20 +105,19 @@ class HttpClient {
             : error.message || "Request failed";
 
         const requiresAuth =
+          (error.config as { requiresAuth?: boolean } | undefined)
+            ?.requiresAuth === true ||
           error.config?.headers?.["X-Requires-Auth"] === "true";
 
-        if (status === 401 && isBrowser && requiresAuth) {
-          const { signOut } = await import("next-auth/react");
-          await signOut({
-            redirect: true,
-            callbackUrl: "/",
-          });
+        if ((status === 401 || status === 403) && isBrowser && requiresAuth) {
+          await signOutToHome();
         }
 
         return Promise.reject({
           message: normalizedMessage,
           status,
           data: error.response?.data,
+          method: error.config?.method?.toUpperCase(),
         });
       }
     );

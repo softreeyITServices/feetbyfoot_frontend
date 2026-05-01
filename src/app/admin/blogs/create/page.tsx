@@ -6,6 +6,7 @@ import { BlogService } from "@/domain/application/services/admin/blog.service";
 import { uploadService } from "@/domain/application/services/upload.service";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 /* ================= TYPES ================= */
 
@@ -127,7 +128,9 @@ function CreateBlogPageContent() {
         setSeoTitle(blog.seoTitle || "");
         setSeoDescription(blog.seoDescription || "");
       } catch (err: any) {
-        toast.error(err?.message || "Failed to load blog");
+        if (!isGetRequestError(err)) {
+          toast.error(err?.message || "Failed to load blog");
+        }
       } finally {
         setLoadingBlog(false);
       }

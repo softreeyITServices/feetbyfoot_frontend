@@ -15,6 +15,7 @@ import type {
   AdminCategory,
   AdminCategoryType,
 } from "@/domain/shared/types/admin/category";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 const ALLOWED_PRODUCT_LENGTHS = ["ANKLE", "CALF", "NO_SHOW", "CREW"] as const;
 
@@ -97,10 +98,12 @@ function ProductPage() {
         setCategories(categoryRows);
         setSubcategories(subcategoryRows);
       } catch (error: unknown) {
-        toast.error(
-          (error as { message?: string })?.message ||
-          "Failed to load categories"
-        );
+        if (!isGetRequestError(error)) {
+          toast.error(
+            (error as { message?: string })?.message ||
+            "Failed to load categories"
+          );
+        }
       }
     };
 

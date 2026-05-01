@@ -12,8 +12,6 @@ import {
   Layers,
   Package,
   FolderOpen,
-  Link2,
-  Settings2,
   Tag,
 } from "lucide-react";
 import { CategoryService } from "@/domain/application/services/admin/category.service";
@@ -23,12 +21,11 @@ import type {
   AdminCategoryType,
 } from "@/domain/shared/types/admin/category";
 import { productService } from "@/domain/application/services/product.service";
-import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
 import type {
   CreateMegaMenuBody,
   MegaMenuDocument,
-  MegaMenuListItem,
 } from "@/domain/shared/types/product.type";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 type SourceSubcategory = {
   id: string;
@@ -196,7 +193,6 @@ function megaMenuPayloadToFinalGroups(
 }
 
 type DragItem =
-  | { type: "source-group"; id: string }
   | {
       type: "source-catalog-category";
       groupId: string;
@@ -226,9 +222,55 @@ const NAV_SOURCE_GROUP_TEMPLATES: Omit<SourceGroup, "categories">[] = [
   { id: "grp-men", name: "Men", storefrontPath: "/mens" },
   { id: "grp-women", name: "Women", storefrontPath: "/womens" },
   { id: "grp-kids", name: "Kids", storefrontPath: "/kids" },
+  { id: "grp-gifts", name: "Gifts", storefrontPath: "/gifts" },
+  { id: "grp-outlet", name: "Outlet", storefrontPath: "/shop" },
+  { id: "grp-brand", name: "Brand", storefrontPath: "/brand" },
 ];
 
 const DRAG_KEY = "application/json";
+
+const FIXED_GROUP_TEMPLATE_BY_ID = new Map(
+  NAV_SOURCE_GROUP_TEMPLATES.map((group) => [group.id, group])
+);
+
+function createFixedFinalGroup(
+  template: Omit<SourceGroup, "categories">
+): FinalGroup {
+  return {
+    id: template.id,
+    name: template.name,
+    storefrontPath: template.storefrontPath,
+    categories: [],
+  };
+}
+
+function createDefaultFinalGroups(): FinalGroup[] {
+  return NAV_SOURCE_GROUP_TEMPLATES.map(createFixedFinalGroup);
+}
+
+function normalizeFixedFinalGroups(groups: FinalGroup[]): FinalGroup[] {
+  const normalized: FinalGroup[] = [];
+  const seen = new Set<string>();
+
+  for (const group of groups) {
+    const template = FIXED_GROUP_TEMPLATE_BY_ID.get(group.id);
+    if (!template || seen.has(group.id)) continue;
+    seen.add(group.id);
+    normalized.push({
+      ...group,
+      href: undefined,
+      storefrontPath: template.storefrontPath,
+    });
+  }
+
+  for (const template of NAV_SOURCE_GROUP_TEMPLATES) {
+    if (!seen.has(template.id)) {
+      normalized.push(createFixedFinalGroup(template));
+    }
+  }
+
+  return normalized;
+}
 
 function defaultSlugFromName(name: string): string {
   return name
@@ -345,10 +387,12 @@ export default function AdminMenuCreationPage() {
         );
       } catch (error: unknown) {
         if (!cancelled) {
-          toast.error(
-            (error as { message?: string })?.message ??
-              "Failed to load categories from API"
-          );
+          if (!isGetRequestError(error)) {
+            toast.error(
+              (error as { message?: string })?.message ??
+                "Failed to load categories from API"
+            );
+          }
           setSharedCatalog([]);
         }
       } finally {
@@ -360,51 +404,32 @@ export default function AdminMenuCreationPage() {
     };
   }, []);
 
-  const [finalMenu, setFinalMenu] = useState<FinalGroup[]>([]);
-  const [customName, setCustomName] = useState("");
-  const [customHref, setCustomHref] = useState("");
-  const [customParentId, setCustomParentId] = useState("root");
-  const [customError, setCustomError] = useState("");
+  const [finalMenu, setFinalMenu] = useState<FinalGroup[]>(
+    createDefaultFinalGroups
+  );
   const [dragging, setDragging] = useState<DragItem | null>(null);
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [savingMenu, setSavingMenu] = useState(false);
-  const [deleteMenuModalOpen, setDeleteMenuModalOpen] = useState(false);
   const [menuMetaName, setMenuMetaName] = useState("Main menu");
-  const [menuPlacement, setMenuPlacement] = useState<MenuPlacement>("top");
-  const [menuIsDefault, setMenuIsDefault] = useState(true);
-  const [menuList, setMenuList] = useState<MegaMenuListItem[]>([]);
   const [selectedMenuId, setSelectedMenuId] = useState<string>("");
-  const [menusLoading, setMenusLoading] = useState(true);
 
   const applyMenuDocument = (payload: MegaMenuDocument) => {
     if (payload.name !== undefined && String(payload.name).trim() !== "") {
       setMenuMetaName(String(payload.name));
     }
-    if (payload.position === "footer") {
-      setMenuPlacement("footer");
-    } else if (payload.position === "top") {
-      setMenuPlacement("top");
-    }
-    if (typeof payload.isDefault === "boolean") {
-      setMenuIsDefault(payload.isDefault);
-    }
-    if (payload.groups?.length) {
-      setFinalMenu(megaMenuPayloadToFinalGroups(payload));
-    } else {
-      setFinalMenu([]);
-    }
+    setFinalMenu(
+      normalizeFixedFinalGroups(megaMenuPayloadToFinalGroups(payload))
+    );
   };
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setMenusLoading(true);
       try {
         const items = await productService.listMegaMenus();
         if (cancelled) return;
-        setMenuList(items);
-        if (items.length > 0) {
-          const pick = items.find((i) => i.isDefault) ?? items[0];
+        const topItems = items.filter((i) => i.position === "top");
+        if (topItems.length > 0) {
+          const pick = topItems.find((i) => i.isDefault) ?? topItems[0];
           setSelectedMenuId(pick.id);
           const doc = await productService.getAdminMegaMenu(pick.id);
           if (cancelled) return;
@@ -415,22 +440,19 @@ export default function AdminMenuCreationPage() {
             const doc = await productService.getMegaMenu();
             if (!cancelled) applyMenuDocument(doc);
           } catch {
-            if (!cancelled) setFinalMenu([]);
+            if (!cancelled) setFinalMenu(createDefaultFinalGroups());
           }
         }
       } catch {
         try {
           const doc = await productService.getMegaMenu();
           if (!cancelled) {
-            setMenuList([]);
             setSelectedMenuId("");
             applyMenuDocument(doc);
           }
         } catch {
-          if (!cancelled) setFinalMenu([]);
+          if (!cancelled) setFinalMenu(createDefaultFinalGroups());
         }
-      } finally {
-        if (!cancelled) setMenusLoading(false);
       }
     })();
     return () => {
@@ -438,37 +460,11 @@ export default function AdminMenuCreationPage() {
     };
   }, []);
 
-  const handleMenuSelectionChange = async (value: string) => {
-    setDeleteMenuModalOpen(false);
-    if (value === "__new__") {
-      setSelectedMenuId("");
-      setFinalMenu([]);
-      setMenuMetaName("");
-      setMenuPlacement("top");
-      setMenuIsDefault(false);
-      return;
-    }
-    setSelectedMenuId(value);
-    try {
-      const doc = await productService.getAdminMegaMenu(value);
-      applyMenuDocument(doc);
-    } catch (error: unknown) {
-      toast.error(
-        (error as { message?: string })?.message ?? "Failed to load menu"
-      );
-    }
-  };
-
   /** Links use the target menu group (e.g. Women), not necessarily the left drag column */
   const storefrontPathForFinalGroup = (groupId: string): string =>
     getSourceGroup(groupId)?.storefrontPath ??
     finalMenu.find((g) => g.id === groupId)?.storefrontPath ??
     "";
-
-  const finalGroupIds = useMemo(
-    () => new Set(finalMenu.map((g) => g.id)),
-    [finalMenu]
-  );
 
   const finalCatalogCategoryKeys = useMemo(() => {
     const keys = new Set<string>();
@@ -490,35 +486,6 @@ export default function AdminMenuCreationPage() {
     });
     return keys;
   }, [finalMenu]);
-
-  const existingHrefs = useMemo(() => {
-    const hrefs = new Set<string>();
-    finalMenu.forEach((g) => {
-      if (g.href) hrefs.add(g.href.toLowerCase());
-      g.categories.forEach((c) => {
-        if (c.href) hrefs.add(c.href.toLowerCase());
-        c.children.forEach((s) => {
-          if (s.href) hrefs.add(s.href.toLowerCase());
-        });
-      });
-    });
-    return hrefs;
-  }, [finalMenu]);
-
-  const addGroupToFinal = (sourceGroupId: string) => {
-    const src = getSourceGroup(sourceGroupId);
-    if (!src) return;
-    if (finalGroupIds.has(sourceGroupId)) return;
-    setFinalMenu((prev) => [
-      ...prev,
-      {
-        id: src.id,
-        name: src.name,
-        storefrontPath: src.storefrontPath,
-        categories: [],
-      },
-    ]);
-  };
 
   const addCatalogCategoryToFinal = (
     sourceGroupId: string,
@@ -622,7 +589,7 @@ export default function AdminMenuCreationPage() {
       : undefined;
 
     setFinalMenu((prev) => {
-      let hasGroup = prev.some((g) => g.id === resolvedGroupId);
+      const hasGroup = prev.some((g) => g.id === resolvedGroupId);
       if (!hasGroup && resolvedGroupId === sourceGroupId) {
         return [
           ...prev,
@@ -674,10 +641,6 @@ export default function AdminMenuCreationPage() {
         return { ...g, categories: cats };
       });
     });
-  };
-
-  const removeGroupFromFinal = (groupId: string) => {
-    setFinalMenu((prev) => prev.filter((g) => g.id !== groupId));
   };
 
   const removeCatalogCategoryFromFinal = (
@@ -741,10 +704,6 @@ export default function AdminMenuCreationPage() {
     const payload = parseDropPayload(event);
     if (!payload) return;
 
-    if (payload.type === "source-group") {
-      addGroupToFinal(payload.id);
-      return;
-    }
     if (payload.type === "source-catalog-category") {
       addCatalogCategoryToFinal(payload.groupId, payload.catalogCategoryId);
       return;
@@ -758,13 +717,19 @@ export default function AdminMenuCreationPage() {
     }
   };
 
-  const clearFinalMenu = () => setFinalMenu([]);
+  const clearFinalMenu = () =>
+    setFinalMenu((prev) =>
+      normalizeFixedFinalGroups(prev).map((group) => ({
+        ...group,
+        categories: [],
+      }))
+    );
 
   const handleSaveMenu = async () => {
     const exportPayload = buildMenuExportPayload(finalMenu, {
       name: menuMetaName,
-      position: menuPlacement,
-      isDefault: menuIsDefault,
+      position: "top",
+      isDefault: true,
     });
     const body: CreateMegaMenuBody = {
       name: exportPayload.name,
@@ -778,12 +743,9 @@ export default function AdminMenuCreationPage() {
     try {
       if (selectedMenuId) {
         await productService.updateMegaMenu(selectedMenuId, body);
-        setMenuList(await productService.listMegaMenus());
       } else {
         const created = await productService.createMegaMenu(body);
         if (created.id) setSelectedMenuId(created.id);
-        const fresh = await productService.listMegaMenus();
-        setMenuList(fresh);
       }
       toast.success("Menu saved");
     } catch (error: unknown) {
@@ -793,111 +755,6 @@ export default function AdminMenuCreationPage() {
     } finally {
       setSavingMenu(false);
     }
-  };
-
-  const confirmDeleteMenu = async () => {
-    if (!selectedMenuId) return;
-    try {
-      await productService.deleteMegaMenu(selectedMenuId);
-      toast.success("Menu deleted");
-      const items = await productService.listMegaMenus();
-      setMenuList(items);
-      if (items.length > 0) {
-        const pick = items.find((i) => i.isDefault) ?? items[0];
-        setSelectedMenuId(pick.id);
-        const doc = await productService.getAdminMegaMenu(pick.id);
-        applyMenuDocument(doc);
-      } else {
-        setSelectedMenuId("");
-        try {
-          const doc = await productService.getMegaMenu();
-          applyMenuDocument(doc);
-        } catch {
-          setFinalMenu([]);
-        }
-      }
-    } catch (error: unknown) {
-      const message =
-        (error as { message?: string })?.message ?? "Failed to delete menu";
-      toast.error(message);
-      throw error;
-    }
-  };
-
-  const isGroupCollapsed = (groupId: string) => Boolean(collapsedGroups[groupId]);
-  const toggleGroupCollapsed = (groupId: string) => {
-    setCollapsedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
-  };
-
-
-  const isValidHref = (value: string) => {
-    if (value.startsWith("/")) return true;
-    try {
-      const url = new URL(value);
-      return url.protocol === "http:" || url.protocol === "https:";
-    } catch {
-      return false;
-    }
-  };
-
-  const handleAddCustomItem = () => {
-    const name = customName.trim();
-    const href = customHref.trim();
-
-    if (!name) {
-      setCustomError("Name is required.");
-      return;
-    }
-    if (href) {
-      if (!isValidHref(href)) {
-        setCustomError("Href must be a path (/path) or https URL.");
-        return;
-      }
-      if (existingHrefs.has(href.toLowerCase())) {
-        setCustomError("This href already exists.");
-        return;
-      }
-    }
-
-    const hrefField = href ? { href } : {};
-
-    if (customParentId === "root") {
-      const gid = `custom-group-${Date.now()}`;
-      setFinalMenu((prev) => [
-        ...prev,
-        {
-          id: gid,
-          name,
-          ...hrefField,
-          categories: [],
-        },
-      ]);
-    } else {
-      const catId = `custom-cat-${Date.now()}`;
-      setFinalMenu((prev) =>
-        prev.map((g) => {
-          if (g.id !== customParentId) return g;
-          return {
-            ...g,
-            categories: [
-              ...g.categories,
-              {
-                id: catId,
-                name,
-                ...hrefField,
-                children: [],
-                fromCatalog: false,
-              },
-            ],
-          };
-        })
-      );
-    }
-
-    setCustomName("");
-    setCustomHref("");
-    setCustomParentId("root");
-    setCustomError("");
   };
 
   const moveGroup = (groupId: string, direction: "up" | "down") => {
@@ -1043,10 +900,6 @@ export default function AdminMenuCreationPage() {
     );
   };
 
-  const categoryKey = (groupId: string, catalogCategoryId: string) =>
-    `${groupId}::${catalogCategoryId}`;
-
-
   const updateSubcategory = (
     groupId: string,
     catalogCategoryId: string,
@@ -1084,8 +937,6 @@ export default function AdminMenuCreationPage() {
 
   const [catalogSearch, setCatalogSearch] = useState("");
   const [catalogExpandedId, setCatalogExpandedId] = useState<string | null>(null);
-  const [showAddSection, setShowAddSection] = useState(false);
-
   const filteredCatalog = catalogSearch.trim()
     ? sharedCatalog.filter(
         (c) =>
@@ -1098,6 +949,7 @@ export default function AdminMenuCreationPage() {
 
   /** All source groups share the same catalog — use any to resolve category lookups */
   const defaultSrcGroupId = sourceGroups[0]?.id ?? "";
+  const targetGroupId = activeTabId ?? defaultSrcGroupId;
 
   return (
     <div className="space-y-5 pb-10">
@@ -1113,7 +965,7 @@ export default function AdminMenuCreationPage() {
             onClick={clearFinalMenu}
             className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 text-gray-600"
           >
-            Clear All
+            Clear Categories
           </button>
           <button
             type="button"
@@ -1126,42 +978,27 @@ export default function AdminMenuCreationPage() {
         </div>
       </div>
 
-      {/* ====== MENU SETTINGS ====== */}
-      <div className="bg-white rounded-xl border border-neutral-200 p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Settings2 className="h-4 w-4 text-neutral-500" />
-          <h2 className="text-sm font-semibold text-neutral-800">Menu Settings</h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-          {/* Saved menu selector */}
-          <div className="lg:col-span-2 space-y-1.5">
+      {/*
             <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Editing Menu</label>
             <div className="flex gap-2">
               <select
-                value={selectedMenuId || "__new__"}
+                value={selectedMenuId}
                 onChange={(e) => void handleMenuSelectionChange(e.target.value)}
                 disabled={menusLoading}
                 className="flex-1 min-w-0 rounded-lg border border-gray-200 px-3 py-2.5 text-sm bg-white outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:opacity-60"
               >
-                <option value="__new__">+ Create new menu</option>
+                <option value="">
+                  {menusLoading ? "Loading menus..." : "Default menu"}
+                </option>
                 {menuList.map((m) => (
                   <option key={m.id} value={m.id}>
                     {m.name}{m.isDefault ? " ⭐" : ""}
                   </option>
                 ))}
               </select>
-              {selectedMenuId && (
-                <button
-                  type="button"
-                  onClick={() => setDeleteMenuModalOpen(true)}
-                  className="shrink-0 px-3 py-2 text-xs border border-red-200 text-red-600 rounded-lg hover:bg-red-50"
-                >
-                  Delete
-                </button>
-              )}
             </div>
           </div>
-          {/* Menu name */}
+        
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Menu Name</label>
             <input
@@ -1172,7 +1009,7 @@ export default function AdminMenuCreationPage() {
               className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
             />
           </div>
-          {/* Position toggle */}
+         
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Show In</label>
             <div className="flex rounded-lg border border-gray-200 overflow-hidden">
@@ -1192,7 +1029,7 @@ export default function AdminMenuCreationPage() {
               </button>
             </div>
           </div>
-          {/* Default toggle */}
+        
           <div className="lg:col-span-4 flex items-center gap-3 pt-1">
             <button
               type="button"
@@ -1206,6 +1043,21 @@ export default function AdminMenuCreationPage() {
               <span className="ml-1.5 text-gray-500 font-normal text-xs">This menu will be used automatically for the selected position</span>
             </span>
           </div>
+        </div>
+      </div> */}
+
+      <div className="bg-white rounded-xl border border-neutral-200 p-5">
+        <div className="max-w-md space-y-1.5">
+          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            Menu Name
+          </label>
+          <input
+            type="text"
+            value={menuMetaName}
+            onChange={(e) => setMenuMetaName(e.target.value)}
+            placeholder="e.g. Main Navigation"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+          />
         </div>
       </div>
 
@@ -1277,7 +1129,7 @@ export default function AdminMenuCreationPage() {
               </div>
             ) : (
               filteredCatalog.map((cat) => {
-                const catKey = `${defaultSrcGroupId}::${cat.id}`;
+                const catKey = `${targetGroupId}::${cat.id}`;
                 const catAdded = finalCatalogCategoryKeys.has(catKey);
                 const isExpanded = catalogExpandedId === cat.id;
                 return (
@@ -1317,7 +1169,14 @@ export default function AdminMenuCreationPage() {
                         )}
                         <button
                           type="button"
-                          onClick={() => { addCatalogCategoryToFinal(defaultSrcGroupId, cat.id); setActiveGroupTab(activeTabId); }}
+                          onClick={() => {
+                            addCatalogCategoryToFinal(
+                              defaultSrcGroupId,
+                              cat.id,
+                              targetGroupId
+                            );
+                            setActiveGroupTab(targetGroupId);
+                          }}
                           disabled={catAdded}
                           title={catAdded ? "Already in menu" : `Add "${cat.name}" to active section`}
                           className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
@@ -1333,7 +1192,7 @@ export default function AdminMenuCreationPage() {
                     {isExpanded && cat.subcategories.length > 0 && (
                       <div className="px-2.5 pb-2.5 pt-0.5 border-t border-neutral-100 flex flex-wrap gap-1.5 bg-neutral-50/50">
                         {cat.subcategories.map((sub) => {
-                          const subKey = `${defaultSrcGroupId}::${cat.id}::${sub.id}`;
+                          const subKey = `${targetGroupId}::${cat.id}::${sub.id}`;
                           const subAdded = finalSubcategoryKeys.has(subKey);
                           return (
                             <button
@@ -1344,8 +1203,8 @@ export default function AdminMenuCreationPage() {
                               onDragEnd={onDragEnd}
                               onClick={() => {
                                 if (!subAdded) {
-                                  addSubcategoryToFinal(defaultSrcGroupId, cat.id, sub.id);
-                                  setActiveGroupTab(activeTabId);
+                                  addSubcategoryToFinal(defaultSrcGroupId, cat.id, sub.id, targetGroupId);
+                                  setActiveGroupTab(targetGroupId);
                                 }
                               }}
                               title={subAdded ? "Already added" : "Click or drag to add"}
@@ -1430,14 +1289,6 @@ export default function AdminMenuCreationPage() {
                     </button>
                   </div>
                 ))}
-                {/* Global drop zone tab */}
-                <div
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleDropToFinal}
-                  className="shrink-0 px-3 py-2.5 text-xs text-neutral-400 border-b-2 border-dashed border-neutral-200 hover:border-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-all cursor-pointer whitespace-nowrap"
-                >
-                  + drop here
-                </div>
               </div>
 
               {/* ---- ACTIVE TAB CONTENT ---- */}
@@ -1470,18 +1321,6 @@ export default function AdminMenuCreationPage() {
                         className="w-6 h-6 rounded border border-neutral-200 text-neutral-500 flex items-center justify-center disabled:opacity-30 hover:bg-neutral-100"
                       >
                         <ChevronDown className="h-3 w-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          removeGroupFromFinal(activeTabGroup.id);
-                          setActiveGroupTab(null);
-                          setCollapsedGroups((p) => { const n = { ...p }; delete n[activeTabGroup.id]; return n; });
-                        }}
-                        title="Remove this section"
-                        className="w-6 h-6 rounded border border-red-200 text-red-500 flex items-center justify-center hover:bg-red-50 ml-0.5"
-                      >
-                        <X className="h-3 w-3" />
                       </button>
                     </div>
                   </div>
@@ -1677,12 +1516,12 @@ export default function AdminMenuCreationPage() {
       </div>
 
       {/* ====== ADD CUSTOM LINK ====== */}
-      <div className="bg-white rounded-xl border border-neutral-200 p-4">
+      {/* <div className="bg-white rounded-xl border border-neutral-200 p-4">
         <div className="flex items-center gap-2 mb-3">
           <Link2 className="h-4 w-4 text-neutral-500 shrink-0" />
           <div>
             <h2 className="text-sm font-semibold text-neutral-800">Add Custom Link</h2>
-            <p className="text-xs text-neutral-400">Add a link not from your catalog — e.g. &quot;Sale&quot;, &quot;Blog&quot;, &quot;About Us&quot;</p>
+            <p className="text-xs text-neutral-400">Add a link under one of the default nav sections</p>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
@@ -1714,7 +1553,6 @@ export default function AdminMenuCreationPage() {
                 onChange={(e) => setCustomParentId(e.target.value)}
                 className="flex-1 min-w-0 rounded-lg border border-neutral-200 px-3 py-2 text-sm bg-white outline-none focus:border-neutral-400"
               >
-                <option value="root">Top level (new section)</option>
                 {finalMenu.map((g) => (
                   <option key={g.id} value={g.id}>Under &quot;{g.name}&quot;</option>
                 ))}
@@ -1732,23 +1570,8 @@ export default function AdminMenuCreationPage() {
         {customError && (
           <p className="mt-2 text-xs text-red-600">{customError}</p>
         )}
-      </div>
+      </div> */}
 
-      <ConfirmModal
-        isOpen={deleteMenuModalOpen}
-        onClose={() => setDeleteMenuModalOpen(false)}
-        onConfirm={confirmDeleteMenu}
-        variant="danger"
-        title="Delete this menu"
-        description={
-          menuMetaName.trim()
-            ? `Delete "${menuMetaName.trim()}"? This removes the saved menu and cannot be undone.`
-            : "This removes the saved menu and cannot be undone."
-        }
-        confirmText="Delete"
-        cancelText="Cancel"
-        loadingText="Deleting..."
-      />
     </div>
   );
 }

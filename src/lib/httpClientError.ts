@@ -1,6 +1,7 @@
 export type HttpClientError = {
   message: string;
   status: number;
+  method?: string;
   data?: {
     message?: string;
     statusCode?: string;
@@ -21,4 +22,12 @@ export function isHttpClientError(
     return false;
 
   return "status" in e && "message" in e;
+}
+
+export function isGetRequestError(error: unknown): boolean {
+  return (
+    isHttpClientError(error) &&
+    typeof error.method === "string" &&
+    error.method.toUpperCase() === "GET"
+  );
 }

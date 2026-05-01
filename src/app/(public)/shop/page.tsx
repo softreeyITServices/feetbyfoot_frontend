@@ -8,6 +8,7 @@ import SortDropdown from "@/component/ui/SortDropdown";
 import { wishlistService } from "@/domain/application/services/wishlist.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/services/auth/[...nextauth]/route";
+import { SectionBannerService } from "@/domain/application/services/admin/sectionBanner.service";
 
 export const metadata: Metadata = {
   title: "Shop | Feet By Foot",
@@ -139,8 +140,8 @@ export default async function ShopPage({
       "totalPages:",
       rawResponse?.totalPages,
     );
-  } catch (err: any) {
-    console.error(err.message);
+  } catch (err: unknown) {
+    console.error(err instanceof Error ? err.message : err);
     throw err;
   }
 
@@ -167,6 +168,14 @@ export default async function ShopPage({
     return `?${qs.toString()}`;
   };
 
+  let outletBannerUrl: string | null = null;
+  try {
+    const banners = await SectionBannerService.getBySectionKey("OUTLET");
+    outletBannerUrl = banners.find((banner) => banner.isActive)?.image ?? null;
+  } catch {
+    outletBannerUrl = null;
+  }
+
   return (
     <main className="w-full">
       <div className="text-center mt-10">
@@ -181,11 +190,12 @@ export default async function ShopPage({
       <section className="max-w-7xl mx-auto px-4 mt-6">
         <div className="overflow-hidden rounded-xl">
           <Image
-            src="/assets/images/mens-category-banner.png"
+            src={outletBannerUrl ?? "/assets/images/mens-category-banner.png"}
             alt="Shop Banner"
             width={1200}
             height={300}
             className="w-full h-auto object-cover"
+            unoptimized={Boolean(outletBannerUrl)}
           />
         </div>
       </section>

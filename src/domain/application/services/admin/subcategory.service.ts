@@ -7,8 +7,24 @@ import type {
 import {
   ADMIN_SUB_CATEGORIES_URL,
   SUB_CATEGORIES_URL,
-  CATEGORIES_URL,
 } from "@/constants/apis";
+
+function normalizeCategoryTypeList<T>(res: unknown): T[] {
+  if (Array.isArray(res)) return res as T[];
+
+  if (res && typeof res === "object") {
+    const data = (res as { data?: unknown }).data;
+
+    if (Array.isArray(data)) return data as T[];
+
+    if (data && typeof data === "object") {
+      const nestedData = (data as { data?: unknown }).data;
+      if (Array.isArray(nestedData)) return nestedData as T[];
+    }
+  }
+
+  return [];
+}
 
 export class CategoryTypeService {
   /* ---------------- CREATE ---------------- */
@@ -28,7 +44,7 @@ export class CategoryTypeService {
   /* ---------------- GET ALL ---------------- */
   static async getAll<T>(): Promise<T[]> {
     try {
-      const res: any = await httpClient.request<
+      const res = await httpClient.request<
         CategoryResponse<{ data: T[] }>
       >({
         url: ADMIN_SUB_CATEGORIES_URL,
@@ -36,11 +52,12 @@ export class CategoryTypeService {
         requiresAuth: true,
       });
 
-      if (Array.isArray(res)) return res;
-      if (res && Array.isArray(res.data)) return res.data;
-      if (res?.data && Array.isArray(res.data.data)) return res.data.data;
-      return [];
+      return normalizeCategoryTypeList<T>(res);
     } catch (error) {
+      if ((error as { status?: number })?.status === 404) {
+        return [];
+      }
+
       throw handleApiError(error, "getAllSubcategories");
     }
   }
@@ -48,7 +65,7 @@ export class CategoryTypeService {
   /* ---------------- GET BY CATEGORY ---------------- */
   static async getByCategory<T>(categoryId: string): Promise<T[]> {
     try {
-      const res: any = await httpClient.request<
+      const res = await httpClient.request<
         CategoryResponse<{ data: T[] }>
       >({
         url: `${ADMIN_SUB_CATEGORIES_URL}/category/${categoryId}`,
@@ -56,11 +73,12 @@ export class CategoryTypeService {
         requiresAuth: true,
       });
 
-      if (Array.isArray(res)) return res;
-      if (res && Array.isArray(res.data)) return res.data;
-      if (res?.data && Array.isArray(res.data.data)) return res.data.data;
-      return [];
+      return normalizeCategoryTypeList<T>(res);
     } catch (error) {
+      if ((error as { status?: number })?.status === 404) {
+        return [];
+      }
+
       throw handleApiError(error, "getSubcategoriesByCategory");
     }
   }

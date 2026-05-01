@@ -10,6 +10,7 @@ import { uploadService } from "@/domain/application/services/upload.service";
 
 import toast from "react-hot-toast";
 import { createPortal } from "react-dom";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 /* ================= TYPES ================= */
 
@@ -46,6 +47,7 @@ const SECTION_OPTIONS = [
   "KIDS",
   "GIFTS",
   "OUTLET",
+  "BRAND",
 ];
 
 /* ================= ACTION DROPDOWN ================= */
@@ -159,7 +161,9 @@ export default function SectionBannerPage() {
 
     } catch (e: any) {
 
-      toast.error(e.message);
+      if (!isGetRequestError(e)) {
+        toast.error(e.message);
+      }
 
     } finally {
 

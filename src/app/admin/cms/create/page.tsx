@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Editor } from "@tinymce/tinymce-react";
 import { CmsService } from "@/domain/application/services/admin/cms.service";
 import toast from "react-hot-toast";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 /* ================= TYPES ================= */
 
@@ -54,8 +55,10 @@ function CmsCreateEditPageContent() {
         content: res.content || "",
         faq: res.faq || [],
       });
-    } catch {
-      toast.error("Failed to load CMS");
+    } catch (error) {
+      if (!isGetRequestError(error)) {
+        toast.error("Failed to load CMS");
+      }
     } finally {
       setLoading(false);
     }

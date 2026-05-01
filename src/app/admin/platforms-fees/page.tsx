@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { createPortal } from "react-dom";
 import { platformFeesService } from "@/domain/application/services/platformFees.service";
 import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 /* ================= TYPES ================= */
 
@@ -144,7 +145,9 @@ export default function PlatformFeePage() {
 
       setData(res.map((x) => ({ ...x, id: x._id })));
     } catch (err: any) {
-      toast.error(err?.message || "Failed to fetch platform fees");
+      if (!isGetRequestError(err)) {
+        toast.error(err?.message || "Failed to fetch platform fees");
+      }
     } finally {
       setLoading(false);
     }

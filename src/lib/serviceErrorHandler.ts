@@ -61,6 +61,7 @@ export function handleApiError(error: unknown, context?: string): never {
     const err = error as {
       message: string;
       status?: number;
+      method?: string;
       data?: unknown;
     };
 
@@ -70,6 +71,7 @@ export function handleApiError(error: unknown, context?: string): never {
 
     throw Object.assign(new Error(message), {
       status: err.status,
+      method: err.method,
       data: err.data,
     });
   }

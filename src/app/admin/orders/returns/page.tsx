@@ -10,8 +10,8 @@ import {
   ReturnStatus,
 } from "@/domain/application/services/admin/return.service";
 import toast from "react-hot-toast";
-import Image from "next/image";
 import { TrackingModal } from "@/component/ui/modals/TrackingModal";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 
 /* ================= TYPES ================= */
@@ -78,9 +78,11 @@ function ReturnsPage() {
 
       setReturns(list);
     } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to load returns",
-      );
+      if (!isGetRequestError(err)) {
+        toast.error(
+          err instanceof Error ? err.message : "Failed to load returns",
+        );
+      }
     } finally {
       setLoading(false);
     }

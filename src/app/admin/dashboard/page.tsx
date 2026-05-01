@@ -31,6 +31,7 @@ import type {
   AdminDashboardOverviewResponse,
   DashboardTrend,
 } from "@/domain/shared/types/admin/dashboard";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -180,10 +181,12 @@ export default function AdminDashboard() {
       const res = await DashboardService.getOverview();
       setOverview(res);
     } catch (error: unknown) {
-      toast.error(
-        (error as { message?: string })?.message ||
-          "Failed to load dashboard overview"
-      );
+      if (!isGetRequestError(error)) {
+        toast.error(
+          (error as { message?: string })?.message ||
+            "Failed to load dashboard overview"
+        );
+      }
     } finally {
       setLoading(false);
     }

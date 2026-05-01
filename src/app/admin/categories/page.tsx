@@ -18,6 +18,7 @@ import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
 import { SubcategoryModal } from "@/component/ui/modals/admin/SubcategoryModal";
 import { AdminForm, FormField } from "@/component/admin/Adminform";
 import { AdminModal } from "@/component/admin/AdminModal";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 /* ================= PAGE ================= */
 
@@ -66,10 +67,12 @@ export default function AdminCategoriesPage() {
 
       setRows(mapped);
     } catch (error: unknown) {
-      toast.error(
-        (error as { message?: string })?.message ||
-        "Failed to load categories"
-      );
+      if (!isGetRequestError(error)) {
+        toast.error(
+          (error as { message?: string })?.message ||
+          "Failed to load categories"
+        );
+      }
     } finally {
       setLoading(false);
     }

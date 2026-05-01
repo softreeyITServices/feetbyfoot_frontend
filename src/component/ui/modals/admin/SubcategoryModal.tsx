@@ -9,6 +9,7 @@ import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
 import { toast } from "react-hot-toast";
 import { AdminCategoryType } from "@/domain/shared/types/admin/category";
 import { CategoryTypeService } from "@/domain/application/services/admin/subcategory.service";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 /* ================= TYPES ================= */
 
@@ -82,10 +83,12 @@ export function SubcategoryModal({
         }))
       );
     } catch (error: unknown) {
-      toast.error(
-        (error as { message?: string })?.message ||
-        "Failed to load subcategories"
-      );
+      if (!isGetRequestError(error)) {
+        toast.error(
+          (error as { message?: string })?.message ||
+          "Failed to load subcategories"
+        );
+      }
     } finally {
       setLoading(false);
     }

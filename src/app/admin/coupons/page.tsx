@@ -10,6 +10,7 @@ import {
 } from "@/domain/application/services/admin/coupon.service";
 import toast from "react-hot-toast";
 import { createPortal } from "react-dom";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 /* ================= TYPES ================= */
 
@@ -138,7 +139,9 @@ function CouponPage() {
       setData(transformed);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch coupons");
+      if (!isGetRequestError(err)) {
+        toast.error("Failed to fetch coupons");
+      }
     } finally {
       setLoading(false);
     }

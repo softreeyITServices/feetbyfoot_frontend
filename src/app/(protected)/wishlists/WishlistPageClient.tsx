@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { wishlistService } from "@/domain/application/services/wishlist.service";
 import { WishlistApiProduct } from "@/domain/shared/types/wishlist.type";
 import ProductCard from "@/component/ui/ProductCard";
+import { isGetRequestError } from "@/lib/httpClientError";
 
 const WishlistPageClient = () => {
   const router = useRouter();
@@ -18,8 +19,10 @@ const WishlistPageClient = () => {
       setLoading(true);
       const response = await wishlistService.getWishlist();
       setProducts(response.data.products ?? []);
-    } catch {
-      toast.error("Failed to load wishlist");
+    } catch (error) {
+      if (!isGetRequestError(error)) {
+        toast.error("Failed to load wishlist");
+      }
     } finally {
       setLoading(false);
     }

@@ -40,11 +40,11 @@ const CATEGORY_CONFIG = {
     description: "Perfect sock gifts for every occasion",
     sectionBannerKey: "GIFTS",
   },
-  // brand: {
-  //   label: "Brand",
-  //   title: "Brand",
-  //   description: "Explore Feet By Foot products by brand",
-  // },
+  brand: {
+    label: "Brand",
+    title: "Brand",
+    description: "Explore Feet By Foot products by brand",
+  },
 } as const;
 
 /** Same box for API banners and static fallback (4:1 hero strip). */

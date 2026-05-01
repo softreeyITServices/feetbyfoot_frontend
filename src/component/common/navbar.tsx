@@ -13,7 +13,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { productService } from "@/domain/application/services/product.service";
-import type { MenuCategory, MenuGroup } from "@/domain/shared/types/product.type";
+import type { MenuGroup } from "@/domain/shared/types/product.type";
 import {
   categoryHref,
   categoryIsHeaderOnly,
@@ -23,6 +23,42 @@ import {
   subcategoryHref,
   subcategoryIsHeaderOnly,
 } from "@/lib/megaMenuLinks";
+
+const DEFAULT_TOP_NAV_GROUPS: MenuGroup[] = [
+  { id: "grp-men", name: "Men", storefrontPath: "/mens", categories: [] },
+  { id: "grp-women", name: "Women", storefrontPath: "/womens", categories: [] },
+  { id: "grp-kids", name: "Kids", storefrontPath: "/kids", categories: [] },
+  { id: "grp-gifts", name: "Gifts", storefrontPath: "/gifts", categories: [] },
+  { id: "grp-outlet", name: "Outlet", storefrontPath: "/shop", categories: [] },
+  { id: "grp-brand", name: "Brand", storefrontPath: "/brand", categories: [] },
+];
+
+const DEFAULT_TOP_NAV_GROUP_BY_ID = new Map(
+  DEFAULT_TOP_NAV_GROUPS.map((group) => [group.id, group])
+);
+
+function normalizeTopNavGroups(groups: MenuGroup[] | undefined): MenuGroup[] {
+  const normalized: MenuGroup[] = [];
+  const seen = new Set<string>();
+
+  for (const group of groups ?? []) {
+    const fixed = DEFAULT_TOP_NAV_GROUP_BY_ID.get(group.id);
+    if (!fixed || seen.has(group.id)) continue;
+    seen.add(group.id);
+    normalized.push({
+      ...group,
+      href: undefined,
+      storefrontPath: fixed.storefrontPath,
+      categories: group.categories ?? [],
+    });
+  }
+
+  for (const group of DEFAULT_TOP_NAV_GROUPS) {
+    if (!seen.has(group.id)) normalized.push(group);
+  }
+
+  return normalized;
+}
 
 function DesktopNavSkeleton() {
   return (
@@ -217,15 +253,11 @@ export default function Navbar() {
     let cancelled = false;
     (async () => {
       try {
-        const doc = await productService.getMegaMenu();
+        const doc = await productService.getMegaMenuForPlacement("top");
         if (cancelled) return;
-        if (doc.position === "footer") {
-          setMegaGroups([]);
-          return;
-        }
-        setMegaGroups(doc.groups?.length ? doc.groups : []);
+        setMegaGroups(normalizeTopNavGroups(doc.groups));
       } catch {
-        if (!cancelled) setMegaGroups([]);
+        if (!cancelled) setMegaGroups(DEFAULT_TOP_NAV_GROUPS);
       } finally {
         if (!cancelled) setMegaMenuReady(true);
       }
