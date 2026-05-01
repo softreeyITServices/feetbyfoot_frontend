@@ -39,6 +39,13 @@ const CATEGORY_CONFIG = {
     title: "Gift Socks",
     description: "Perfect sock gifts for every occasion",
     sectionBannerKey: "GIFTS",
+    isGiftPack: true,
+  },
+  outlet: {
+    label: "Outlet",
+    title: "Outlet Socks",
+    description: "Shop premium socks at Feet By Foot",
+    sectionBannerKey: "OUTLET",
   },
   brand: {
     label: "Brand",
@@ -172,7 +179,12 @@ export default async function CategoryPage({
     minDiscount: resolvedSearchParams.discount
       ? Number(resolvedSearchParams.discount)
       : undefined,
-    packTypes: toArray(resolvedSearchParams.packType).map((v) => v === "true"),
+    packTypes:
+      resolvedSearchParams.packType !== undefined
+        ? toArray(resolvedSearchParams.packType).map((v) => v === "true")
+        : "isGiftPack" in config && config.isGiftPack
+          ? [true]
+          : [],
   });
 
 
@@ -190,6 +202,13 @@ export default async function CategoryPage({
     // so clicking "page 2" doesn't drop the /mens:/womens:/kids filter.
     if (resolvedSearchParams.gender === undefined && defaultGender) {
       qs.set("gender", defaultGender);
+    }
+    if (
+      resolvedSearchParams.packType === undefined &&
+      "isGiftPack" in config &&
+      config.isGiftPack
+    ) {
+      qs.set("packType", "true");
     }
     qs.set("page", String(pageNum));
     return `?${qs.toString()}`;

@@ -28,7 +28,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   console.log("response", response);
   const ratingResponse = await ratingService.getRatingsByProductId(id);
 
-  const { product } = response;
+  const { product, categoriesProducts } = response;
 
   const {
     _id,
@@ -38,6 +38,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     description,
     imageUrls,
     sizes,
+    brand
   } = product;
 
   const products = {
@@ -51,6 +52,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
     baseImage: imageUrls.length > 0 ? imageUrls[0] : "",
   };
 
+  const relatedProducts = categoriesProducts?.map((p: any) => ({
+    id: p._id,
+    imageSrc: p.imageUrls?.[0] || "",
+    altText: p.name,
+    categories: p.brand || "products",
+    title: p.name,
+    originalPrice: p.price,
+    discountedPrice: p.salePrice || p.price,
+    size: p.sizes || [],
+  })) || [];
+
   return (
     <main className="max-w-7xl mx-auto px-4 py-10">
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -58,16 +70,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <ProductSummary
           product={products}
           totalRatings={ratingResponse?.totalRatings ?? 0}
-          averageRating={ratingResponse?.averageRating ?? 0} />
+          averageRating={ratingResponse?.averageRating ?? 0}
+          reviews={ratingResponse?.reviews ?? []}
+        />
       </section>
 
-      <ProductTabs
-        description={products.description}
-        reviews={ratingResponse?.reviews ?? []}
-        totalRatings={ratingResponse?.totalRatings ?? 0}
-        averageRating={ratingResponse?.averageRating ?? 0}
-      />
-      {/* <RelatedProducts products={products} /> */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-20">
+          <h2 className="text-2xl font-bold mb-8">Related Products</h2>
+          <RelatedProducts products={relatedProducts} />
+        </div>
+      )}
     </main>
   );
 }

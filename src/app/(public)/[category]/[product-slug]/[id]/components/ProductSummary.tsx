@@ -1,5 +1,7 @@
 "use client";
 
+import ProductTabs from "./ProductTabs";
+import { Review } from "@/domain/shared/types/rating.type";
 import SizeSelector from "./SizeSelector";
 import QuantitySelector from "./QuantitySelector";
 import { CartBasketIcon } from "@/icons/CartBasketIcon";
@@ -33,12 +35,14 @@ interface ProductSummaryProps {
   };
   totalRatings: number;
   averageRating: number;
+  reviews: Review[];
 }
 
 export default function ProductSummary({
   product,
   totalRatings,
   averageRating,
+  reviews,
 }: ProductSummaryProps) {
   const dispatch = useAppDispatch();
   const { data: session } = useSession();
@@ -112,7 +116,10 @@ export default function ProductSummary({
   const hasColors = uniqueColors.length > 0;
 
   const scrollToReviews = () => {
-    window.location.hash = "reviews";
+    const reviewsTab = document.getElementById("product-tabs");
+    if (reviewsTab) {
+      reviewsTab.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
@@ -156,10 +163,6 @@ export default function ProductSummary({
           ₹{product.mrp}
         </span>
       </div>
-
-      <p className="text-gray-600 text-sm mb-6">
-        {product.description}
-      </p>
 
       {/* Color Selector */}
       {hasColors && (
@@ -215,6 +218,15 @@ export default function ProductSummary({
           <CartBasketIcon width={13} height={15} fill={isOutOfStock || loading ? "#9ca3af" : "#fff"} />
           <span>{loading ? "ADDING..." : isOutOfStock ? "OUT OF STOCK" : "ADD TO BASKET"}</span>
         </button>
+      </div>
+
+      <div id="product-tabs" className="mt-10">
+        <ProductTabs
+          description={product.description}
+          reviews={reviews}
+          totalRatings={totalRatings}
+          averageRating={averageRating}
+        />
       </div>
 
       <div className="flex gap-8 mt-10">

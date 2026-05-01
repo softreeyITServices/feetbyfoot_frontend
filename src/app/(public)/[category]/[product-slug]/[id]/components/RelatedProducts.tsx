@@ -2,6 +2,7 @@ import ProductCard from "@/component/ui/ProductCard";
 
 interface RelatedProductsProps {
   products?: {
+    id: string;
     imageSrc: string;
     altText: string;
     categories: string;
@@ -18,12 +19,12 @@ interface RelatedProductsProps {
 }
 export default function RelatedProducts({ products }: RelatedProductsProps) {
   return (
-    <section className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
-      {products?.map((product, i) => (
+    <section className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+      {products?.map((product) => (
         <ProductCard
-          key={i.toString()}
+          key={product.id}
           wishlist={true}
-          id={i.toString()}
+          id={product.id}
           size={product.size}
           imageSrc={product.imageSrc}
           altText={product.altText}
