@@ -28,7 +28,7 @@ export default async function BestSelling() {
       <section className="flex flex-col gap-8 py-12">
         <FadeIn direction="up" className="text-center">
           <h2 className="inline-block bg-yellow-400 px-6 py-2 text-4xl font-bold">
-            Best Selling Socks
+            Best Selling
           </h2>
           <p className="mt-2 text-gray-600">
             Preorder now to receive exclusive deals & gifts

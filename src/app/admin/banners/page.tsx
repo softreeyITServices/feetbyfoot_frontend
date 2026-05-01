@@ -141,11 +141,9 @@ export default function BannerPage() {
       setLoading(true);
       const res:any = await bannerService.getAllBanners();
       console.log('res',res)
-      setData(res.data?.map((x:any) => ({ ...x, id: x._id })));
+      setData(res?.data?.map((x:any) => ({ ...x, id: x._id })));
     } catch (err: any) {
-      if (!isGetRequestError(err)) {
-        toast.error(err?.message || "Failed to fetch banners");
-      }
+      console.log('err',err)
     } finally {
       setLoading(false);
     }

@@ -131,7 +131,7 @@ function CouponPage() {
 
       const res = await CouponService.getAll();
 
-      const transformed: CouponRow[] = res.map((x) => ({
+      const transformed: CouponRow[] = res?.map((x) => ({
         ...x,
         id: x._id,
       }));
@@ -139,9 +139,6 @@ function CouponPage() {
       setData(transformed);
     } catch (err) {
       console.error(err);
-      if (!isGetRequestError(err)) {
-        toast.error("Failed to fetch coupons");
-      }
     } finally {
       setLoading(false);
     }

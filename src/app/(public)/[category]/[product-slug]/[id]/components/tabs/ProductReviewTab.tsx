@@ -22,7 +22,7 @@ export default function ProductReviewTab({
   return (
     <div id="reviews-section" className="space-y-6">
       {/* Rating Summary */}
-      <div className="border-b border-gray-300 pb-6">
+      <div className="pb-6">
         <div className="text-3xl font-semibold text-gray-900">
           {averageRating.toFixed(1)} / 5
         </div>

@@ -60,7 +60,7 @@ export default function ProductTabs({
         ))}
       </div>
 
-      <div className="shadow-xl rounded-lg p-8 text-sm text-gray-700">
+      <div className=" border-t border-slate-200  rounded-t-xl p-2 text-sm text-gray-700">
         {tab === "description" && (
           <ProductDescriptionTab description={description} />
         )}

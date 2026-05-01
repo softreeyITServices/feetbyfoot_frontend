@@ -229,12 +229,12 @@ export default function ProductSummary({
         />
       </div>
 
-      <div className="flex gap-8 mt-10">
+      {/* <div className="flex gap-8 mt-10">
         <SustainableIcon width={82} height={93} />
         <ComfortToeIcon width={96} height={93} />
         <HassleFreeIcon width={96} height={93} />
         <MoneyBackIcon width={96} height={93} />
-      </div>
+      </div> */}
     </div>
   );
 }
