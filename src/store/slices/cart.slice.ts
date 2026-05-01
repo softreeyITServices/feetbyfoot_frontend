@@ -45,6 +45,7 @@ export const migrateCartAsync = createAsyncThunk(
           size: item.size,
           quantity: item.quantity,
         });
+        
       }
 
       // ✅ Fetch the final merged cart from server
