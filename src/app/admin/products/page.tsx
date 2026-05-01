@@ -476,13 +476,14 @@ function ProductPage() {
       key: "color",
       label: "Color",
       render: (row) => {
-        const extendedRow = row as Product & { colors?: string[] };
         const rowColors =
-          extendedRow.colors?.length
-            ? extendedRow.colors
-            : row.color
-              ? [row.color]
-              : [];
+          row.colors?.length
+            ? row.colors
+            : row.sizes?.length
+              ? Array.from(new Set(row.sizes.map((s) => s.color).filter(Boolean))) as string[]
+              : row.color
+                ? [row.color]
+                : [];
 
         return (
           <div className="flex flex-wrap gap-1">

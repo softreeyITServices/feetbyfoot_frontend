@@ -4,6 +4,7 @@ export interface ProductSize {
   size: string;
   quantity: number;
   isActive: boolean;
+  color?: string;
   isInCart?: boolean;
 }
 
