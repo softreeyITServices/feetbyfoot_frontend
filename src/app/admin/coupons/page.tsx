@@ -130,6 +130,7 @@ function CouponPage() {
       setLoading(true);
 
       const res = await CouponService.getAll();
+      console.log("res", res)
 
       const transformed: CouponRow[] = res?.map((x) => ({
         ...x,

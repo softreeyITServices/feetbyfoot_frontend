@@ -48,13 +48,13 @@ export class CouponService {
   /* ---------------- GET ALL ---------------- */
   static async getAll(): Promise<Coupon[]> {
     try {
-      const res = await httpClient.request<ApiResponse<Coupon[]>>({
+      const res :any = await httpClient.request<ApiResponse<Coupon[]>>({
         url: COUPONS_URL,
         method: "GET",
         requiresAuth: true,
       });
 
-      return res.data.data; // ✅ correct extraction
+      return res.data; // ✅ correct extraction
     } catch (error) {
       throw handleApiError(error, "getAllCoupons");
     }
