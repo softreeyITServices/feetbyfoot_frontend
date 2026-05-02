@@ -39,6 +39,17 @@ export default function CartDrawer({
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   if (!mounted) return null;
 
   const getPrice = (price: string | number): number => {
@@ -131,7 +142,7 @@ export default function CartDrawer({
       )}
 
       <div
-        className={`fixed right-0 top-0 h-full w-full sm:w-105 bg-white z-50
+        className={`fixed right-0 top-0 h-full w-full sm:w-105 bg-white z-50 flex flex-col
         transform transition-transform duration-300
         ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >

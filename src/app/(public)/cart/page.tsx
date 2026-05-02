@@ -31,7 +31,6 @@ import toast from "react-hot-toast";
 import { DeliveryService } from "@/domain/application/services/delivery.service";
 
 
-
 export default function CartBody() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -214,10 +213,9 @@ export default function CartBody() {
   const handleIncrease = async (
     id: string,
     size: string,
-    quantity: number, // we'll use items.find for accuracy
+    quantity: number,
     itemId?: string
   ) => {
-    // 🔥 Get latest quantity from current state to prevent race conditions
     const currentItem = items.find(i => i.id === id && i.size === size);
     const latestQty = currentItem?.quantity ?? quantity;
 
@@ -241,7 +239,6 @@ export default function CartBody() {
     quantity: number,
     itemId?: string
   ) => {
-    // 🔥 Get latest quantity from current state
     const currentItem = items.find(i => i.id === id && i.size === size);
     const latestQty = currentItem?.quantity ?? quantity;
 
@@ -373,124 +370,203 @@ export default function CartBody() {
 
   return (
     <>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 md:py-14">
+        <h1 className="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-10">Cart</h1>
 
-      <main className="max-w-7xl mx-auto px-6 py-14">
-        <h1 className="text-3xl font-semibold mb-10">Cart</h1>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
           {/* LEFT SIDE */}
           <div className="lg:col-span-2">
             {items.length === 0 ? (
-              <div className="p-6 border border-gray-200 rounded-md bg-gray-50">
-                <p className="text-gray-500">Your cart is empty</p>
+              <div className="p-4 sm:p-6 border border-gray-200 rounded-md bg-gray-50">
+                <p className="text-gray-500 text-sm sm:text-base">Your cart is empty</p>
               </div>
             ) : (
               <div className="p-0">
-                <div className="grid grid-cols-[2fr_1fr_1fr_1fr] text-xs text-gray-500 uppercase border-b pb-3 border-gray-300">
+                {/* Desktop Header - Hidden on mobile */}
+                <div className="hidden sm:grid grid-cols-[2fr_1fr_1fr_1fr] text-xs text-gray-500 uppercase border-b pb-3 border-gray-300">
                   <div>Product</div>
                   <div className="text-center">Price</div>
                   <div className="text-center">Quantity</div>
                   <div className="text-right">Subtotal</div>
                 </div>
 
+                {/* Mobile Header */}
+                <div className="sm:hidden text-xs text-gray-500 uppercase border-b pb-2 mb-4 border-gray-300">
+                  Products
+                </div>
+
                 {items.map(item => (
-                  <div
-                    key={`${item.id}-${item.size}`}
-                    className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center py-6 border-b border-gray-300"
-                  >
-                    {/* Product */}
-                    <div className="flex gap-4">
-                      <Image
-                        src={
-                          item.image &&
-                          typeof item.image === "string" &&
-                          (item.image.startsWith("http") || item.image.startsWith("/"))
-                            ? item.image
-                            : "/assets/images/logo.png"
+                  <div key={`${item.id}-${item.size}`}>
+                    {/* Mobile Layout */}
+                    <div className="sm:hidden py-4 border-b border-gray-300">
+                      <div className="flex gap-3 mb-3">
+                        <Image
+                          src={
+                            item.image &&
+                            typeof item.image === "string" &&
+                            (item.image.startsWith("http") || item.image.startsWith("/"))
+                              ? item.image
+                              : "/assets/images/logo.png"
+                          }
+                          alt={item.name}
+                          width={60}
+                          height={60}
+                          className="rounded w-16 h-16 object-cover"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{item.name}</p>
+                          <p className="text-xs text-gray-500">Size: {item.size}</p>
+                          <p className="text-sm font-medium mt-1">₹{getPrice(item.price).toFixed(2)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex border border-gray-300 rounded">
+                          <button
+                            className="px-3 py-1 text-sm"
+                            onClick={() =>
+                              handleDecrease(
+                                item.id,
+                                item.size,
+                                item.quantity,
+                                item.itemId
+                              )
+                            }
+                          >
+                            −
+                          </button>
+                          <span className="px-4 py-1 border-x border-gray-300 text-sm">
+                            {item.quantity}
+                          </span>
+                          <button
+                            className="px-3 py-1 text-sm"
+                            onClick={() =>
+                              handleIncrease(
+                                item.id,
+                                item.size,
+                                item.quantity,
+                                item.itemId
+                              )
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+                        
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500">Subtotal</p>
+                          <p className="font-medium">
+                            ₹{(getPrice(item.price) * item.quantity).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <button
+                        onClick={() =>
+                          handleRemove(item.id, item.size, item.itemId)
                         }
-                        alt={item.name}
-                        width={80}
-                        height={80}
-                        className="rounded"
-                      />
+                        className="text-red-500 text-xs mt-2"
+                      >
+                        Remove
+                      </button>
+                    </div>
 
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-gray-500">
-                          Size: {item.size}
-                        </p>
-                        <button
-                          onClick={() =>
-                            handleRemove(item.id, item.size, item.itemId)
+                    {/* Desktop Layout */}
+                    <div className="hidden sm:grid grid-cols-[2fr_1fr_1fr_1fr] items-center py-6 border-b border-gray-300">
+                      {/* Product */}
+                      <div className="flex gap-3 md:gap-4">
+                        <Image
+                          src={
+                            item.image &&
+                            typeof item.image === "string" &&
+                            (item.image.startsWith("http") || item.image.startsWith("/"))
+                              ? item.image
+                              : "/assets/images/logo.png"
                           }
-                          className="text-red-500 text-sm mt-1"
-                        >
-                          Remove
-                        </button>
+                          alt={item.name}
+                          width={80}
+                          height={80}
+                          className="rounded w-16 h-16 md:w-20 md:h-20 object-cover"
+                        />
+
+                        <div>
+                          <p className="font-medium text-sm md:text-base">{item.name}</p>
+                          <p className="text-xs md:text-sm text-gray-500">
+                            Size: {item.size}
+                          </p>
+                          <button
+                            onClick={() =>
+                              handleRemove(item.id, item.size, item.itemId)
+                            }
+                            className="text-red-500 text-xs md:text-sm mt-1"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Price */}
-                    <div className="text-center">
-                      ₹{getPrice(item.price).toFixed(2)}
-                    </div>
-
-                    {/* Quantity */}
-                    <div className="flex justify-center">
-                      <div className="flex border border-gray-300 rounded">
-                        <button
-                          className="px-3 py-1"
-                          onClick={() =>
-                            handleDecrease(
-                              item.id,
-                              item.size,
-                              item.quantity,
-                              item.itemId
-                            )
-                          }
-                        >
-                          −
-                        </button>
-                        <span className="px-4 py-1 border-x border-gray-300">
-                          {item.quantity}
-                        </span>
-                        <button
-                          className="px-3 py-1"
-                          onClick={() =>
-                            handleIncrease(
-                              item.id,
-                              item.size,
-                              item.quantity,
-                              item.itemId
-                            )
-                          }
-                        >
-                          +
-                        </button>
+                      {/* Price */}
+                      <div className="text-center text-sm md:text-base">
+                        ₹{getPrice(item.price).toFixed(2)}
                       </div>
-                    </div>
 
-                    {/* Subtotal */}
-                    <div className="text-right font-medium">
-                      ₹
-                      {(
-                        getPrice(item.price) *
-                        item.quantity
-                      ).toFixed(2)}
+                      {/* Quantity */}
+                      <div className="flex justify-center">
+                        <div className="flex border border-gray-300 rounded">
+                          <button
+                            className="px-2 md:px-3 py-1 text-sm"
+                            onClick={() =>
+                              handleDecrease(
+                                item.id,
+                                item.size,
+                                item.quantity,
+                                item.itemId
+                              )
+                            }
+                          >
+                            −
+                          </button>
+                          <span className="px-3 md:px-4 py-1 border-x border-gray-300 text-sm">
+                            {item.quantity}
+                          </span>
+                          <button
+                            className="px-2 md:px-3 py-1 text-sm"
+                            onClick={() =>
+                              handleIncrease(
+                                item.id,
+                                item.size,
+                                item.quantity,
+                                item.itemId
+                              )
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Subtotal */}
+                      <div className="text-right font-medium text-sm md:text-base">
+                        ₹
+                        {(
+                          getPrice(item.price) *
+                          item.quantity
+                        ).toFixed(2)}
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
             {session && items.length > 0 && (
-              <div className="mt-6 p-4">
+              <div className="mt-4 sm:mt-6 p-3 sm:p-4">
                 <h3 className="text-sm font-medium mb-3">
                   Apply Coupon
                 </h3>
 
                 {!couponId ? (
                   <>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3">
                       <input
                         type="text"
                         value={couponCode}
@@ -498,13 +574,13 @@ export default function CartBody() {
                           setCouponCode(e.target.value.toUpperCase())
                         }
                         placeholder="Enter coupon code"
-                        className="flex-1 border px-3 py-2 rounded text-sm"
+                        className="flex-1 border px-3 py-2 rounded text-sm focus:outline-none focus:ring-1 focus:ring-black"
                       />
 
                       <button
                         onClick={handleApplyCoupon}
                         disabled={couponLoading || !couponCode.trim()}
-                        className="bg-black text-white px-4 py-2 rounded text-sm disabled:opacity-50"
+                        className="bg-black text-white px-3 sm:px-4 py-2 rounded text-sm disabled:opacity-50 whitespace-nowrap"
                       >
                         {couponLoading ? "Applying..." : "Apply"}
                       </button>
@@ -520,7 +596,7 @@ export default function CartBody() {
                   <div className="flex items-center justify-between bg-green-50 border border-green-300 p-3 rounded">
                     <div>
                       <p className="text-sm font-medium text-green-700">
-                        {`Coupon ${couponCode}" applied`}
+                        {`Coupon "${couponCode}" applied`}
                       </p>
                       <p className="text-xs text-green-600">
                         You saved ₹{discount.toFixed(2)}
@@ -529,7 +605,7 @@ export default function CartBody() {
 
                     <button
                       onClick={handleRemoveCoupon}
-                      className="text-red-500 text-sm font-medium"
+                      className="text-red-500 text-sm font-medium ml-2"
                     >
                       Remove
                     </button>
@@ -539,8 +615,8 @@ export default function CartBody() {
             )}
 
             {items && items.length > 0 && <>
-              <div className="mb-8 p-4">
-                <h3 className="font-medium mb-4 text-sm">Shipping Address</h3>
+              <div className="mb-6 sm:mb-8 p-3 sm:p-4">
+                <h3 className="font-medium mb-3 sm:mb-4 text-sm">Shipping Address</h3>
 
                 {addressLoading && (
                   <p className="text-sm text-gray-500">Loading addresses...</p>
@@ -549,64 +625,71 @@ export default function CartBody() {
                 {!addressLoading && shippingAddresses.length === 0 && (
                   <button
                     onClick={() => router.push("/account/addresses")}
-                    className="text-blue-600 text-sm"
+                    className="text-blue-600 text-sm hover:underline"
                   >
                     + Add Shipping Address
                   </button>
                 )}
 
-                {shippingAddresses.map(addr => (
-                  <label
-                    key={addr._id}
-                    className={`flex items-start gap-3 border p-3 rounded mb-3 cursor-pointer ${selectedShippingId === addr._id
-                      ? "border-green-600 bg-green-50"
-                      : "border-gray-300"
+                <div className="space-y-2 sm:space-y-3">
+                  {shippingAddresses.map(addr => (
+                    <label
+                      key={addr._id}
+                      className={`flex items-start gap-2 sm:gap-3 border p-2.5 sm:p-3 rounded cursor-pointer transition-colors ${
+                        selectedShippingId === addr._id
+                          ? "border-green-600 bg-green-50"
+                          : "border-gray-300 hover:border-gray-400"
                       }`}
-                  >
-                    <input
-                      type="radio"
-                      checked={selectedShippingId === addr._id}
-                      onChange={() => setSelectedShippingId(addr._id)}
-                    />
+                    >
+                      <input
+                        type="radio"
+                        checked={selectedShippingId === addr._id}
+                        onChange={() => setSelectedShippingId(addr._id)}
+                        className="mt-0.5"
+                      />
 
-                    <div className="text-sm flex-1">
-                      <div className="flex justify-between items-start">
-                        <p className="font-medium">{addr.fullName}</p>
-                        {selectedShippingId === addr._id && isCheckingServiceability && (
-                          <span className="text-[10px] text-gray-500 animate-pulse">Checking...</span>
-                        )}
-                        {selectedShippingId === addr._id && isServiceable === false && (
-                          <span className="text-[10px] text-red-500 font-bold italic">NOT SERVICEABLE</span>
-                        )}
-                        {selectedShippingId === addr._id && isServiceable === true && (
-                          <span className="text-[10px] text-green-600 font-bold">✓ SERVICEABLE</span>
-                        )}
+                      <div className="text-xs sm:text-sm flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
+                          <p className="font-medium truncate">{addr.fullName}</p>
+                          <div className="flex gap-2 items-center">
+                            {selectedShippingId === addr._id && isCheckingServiceability && (
+                              <span className="text-[10px] sm:text-xs text-gray-500 animate-pulse whitespace-nowrap">Checking...</span>
+                            )}
+                            {selectedShippingId === addr._id && isServiceable === false && (
+                              <span className="text-[10px] sm:text-xs text-red-500 font-bold italic whitespace-nowrap">NOT SERVICEABLE</span>
+                            )}
+                            {selectedShippingId === addr._id && isServiceable === true && (
+                              <span className="text-[10px] sm:text-xs text-green-600 font-bold whitespace-nowrap">✓ SERVICEABLE</span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="break-words">{addr.addressLine1}</p>
+                        <p>
+                          {addr.city}, {addr.state} - {addr.pincode}
+                        </p>
+                        <div className="flex gap-3 items-center mt-1">
+                          {addr.isDefault && (
+                            <span className="text-[10px] sm:text-xs text-green-600">Default</span>
+                          )}
+                          {selectedShippingId === addr._id && isServiceable === false && (
+                            <p className="text-[10px] sm:text-xs text-red-600 font-medium">⚠️ We cannot deliver to this pincode</p>
+                          )}
+                        </div>
                       </div>
-                      <p>{addr.addressLine1}</p>
-                      <p>
-                        {addr.city}, {addr.state} - {addr.pincode}
-                      </p>
-                      <div className="flex gap-3 items-center mt-1">
-                        {addr.isDefault && (
-                          <span className="text-xs text-green-600">Default</span>
-                        )}
-                        {selectedShippingId === addr._id && isServiceable === false && (
-                          <p className="text-[10px] text-red-600 font-medium">⚠️ We cannot deliver to this pincode</p>
-                        )}
-                      </div>
-                    </div>
-                  </label>
-                ))}
+                    </label>
+                  ))}
+                </div>
               </div>
 
 
               {/* BILLING SAME AS SHIPPING */}
-              <div className="mb-6">
-                <label className="flex items-center gap-2 text-sm">
+              <div className="mb-4 sm:mb-6">
+                <label className="flex items-center gap-2 text-xs sm:text-sm cursor-pointer">
                   <input
                     type="checkbox"
                     checked={sameAsShipping}
                     onChange={() => setSameAsShipping(!sameAsShipping)}
+                    className="rounded"
                   />
                   Billing address same as shipping
                 </label>
@@ -614,50 +697,54 @@ export default function CartBody() {
 
               {/* BILLING ADDRESS */}
               {!sameAsShipping && (
-                <div className="mb-8 p-4 rounded border border-gray-200">
-                  <h3 className="font-medium mb-4 text-sm">Billing Address</h3>
+                <div className="mb-6 sm:mb-8 p-3 sm:p-4 rounded border border-gray-200">
+                  <h3 className="font-medium mb-3 sm:mb-4 text-sm">Billing Address</h3>
 
                   {billingAddresses.length === 0 && (
                     <button
                       onClick={() => router.push("/account/addresses")}
-                      className="text-blue-600 text-sm"
+                      className="text-blue-600 text-sm hover:underline"
                     >
                       + Add Billing Address
                     </button>
                   )}
 
-                  {billingAddresses.map(addr => (
-                    <label
-                      key={addr._id}
-                      className={`flex items-start gap-3 border p-3 rounded mb-3 cursor-pointer ${selectedBillingId === addr._id
-                        ? "border-green-600 bg-green-50"
-                        : "border-gray-300"
+                  <div className="space-y-2 sm:space-y-3">
+                    {billingAddresses.map(addr => (
+                      <label
+                        key={addr._id}
+                        className={`flex items-start gap-2 sm:gap-3 border p-2.5 sm:p-3 rounded cursor-pointer transition-colors ${
+                          selectedBillingId === addr._id
+                            ? "border-green-600 bg-green-50"
+                            : "border-gray-300 hover:border-gray-400"
                         }`}
-                    >
-                      <input
-                        type="radio"
-                        checked={selectedBillingId === addr._id}
-                        onChange={() => setSelectedBillingId(addr._id)}
-                      />
+                      >
+                        <input
+                          type="radio"
+                          checked={selectedBillingId === addr._id}
+                          onChange={() => setSelectedBillingId(addr._id)}
+                          className="mt-0.5"
+                        />
 
-                      <div className="text-sm">
-                        <p className="font-medium">{addr.fullName}</p>
-                        <p>{addr.addressLine1}</p>
-                        <p>
-                          {addr.city}, {addr.state} - {addr.pincode}
-                        </p>
-                        {addr.isDefault && (
-                          <span className="text-xs text-green-600">Default</span>
-                        )}
-                      </div>
-                    </label>
-                  ))}
+                        <div className="text-xs sm:text-sm min-w-0">
+                          <p className="font-medium truncate">{addr.fullName}</p>
+                          <p className="break-words">{addr.addressLine1}</p>
+                          <p>
+                            {addr.city}, {addr.state} - {addr.pincode}
+                          </p>
+                          {addr.isDefault && (
+                            <span className="text-[10px] sm:text-xs text-green-600">Default</span>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               )}
             </>}
           </div>
 
-          {/* RIGHT SIDE */}
+          {/* RIGHT SIDE - CartPlatformFees */}
           {items.length > 0 && (
             <CartPlatformFees
               subtotal={subtotal}
@@ -671,7 +758,6 @@ export default function CartBody() {
           )}
         </div>
       </main>
-
     </>
   );
 }
