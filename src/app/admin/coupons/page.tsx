@@ -317,7 +317,7 @@ function CouponPage() {
               {/* CODE */}
               <div className="col-span-2">
                 <label className="block text-xs font-medium mb-1 text-neutral-600">
-                  Coupon Code
+                  Coupon Code <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
                   placeholder="e.g. SAVE100"
@@ -332,7 +332,7 @@ function CouponPage() {
               {/* DISCOUNT TYPE */}
               <div>
                 <label className="block text-xs font-medium mb-1 text-neutral-600">
-                  Discount Type
+                  Discount Type <span className="text-red-500 font-bold">*</span>
                 </label>
                 <select
                   className="w-full border border-neutral-300 focus:border-black focus:ring-1 focus:ring-black p-2.5 rounded-xl outline-none"
@@ -352,7 +352,7 @@ function CouponPage() {
               {/* DISCOUNT VALUE */}
               <div>
                 <label className="block text-xs font-medium mb-1 text-neutral-600">
-                  Discount Value
+                  Discount Value <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
                   type="text"
@@ -428,7 +428,7 @@ function CouponPage() {
               {/* EXPIRY */}
               <div className="col-span-2">
                 <label className="block text-xs font-medium mb-1 text-neutral-600">
-                  Expiry Date
+                  Expiry Date <span className="text-red-500 font-bold">*</span>
                 </label>
                 <input
                   type="date"

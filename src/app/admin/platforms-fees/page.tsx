@@ -17,6 +17,7 @@ type PlatformFee = {
   amount?: number;
   percentage?: number;
   MinAmount?: number;
+  applicableTo: "ALL" | "COD" | "ONLINE";
   isActive: boolean;
 };
 
@@ -35,6 +36,7 @@ type FormType = {
   MinAmount: string;
   isActive: boolean;
   feeType: "FLAT" | "PERCENTAGE";
+  applicableTo: "ALL" | "COD" | "ONLINE";
 };
 
 /* ================= ACTION DROPDOWN ================= */
@@ -134,6 +136,7 @@ export default function PlatformFeePage() {
     MinAmount: "",
     isActive: true,
     feeType: "FLAT",
+    applicableTo: "ALL",
   });
 
   /* ================= FETCH ================= */
@@ -183,6 +186,7 @@ export default function PlatformFeePage() {
   const handleCreate = async () => {
     try {
       if (!form.name) return toast.error("Name is required");
+      if (!form.applicableTo) return toast.error("Applicable To is required");
 
       const payload = {
         name: form.name,
@@ -196,6 +200,7 @@ export default function PlatformFeePage() {
             : 0,
         MinAmount: form.MinAmount ? Number(form.MinAmount) : 0,
         isActive: form.isActive,
+        applicableTo: form.applicableTo,
       };
 
       await platformFeesService.create(payload);
@@ -211,6 +216,7 @@ export default function PlatformFeePage() {
         MinAmount: "",
         isActive: true,
         feeType: "FLAT",
+        applicableTo: "ALL",
       });
     } catch (err: any) {
       toast.error(err?.message || "Create failed");
@@ -237,6 +243,7 @@ export default function PlatformFeePage() {
 
   const columns: Column<PlatformFeeRow>[] = [
     { key: "name", label: "Name" },
+    { key: "applicableTo", label: "Applicable To" },
     {
       key: "amount",
       label: "Amount",
@@ -341,7 +348,7 @@ export default function PlatformFeePage() {
           {/* NAME */}
           <div>
             <label className="block text-xs font-medium text-neutral-600 mb-1">
-              Fee Name
+              Fee Name <span className="text-red-500 font-bold">*</span>
             </label>
             <input
               placeholder="e.g. Platform Fee, GST"
@@ -440,6 +447,24 @@ export default function PlatformFeePage() {
               />
             </div>
           )}
+
+          {/* APPLICABLE TO */}
+          <div>
+            <label className="block text-xs font-medium text-neutral-600 mb-1">
+              Applicable To <span className="text-red-500 font-bold">*</span>
+            </label>
+            <select
+              className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 focus:border-black focus:ring-1 focus:ring-black outline-none bg-white transition cursor-pointer"
+              value={form.applicableTo}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, applicableTo: e.target.value as any }))
+              }
+            >
+              <option value="ALL">All Orders (Always apply)</option>
+              <option value="COD">COD Only (Cash on Delivery)</option>
+              <option value="ONLINE">Online Only (Prepaid)</option>
+            </select>
+          </div>
 
           {/* MIN ORDER */}
           <div>
