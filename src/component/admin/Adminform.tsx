@@ -344,6 +344,8 @@ function MultiSelectInput({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -360,6 +362,19 @@ function MultiSelectInput({
 
   const options = field.options ?? [];
   const selectedValues = Array.isArray(value) ? value : [];
+
+  // When options change (e.g. category switch filters subcategories), remove
+  // any selected values that are no longer present in the new options list.
+  useEffect(() => {
+    if (selectedValues.length === 0 || options.length === 0) return;
+    const valid = selectedValues.filter((v) =>
+      options.some((opt) => opt.value === v)
+    );
+    if (valid.length !== selectedValues.length) {
+      onChangeRef.current(valid);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [options]);
   const normalizedQuery = query.trim().toLowerCase();
   const filteredOptions = normalizedQuery
     ? options.filter(

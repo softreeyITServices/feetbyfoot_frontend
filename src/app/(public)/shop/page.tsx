@@ -202,11 +202,11 @@ export default async function ShopPage({
 
       <section className="max-w-7xl mx-auto px-4 mt-10">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
-          <aside className="hidden lg:block sticky top-32 h-fit">
+          <aside className="hidden lg:block sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto">
             <FiltersSidebar />
           </aside>
 
-          <div>
+          <div id="products-section">
             <div className="flex items-center justify-between mb-6">
               <span className="text-sm">
                 Showing {(page - 1) * perpage + 1}–
@@ -265,6 +265,7 @@ export default async function ShopPage({
                 <Link
                   key={i}
                   href={buildPageHref(i + 1)}
+                  scroll={false}
                   className={`px-4 py-2 border text-sm ${
                     page === i + 1 ? "bg-black text-white" : "hover:bg-gray-100"
                   }`}

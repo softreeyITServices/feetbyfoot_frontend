@@ -16,13 +16,13 @@ class PlatformFeesService {
   /* ---------------- GET ALL ---------------- */
   async getAll(): Promise<PlatformFee[]> {
     try {
-      const response = await httpClient.request<ApiResponse<PlatformFee[]>>({
+      const response:any = await httpClient.request<ApiResponse<PlatformFee[]>>({
         url: PLATFORM_FEES_URL,
         method: "GET",
         requiresAuth: true,
       });
 
-      return response.data;
+      return response;
     } catch (error) {
       handleApiError(error, "getAllPlatformFees");
     }

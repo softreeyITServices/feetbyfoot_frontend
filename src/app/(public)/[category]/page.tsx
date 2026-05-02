@@ -267,12 +267,12 @@ export default async function CategoryPage({
       <section className="max-w-7xl mx-auto px-4 mt-10">
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
           {/* Filters */}
-          <aside className="hidden lg:block sticky top-32 h-fit">
+          <aside className="hidden lg:block sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto">
             <FiltersSidebar />
           </aside>
 
           {/* Products */}
-          <div>
+          <div id="products-section">
             {/* Top Bar */}
             <div className="flex items-center justify-between mb-6">
               <span className="text-sm">
@@ -314,6 +314,7 @@ export default async function CategoryPage({
                 <Link
                   key={i}
                   href={buildPageHref(i + 1)}
+                  scroll={false}
                   className={`px-4 py-2 border text-sm ${
                     page === i + 1 ? "bg-black text-white" : "hover:bg-gray-100"
                   }`}

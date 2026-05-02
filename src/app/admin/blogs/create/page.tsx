@@ -230,28 +230,55 @@ function CreateBlogPageContent() {
 
   const removeTag = (t: string) => setTags(tags.filter((x) => x !== t));
 
+  // A section is "started" if it has content or bullets — heading is then required
+  const sectionsWithMissingHeading = sections.filter(
+    (sec) =>
+      !sec.heading.trim() &&
+      (sec.content.trim() || sec.bullets.some((b) => b.trim()))
+  );
+
   const canPublish =
     Boolean(title.trim()) &&
     Boolean(slug.trim()) &&
     Boolean(excerpt.trim()) &&
     Boolean(authorName.trim()) &&
-    Boolean(cover.trim());
+    Boolean(cover.trim()) &&
+    sectionsWithMissingHeading.length === 0;
 
   /* ================= SUBMIT ================= */
 
   const handleSubmit = async (isPublished: boolean) => {
     if (submitting) return;
 
+    if (sectionsWithMissingHeading.length > 0) {
+      toast.error("Each section must have a heading before publishing");
+      return;
+    }
+
     try {
       setSubmitting(true);
+
+      // Drop sections with no heading (backend requires heading to be non-empty)
+      const cleanedSections = sections
+        .filter((sec) => sec.heading.trim())
+        .map((sec) => ({
+          ...sec,
+          bullets: sec.bullets.filter((b) => b.trim()),
+        }));
+
+      // Drop FAQs where question or answer is empty (both required by backend)
+      const cleanedFaqs = faqs.filter(
+        (f) => f.question.trim() && f.answer.trim()
+      );
+
       const payload = {
         ...(brandId ? { brandId } : {}),
         title,
         slug,
         excerpt,
         coverImage: { url: cover, publicId: "" },
-        sections,
-        faqs,
+        sections: cleanedSections,
+        faqs: cleanedFaqs,
         tags,
         authorName,
         isPublished,
@@ -438,18 +465,30 @@ function CreateBlogPageContent() {
           {sections.map((sec, i) => (
             <div
               key={i}
-              className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4 shadow-sm"
+              className={`bg-white rounded-2xl border p-5 space-y-4 shadow-sm ${
+                !sec.heading.trim() && (sec.content.trim() || sec.bullets.some((b) => b.trim()))
+                  ? "border-red-300"
+                  : "border-gray-100"
+              }`}
             >
-              <div className="flex items-center justify-between gap-3">
-                <input
-                  placeholder="Section heading"
-                  value={sec.heading}
-                  onChange={(e) => updateSection(i, { heading: e.target.value })}
-                  className="flex-1 text-base font-semibold bg-transparent outline-none text-gray-800 placeholder:text-gray-200"
-                />
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                    Section Heading <span className="text-red-400">*</span>
+                  </p>
+                  <input
+                    placeholder="e.g. 5 Ways to Style a Summer Dress"
+                    value={sec.heading}
+                    onChange={(e) => updateSection(i, { heading: e.target.value })}
+                    className="w-full text-base font-semibold bg-transparent outline-none text-gray-800 placeholder:text-gray-300 border-b border-gray-100 focus:border-[#006574] pb-1 transition"
+                  />
+                  {!sec.heading.trim() && (sec.content.trim() || sec.bullets.some((b) => b.trim())) && (
+                    <p className="text-[10px] text-red-400">Heading is required when section has content</p>
+                  )}
+                </div>
                 <button
                   onClick={() => removeSection(i)}
-                  className="text-gray-300 hover:text-red-400 transition text-lg leading-none"
+                  className="text-gray-300 hover:text-red-400 transition text-lg leading-none mt-5"
                 >
                   ×
                 </button>
@@ -582,21 +621,33 @@ function CreateBlogPageContent() {
             SEO
           </h3>
           <Field label="SEO Title">
-            <input
-              placeholder="Optimised title for search engines…"
-              value={seoTitle}
-              onChange={(e) => setSeoTitle(e.target.value)}
-              className={inputCls}
-            />
+            <div className="relative">
+              <input
+                placeholder="Optimised title for search engines…"
+                value={seoTitle}
+                onChange={(e) => setSeoTitle(e.target.value.slice(0, 70))}
+                maxLength={70}
+                className={inputCls}
+              />
+              <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] ${seoTitle.length >= 65 ? "text-red-400" : "text-gray-400"}`}>
+                {seoTitle.length}/70
+              </span>
+            </div>
           </Field>
           <Field label="SEO Description">
-            <textarea
-              placeholder="Meta description (150–160 chars recommended)…"
-              value={seoDescription}
-              onChange={(e) => setSeoDescription(e.target.value)}
-              rows={3}
-              className={textareaCls}
-            />
+            <div className="relative">
+              <textarea
+                placeholder="Meta description (150–160 chars recommended)…"
+                value={seoDescription}
+                onChange={(e) => setSeoDescription(e.target.value.slice(0, 160))}
+                rows={3}
+                maxLength={160}
+                className={textareaCls}
+              />
+              <span className={`absolute bottom-2 right-3 text-[10px] ${seoDescription.length >= 150 ? "text-red-400" : "text-gray-400"}`}>
+                {seoDescription.length}/160
+              </span>
+            </div>
           </Field>
         </div>
 

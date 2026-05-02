@@ -609,16 +609,23 @@ function ProductPage() {
           onSubmit={handleSubmit}
           onValuesChange={(nextValues, previousValues) => {
             const nextCategoryId = String(nextValues.categoryId ?? "");
+            const prevCategoryId = String(previousValues.categoryId ?? "");
+
             setTimeout(() => {
               setSelectedCategoryId((prev) =>
                 prev === nextCategoryId ? prev : nextCategoryId
               );
             }, 0);
 
-            if (editing) return nextValues;
+            const categoryChanged = nextCategoryId !== prevCategoryId;
+            const resolvedValues = categoryChanged
+              ? { ...nextValues, categoryTypeIds: [] }
+              : nextValues;
 
-            const nextName = String(nextValues.name ?? "");
-            const nextSlug = String(nextValues.slug ?? "");
+            if (editing) return resolvedValues;
+
+            const nextName = String(resolvedValues.name ?? "");
+            const nextSlug = String(resolvedValues.slug ?? "");
             const previousName = String(previousValues.name ?? "");
             const previousSlug = String(previousValues.slug ?? "");
             const previousAutoSlug = toSlug(previousName);
@@ -629,12 +636,12 @@ function ProductPage() {
               (previousSlug === "" || previousSlug === previousAutoSlug)
             ) {
               return {
-                ...nextValues,
+                ...resolvedValues,
                 slug: toSlug(nextName),
               };
             }
 
-            return nextValues;
+            return resolvedValues;
           }}
           onCancel={() => {
             setOpen(false);
