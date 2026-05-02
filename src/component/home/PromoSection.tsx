@@ -66,9 +66,9 @@ export default function PromoCarousel() {
             <div className="absolute inset-0 flex">
               {/* Vertical SOCKS text */}
               <div className="hidden lg:flex items-center absolute left-0 top-0 bottom-0">
-                <span className="text-4xl lg:text-5xl rotate-[-270deg] tracking-[0.3em] lg:tracking-[0.4em] opacity-40 lg:opacity-60 font-sans origin-center whitespace-nowrap text-gray-400">
+                {/* <span className="text-4xl lg:text-5xl rotate-[-270deg] tracking-[0.3em] lg:tracking-[0.4em] opacity-40 lg:opacity-60 font-sans origin-center whitespace-nowrap text-gray-400">
                   SOCKS
-                </span>
+                </span> */}
               </div>
               
               <div className="flex flex-col justify-center px-5 sm:px-10 md:px-14 lg:px-20 w-full">

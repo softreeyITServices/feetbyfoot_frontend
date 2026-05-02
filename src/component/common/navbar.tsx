@@ -378,14 +378,20 @@ function MobileMenuDrawer({
   );
 }
 
+const CATEGORY_PATHS = new Set(["/mens", "/womens", "/kids", "/gifts", "/outlet", "/brand", "/shop"]);
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const openCartState = useAppSelector((state) => state.ui.isCartOpen);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const searchRef = useRef<HTMLFormElement | null>(null);
+  // Tracks the search term that was last pushed to the URL so the debounce
+  // doesn't fire again when the input is pre-filled from the URL on load.
+  const lastNavigatedRef = useRef("");
   const [megaMenuReady, setMegaMenuReady] = useState(false);
   const [megaGroups, setMegaGroups] = useState<MenuGroup[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -416,13 +422,41 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (pathname === "/shop") {
+    if (CATEGORY_PATHS.has(pathname)) {
       const params = new URLSearchParams(window.location.search);
-      setSearchTerm(params.get("search") ?? "");
+      const urlSearch = params.get("search") ?? "";
+      lastNavigatedRef.current = urlSearch;
+      setSearchTerm(urlSearch);
       return;
     }
+    lastNavigatedRef.current = "";
     setSearchTerm("");
   }, [pathname]);
+
+  // Debounce: auto-search 500 ms after the user stops typing
+  useEffect(() => {
+    if (searchTerm === lastNavigatedRef.current) return;
+    if (!searchOpen && !mobileSearchOpen) return;
+
+    const timer = setTimeout(() => {
+      const q = searchTerm.trim();
+      lastNavigatedRef.current = q;
+
+      const targetPath = CATEGORY_PATHS.has(pathname) ? pathname : "/shop";
+      const existing = new URLSearchParams(window.location.search);
+      existing.delete("page");
+      if (q) {
+        existing.set("search", q);
+      } else {
+        existing.delete("search");
+      }
+      const qs = existing.toString();
+      router.replace(qs ? `${targetPath}?${qs}` : targetPath, { scroll: false });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -438,9 +472,11 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [searchOpen]);
 
-  // Close mobile menu on route change
+  // Close menus on route change
   useEffect(() => {
     setMobileMenuOpen(false);
+    setMobileSearchOpen(false);
+    setSearchOpen(false);
   }, [pathname]);
 
   const handleCart = (e: React.MouseEvent) => {
@@ -451,20 +487,20 @@ export default function Navbar() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const q = searchTerm.trim();
-    if (!q) {
-      router.push("/shop");
-      setSearchOpen(false);
-      return;
-    }
-
-    const params = new URLSearchParams();
-    params.set("search", q);
-    router.push(`/shop?${params.toString()}`);
     setSearchOpen(false);
-  };
+    setMobileSearchOpen(false);
+    lastNavigatedRef.current = q;
 
-  const handleMobileSearch = () => {
-    router.push("/shop");
+    const targetPath = CATEGORY_PATHS.has(pathname) ? pathname : "/shop";
+    const existing = new URLSearchParams(window.location.search);
+    existing.delete("page");
+    if (q) {
+      existing.set("search", q);
+    } else {
+      existing.delete("search");
+    }
+    const qs = existing.toString();
+    router.push(qs ? `${targetPath}?${qs}` : targetPath, { scroll: false });
   };
 
   const hasMegaNav = megaMenuReady && megaGroups.length > 0;
@@ -547,7 +583,7 @@ export default function Navbar() {
             <button
               aria-label="Search"
               className="md:hidden hover:text-black transition-colors p-1"
-              onClick={handleMobileSearch}
+              onClick={() => setMobileSearchOpen((prev) => !prev)}
             >
               <SearchIcon width={18} height={18} className="sm:w-[20px] sm:h-[20px]" fill="currentColor" />
             </button>
@@ -588,6 +624,32 @@ export default function Navbar() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Search Bar */}
+      {mobileSearchOpen && (
+        <div className="md:hidden bg-white border-b border-gray-200 sticky top-[60px] sm:top-[72px] z-40 px-4 py-2.5">
+          <form onSubmit={handleSearchSubmit} className="flex items-center gap-3">
+            <input
+              autoFocus
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search products..."
+              className="flex-1 text-sm text-gray-800 outline-none placeholder:text-gray-400 py-1"
+            />
+            <button type="submit" aria-label="Submit search" className="shrink-0 text-gray-600 hover:text-black">
+              <SearchIcon width={18} height={18} fill="currentColor" />
+            </button>
+            <button
+              type="button"
+              aria-label="Close search"
+              onClick={() => setMobileSearchOpen(false)}
+              className="shrink-0 text-gray-500 hover:text-black"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </form>
+        </div>
+      )}
 
       {/* Mobile Menu Drawer */}
       <MobileMenuDrawer

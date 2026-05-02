@@ -105,6 +105,7 @@ export default async function CategoryPage({
   params: { category: string };
   searchParams: {
     page?: string;
+    search?: string;
     gender?: string | string[];
     category?: string | string[];
     subcategory?: string | string[];
@@ -159,10 +160,6 @@ export default async function CategoryPage({
   }
 
   const { products, total, totalPages } = await productService.getPublicProducts({
-    // If the URL doesn't explicitly include gender, default to the route's config.gender.
-    // This prevents /mens, /womens, /kids from all showing the same unfiltered product list.
- 
-
     gender:
       resolvedSearchParams.gender !== undefined
         ? toArray(resolvedSearchParams.gender)
@@ -171,6 +168,7 @@ export default async function CategoryPage({
           : [],
     page,
     limit: perpage,
+    search: resolvedSearchParams.search?.trim(),
     sortBy,
     categories: toArray(resolvedSearchParams.category),
     subcategories: toArray(resolvedSearchParams.subcategory),
