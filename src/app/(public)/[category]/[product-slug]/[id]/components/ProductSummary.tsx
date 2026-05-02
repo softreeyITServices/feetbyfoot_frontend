@@ -16,6 +16,7 @@ import { openCart } from "@/store/slices/ui.slice";
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import { RatingStarIcon } from "@/icons/RatingStarIcon";
+import { RatingHalfStarIcon } from "@/icons/RatingHalfStarIcon";
 
 interface ProductSummaryProps {
   product: {
@@ -128,18 +129,22 @@ export default function ProductSummary({
 
       <div className="flex items-center gap-3 mb-4">
         <div className="flex">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <span
-              key={i}
-              className={`text-lg ${i < Math.round(averageRating)
-                ? "text-yellow-400"
-                : "text-gray-300"
-                }`}
-            >
-              <RatingStarIcon key={i}
-                fill={i < Math.round(averageRating) ? "#FACC15" : "#D1D5DB"} />
-            </span>
-          ))}
+          {Array.from({ length: 5 }).map((_, i) => {
+            const isFull = i + 1 <= Math.floor(averageRating);
+            const isHalf = !isFull && i < averageRating;
+
+            return (
+              <span key={i} className="text-lg">
+                {isFull ? (
+                  <RatingStarIcon fill="#FACC15" />
+                ) : isHalf ? (
+                  <RatingHalfStarIcon />
+                ) : (
+                  <RatingStarIcon fill="#D1D5DB" />
+                )}
+              </span>
+            );
+          })}
         </div>
 
         <span className="text-sm text-gray-600">

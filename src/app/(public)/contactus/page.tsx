@@ -3,14 +3,14 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import ContactMessageForm from "./ContactMessageForm";
 
-/** CMS is loaded on the server; avoid static shell so content and /api/cms calls stay fresh. */
+/** CMS is loaded on the server; avoid static shell so content and /cms calls stay fresh. */
 export const dynamic = "force-dynamic";
 
 /** Must match the CMS page name in Admin → CMS (underscores). Content = information column only (not the form). */
 const CONTACT_US_CMS_NAME = "contact_us";
 
 const getContactUsCms = cache(() =>
-  CmsService.getPublicByName(CONTACT_US_CMS_NAME)
+  CmsService.getPublicByName(CONTACT_US_CMS_NAME),
 );
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -73,7 +73,6 @@ export default async function ContactPage() {
 
   return (
     <>
-
       <div className="min-h-screen bg-white py-16 px-6">
         <div className="text-center mb-10">
           <div className="inline-block bg-yellow-400 px-16 py-4">
@@ -99,7 +98,6 @@ export default async function ContactPage() {
           <ContactMessageForm />
         </div>
       </div>
-
     </>
   );
 }

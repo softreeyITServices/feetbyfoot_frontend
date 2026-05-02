@@ -99,7 +99,7 @@ function ReturnsPage() {
     setActionLoading(true);
     try {
       const itemIds = pending.row.items.map(item => item._id);
-      const targetOrderId = pending.row.orderId;
+      const targetOrderId = pending.row.order_id;
 
       if (pending.type === "APPROVE" || pending.type === "REJECT") {
         if (pending.type === "REJECT" && !form.rejectReason) {
