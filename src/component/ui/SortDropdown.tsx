@@ -20,7 +20,7 @@ export default function SortDropdown() {
     const params = new URLSearchParams(searchParams.toString());
     params.set("sortBy", value);
     params.set("page", "1");
-    router.push(`?${params.toString()}`);
+    router.push(`?${params.toString()}`, { scroll: false });
   };
 
   return (

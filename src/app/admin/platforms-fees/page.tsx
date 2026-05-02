@@ -143,6 +143,8 @@ export default function PlatformFeePage() {
       setLoading(true);
       const res = await platformFeesService.getAll();
 
+      console.log("res",res)
+
       setData(res.map((x) => ({ ...x, id: x._id })));
     } catch (err: any) {
       if (!isGetRequestError(err)) {
