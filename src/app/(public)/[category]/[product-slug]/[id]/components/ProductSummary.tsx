@@ -174,10 +174,10 @@ export default function ProductSummary({
                 key={color}
                 onClick={() => { setSelectedColor(color); setSelectedSize(null); }}
                 title={color}
-                className={`w-8 h-8 rounded-full border-2 transition ${
+                className={`w-8 h-8 rounded-full border-2  transition ${
                   selectedColor === color
                     ? "border-black scale-110"
-                    : "border-transparent hover:border-gray-400"
+                    : "border-gray-400 hover:border-gray-400"
                 }`}
                 style={{ backgroundColor: color.toLowerCase() }}
               />
