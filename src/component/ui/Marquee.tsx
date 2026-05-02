@@ -6,6 +6,7 @@ export const Marquee = async () => {
 
   try {
     announcements = await AnnouncementService.getPublic();
+    console.log("annnoun", announcements)
   } catch {
     return null;
   }
@@ -16,21 +17,24 @@ export const Marquee = async () => {
 
   if (messages.length === 0) return null;
 
-  const text =
-    messages.length === 1 ? messages[0] : `${messages.join("   •   ")}   •   `;
-
   const duration = Math.min(12 + (messages.length - 1) * 8, 52);
   const trackStyle = { "--marquee-duration": `${duration}s` } as CSSProperties;
 
   const segment = (
     <>
-      <span className="marquee-segment-text">{text}</span>
+      <span className="marquee-segment-text flex items-center gap-24">
+        {messages.map((msg, i) => (
+          <span key={i} className="font-bold tracking-[0.18em] uppercase whitespace-nowrap">
+            {msg}
+          </span>
+        ))}
+      </span>
       <span className="marquee-segment-tail" aria-hidden="true" />
     </>
   );
 
   return (
-    <div className="marquee-container bg-yellow-400 p-4 text-xl">
+    <div className="marquee-container bg-yellow-400 py-3 text-sm">
       <div className="marquee-inner">
         <div className="marquee-track" style={trackStyle}>
           <span className="marquee-segment">{segment}</span>

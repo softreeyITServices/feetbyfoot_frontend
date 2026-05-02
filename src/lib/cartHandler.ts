@@ -84,9 +84,9 @@ export const handleRemoveCart = async ({
     try {
       await cartService.deleteItems({
         items: [{ 
-          productId: id, 
-          size, 
-          itemId: itemId || undefined 
+          productId: id,
+          size,
+          ...(itemId ? { itemId } : {})
         }],
       });
       await refreshBackend();

@@ -17,7 +17,7 @@ type PlatformFee = {
   amount?: number;
   percentage?: number;
   MinAmount?: number;
-  applicableTo: "ALL" | "COD" | "ONLINE";
+  applicableTo?: "ALL" | "COD" | "ONLINE";
   isActive: boolean;
 };
 

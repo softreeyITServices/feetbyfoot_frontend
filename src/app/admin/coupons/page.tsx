@@ -207,7 +207,30 @@ function CouponPage() {
       ),
     },
 
-    { key: "minOrderValue", label: "Min Order" },
+    { key: "minOrderValue", label: "Min Order (₹)" },
+
+    {
+      key: "maxUsage",
+      label: "Usage",
+      render: (row) => (
+        <span className="text-xs">
+          {row.usedCount ?? 0}
+          <span className="text-neutral-400">
+            /{row.maxUsage === 0 ? "∞" : row.maxUsage}
+          </span>
+        </span>
+      ),
+    },
+
+    {
+      key: "perUserLimit",
+      label: "Per User",
+      render: (row) => (
+        <span className="text-xs">
+          {row.perUserLimit === 0 ? "∞" : row.perUserLimit}
+        </span>
+      ),
+    },
 
     {
       key: "expiryDate",

@@ -55,7 +55,7 @@ export interface DeleteCartItemsRequest {
   items: {
     productId: string;
     size: string;
-    itemId: string;
+    itemId?: string;
   }[];
 }
 

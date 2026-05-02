@@ -4,6 +4,7 @@ export interface PlatformFee {
   amount?: number;
   MinAmount?: number;
   percentage?: number;
+  applicableTo?: "ALL" | "COD" | "ONLINE";
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -16,6 +17,7 @@ export interface CreatePlatformFeeRequest {
   amount?: number;
   MinAmount?: number;
   percentage?: number;
+  applicableTo?: "ALL" | "COD" | "ONLINE";
   isActive: boolean;
 }
 
