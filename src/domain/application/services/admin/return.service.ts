@@ -41,7 +41,8 @@ export type ReturnItemInfo = {
 export type ReturnOrder = {
   _id: string;
   customerName: string;
-  orderId: string;
+  orderId: string; // This is the orderNumber (e.g. ORD_18)
+  order_id: string; // This is the real MongoDB _id
   orderNumber: string;
   userId?: any; // Populated user object
   returnStatus: string;

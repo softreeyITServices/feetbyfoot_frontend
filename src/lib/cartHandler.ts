@@ -80,10 +80,14 @@ export const handleRemoveCart = async ({
   // 1. Optimistic Update
   onLocalUpdate();
 
-  if (isAuthenticated && itemId) {
+  if (isAuthenticated) {
     try {
       await cartService.deleteItems({
-        items: [{ productId: id, size, itemId }],
+        items: [{ 
+          productId: id, 
+          size, 
+          itemId: itemId || undefined 
+        }],
       });
       await refreshBackend();
     } catch (error) {

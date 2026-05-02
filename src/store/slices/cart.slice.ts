@@ -104,9 +104,13 @@ const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    /* 🔥 Switch to backend mode */
     setAuthMode(state, action: PayloadAction<boolean>) {
       state.isAuthenticatedMode = action.payload;
+      // 🔥 If we are switching to Auth Mode, wipe the guest storage 
+      // to prevent "Ghost" items from being migrated again on next refresh.
+      if (action.payload) {
+        saveCartToStorage([]);
+      }
     },
 
     /* 🔥 Replace cart from backend */

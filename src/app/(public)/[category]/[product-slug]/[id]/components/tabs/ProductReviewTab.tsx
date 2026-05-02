@@ -1,5 +1,6 @@
 import { Review } from "@/domain/shared/types/rating.type";
 import { RatingStarIcon } from "@/icons/RatingStarIcon";
+import { RatingHalfStarIcon } from "@/icons/RatingHalfStarIcon";
 
 interface Props {
   reviews: Review[];
@@ -25,6 +26,24 @@ export default function ProductReviewTab({
       <div className="pb-6">
         <div className="text-3xl font-semibold text-gray-900">
           {averageRating.toFixed(1)} / 5
+        </div>
+        <div className="flex mt-1">
+          {Array.from({ length: 5 }).map((_, i) => {
+            const isFull = i + 1 <= Math.floor(averageRating);
+            const isHalf = !isFull && i < averageRating;
+
+            return (
+              <span key={i} className="text-lg">
+                {isFull ? (
+                  <RatingStarIcon fill="#FACC15" />
+                ) : isHalf ? (
+                  <RatingHalfStarIcon />
+                ) : (
+                  <RatingStarIcon fill="#D1D5DB" />
+                )}
+              </span>
+            );
+          })}
         </div>
         <div className="text-gray-500 text-sm mt-1">
           Based on {totalRatings} review{totalRatings !== 1 && "s"}
@@ -56,8 +75,9 @@ export default function ProductReviewTab({
                   : "text-gray-300"
                   }`}
               >
-                <RatingStarIcon key={i}
-                  fill={i < Math.round(averageRating) ? "#FACC15" : "#D1D5DB"} />
+                <RatingStarIcon 
+                  fill={i < review.rating ? "#FACC15" : "#D1D5DB"} 
+                />
               </span>
             ))}
           </div>
