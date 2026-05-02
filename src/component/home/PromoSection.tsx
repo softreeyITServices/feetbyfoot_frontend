@@ -1,118 +1,100 @@
 "use client";
 
 import Image from "next/image";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, Autoplay } from "swiper/modules";
 import Link from "next/link";
-
-// import "swiper/css";
-// import "swiper/css/pagination";
 import Container from "../ui/Container";
 import FadeIn from "../ui/FadeIn";
-
-const slides = [
-  "/assets/images/promo-winter.png",
-  "/assets/images/promo-winter.png",
-  "/assets/images/promo-winter.png"
-];
 
 export default function PromoCarousel() {
   return (
     <Container>
-      <section className="w-full">
-        {/* <Swiper
-          modules={[Pagination, Autoplay]}
-          pagination={{ clickable: true }}
-          autoplay={{ delay: 4000 }}
-          loop
-          className="w-full"
-        >
-          {slides.map((src, index) => (
-            <SwiperSlide key={index}>
-              <div className="w-full">
-                <Image
-                  src={src}
-                  alt={`Promo Slide ${index + 1}`}
-                  width={1800}
-                  height={700}
-                  className="w-full h-auto object-cover"
-                  priority={index === 0}
-                />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper> */}
-
-
-        <div className="grid grid-cols-1 md:grid-cols-2">
+      <section className="w-full overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
 
           {/* ================= LEFT BANNER ================= */}
-          <FadeIn direction="left" className="relative h-90 md:h-130">
+          <FadeIn direction="left" className="relative h-[300px] sm:h-[400px] md:h-[500px] overflow-hidden group">
             <Image
               src="/assets/images/womens-winter-socks.jpg"
               alt="Women's Winter Socks"
               fill
               priority
-              className="object-cover"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 50vw"
             />
 
+            {/* Dark overlay for better text readability on mobile */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/20 to-transparent sm:from-black/10 sm:via-transparent" />
+
             {/* Text Overlay */}
-            <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-14 text-[#1b5e3c]">
-              <span className="text-2xl tracking-widest uppercase mb-4 text-[#00C484]">
+            <div className="absolute inset-0 flex flex-col justify-center px-5 sm:px-8 md:px-14">
+              <span className="text-xs sm:text-lg md:text-2xl tracking-[0.15em] sm:tracking-widest uppercase mb-2 sm:mb-3 md:mb-4 text-[#00C484] font-semibold">
                 New Arrivals
               </span>
 
-              <h2 className="text-3xl md:text-5xl font-normal leading-tight mb-20">
-                Women’s Winter <br /> Socks
+              <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold leading-tight mb-8 sm:mb-16 md:mb-20 text-white sm:text-[#1b5e3c] drop-shadow-lg sm:drop-shadow-none">
+                Women&apos;s Winter <br /> Socks
               </h2>
 
               <Link
                 href="/shop?isNewArrival=true"
-                className="inline-flex items-center gap-2 text-sm font-semibold underline underline-offset-4 w-fit"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold underline underline-offset-4 w-fit text-white sm:text-[#1b5e3c] hover:text-[#00C484] transition-colors"
               >
                 Shop Now ↗
               </Link>
 
-              <span className="collection-outline text-[55px] md:text-[65px]">
+              <span className="text-lg sm:text-2xl md:text-[65px] mt-3 sm:mt-4 md:mt-0 text-white/90 sm:text-[#1b5e3c]/70 font-bold tracking-wide">
                 COLLECTION
               </span>
             </div>
           </FadeIn>
 
           {/* ================= RIGHT BANNER ================= */}
-          <FadeIn direction="right" delay={150} className="relative h-90 md:h-130 bg-white">
+          <FadeIn direction="right" delay={150} className="relative h-[300px] sm:h-[400px] md:h-[500px] bg-[#f8f8f8] md:bg-white overflow-hidden group">
             <Image
               src="/assets/images/socks-sale.jpg"
               alt="Socks Sale"
               fill
               priority
-              className="object-contain"
+              className="object-cover sm:object-contain transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 100vw, 50vw"
             />
 
+            {/* Light overlay for text readability */}
+            <div className="absolute inset-0 bg-white/20 sm:bg-transparent" />
+
             {/* Text Overlay */}
-            <div className="flex flex-row absolute inset-0">
-              <span className="collection-outline text-5xl absolute top-1/2 -translate-y-1/2 -ml-14 rotate-[-270deg] tracking-[0.4em] opacity-60 font-sans">
-                SOCKS
-              </span>
-              <div className="flex flex-col absolute inset-0 justify-center px-30 md:px-20 text-[#1b5e3c]">
-                <span className="text-sm tracking-widest uppercase mb-4">
+            <div className="absolute inset-0 flex">
+              {/* Vertical SOCKS text */}
+              <div className="hidden lg:flex items-center absolute left-0 top-0 bottom-0">
+                <span className="text-4xl lg:text-5xl rotate-[-270deg] tracking-[0.3em] lg:tracking-[0.4em] opacity-40 lg:opacity-60 font-sans origin-center whitespace-nowrap text-gray-400">
+                  SOCKS
+                </span>
+              </div>
+              
+              <div className="flex flex-col justify-center px-5 sm:px-10 md:px-14 lg:px-20 w-full">
+                <span className="text-[10px] sm:text-xs md:text-sm tracking-[0.15em] sm:tracking-widest uppercase mb-2 sm:mb-3 md:mb-4 font-semibold text-gray-600">
                   2026 Season Sale
                 </span>
 
-                <h2 className="text-4xl md:text-5xl font-normal leading-tight mb-10">
+                <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold leading-tight mb-6 sm:mb-8 md:mb-10 text-[#1b5e3c]">
                   Up To <br />
-                  <span className="font-normal">70% <br /> Off</span>
+                  <span className="text-[#00C484] font-extrabold">
+                    70% Off
+                  </span>
                 </h2>
 
                 <Link
                   href="/shop"
-                  className="inline-flex items-center gap-2 text-sm font-semibold underline underline-offset-4 w-fit"
+                  className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold underline underline-offset-4 w-fit text-[#1b5e3c] hover:text-[#00C484] transition-colors"
                 >
                   Shop Now ↗
                 </Link>
-              </div>
-              {/* Vertical SOCKS text */}
 
+                {/* Mobile SOCKS text */}
+                <span className="lg:hidden text-sm tracking-[0.3em] opacity-30 font-sans mt-4 text-gray-400">
+                  SOCKS
+                </span>
+              </div>
             </div>
           </FadeIn>
 
