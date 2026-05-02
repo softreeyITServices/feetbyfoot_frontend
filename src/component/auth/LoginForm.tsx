@@ -10,6 +10,8 @@ import { validate, ValidType } from "@/lib/emailPhoneValidator";
 import { useAppDispatch } from "@/store/hooks";
 import { migrateCartAsync } from "@/store/slices/cart.slice";
 import { store } from "@/store";
+import { auth } from "@/lib/firebase";
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [authType, setAuthType] = useState<ValidType | null>(null);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   const getSafeRedirectPath = (value: string | null): string => {
     if (!value) return "/account";
@@ -43,7 +46,13 @@ export default function LoginForm() {
   }, [otpSent, timer]);
 
   const handleIndentifier = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    let value = e.target.value;
+    
+    // Smart auto-correct: If it's a 10-digit number, add +91
+    if (/^\d{10}$/.test(value)) {
+      value = `+91${value}`;
+    }
+
     const type = validate(value);
     if (type === 'email') {
       setAuthType('email')
@@ -52,7 +61,6 @@ export default function LoginForm() {
     }
     setIdentifier(value);
     setError("");
-
   }
 
   const handleSendOtp = async () => {
@@ -70,17 +78,29 @@ export default function LoginForm() {
       setError("");
       setSuccess("");
 
+      // 1. Check with backend if user is registered
       await authService.sendOtp({
         identifier,
         type: authType,
       });
 
+      // 2. If it's phone, use Firebase to send SMS
+      if (authType === 'phone') {
+        const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible',
+        });
+
+        const result = await signInWithPhoneNumber(auth, identifier, recaptchaVerifier);
+        setConfirmationResult(result);
+        setSuccess("OTP sent successfully to your phone!");
+      } else {
+        setSuccess("OTP sent successfully! Check your email.");
+      }
+
       setOtpSent(true);
       setTimer(60);
-      setSuccess("OTP sent successfully! Check your email.");
     } catch (err: unknown) {
       console.error("Send OTP failed", err);
-
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -130,9 +150,19 @@ export default function LoginForm() {
       setError("");
       setSuccess("");
 
+      let finalOtp = otp;
+
+      // 1. If it's phone, first verify with Firebase to get the ID Token
+      if (authType === 'phone' && confirmationResult) {
+        const result = await confirmationResult.confirm(otp);
+        const idToken = await result.user.getIdToken();
+        finalOtp = idToken; // Pass the long token to the backend
+      }
+
+      // 2. Call NextAuth signIn with the code (email) or token (phone)
       const result = await signIn("credentials", {
         identifier,
-        otp,
+        otp: finalOtp,
         type: authType,
         redirect: false,
       });
@@ -258,6 +288,7 @@ export default function LoginForm() {
           </div>
         </>
       )}
+      <div id="recaptcha-container"></div>
     </div>
   );
 }
