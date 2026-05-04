@@ -196,17 +196,10 @@ export function DataTable<T>({
         )}
       </div>
 
-      {/* Table */}
-      {/* FIX 2: Changed "overflow-x-auto overflow-y-visible" to "overflow-x-auto [overflow-y:visible]".
-          In CSS, setting overflow-x to anything other than "visible" forces overflow-y to behave as
-          "auto" regardless of what you set it to — this is per the CSS spec. As a result, dropdowns
-          rendered inside table cells get clipped vertically.
-          
-          The real fix is to use "overflow-clip" for the x-axis instead of "overflow-auto", which
-          clips overflowing content without creating a scroll container, so overflow-y can remain
-          truly visible. This lets row menus/dropdowns escape the table bounds vertically while
-          still hiding content that overflows horizontally on small screens. */}
-      <div className="overflow-x-clip overflow-y-visible w-full">
+      {/* Table — overflow-x-auto enables horizontal scroll on mobile.
+          The RowActionMenu dropdown uses createPortal so it renders in document.body
+          and is never clipped by this scroll container. */}
+      <div className="overflow-x-auto w-full" style={{ WebkitOverflowScrolling: 'touch' }}>
         <table className="w-full text-sm">
           <thead className="bg-gray-100 text-gray-600 text-left">
             <tr>

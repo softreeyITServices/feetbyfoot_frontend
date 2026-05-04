@@ -121,11 +121,11 @@ export default function AccountPage() {
 
 
   return (
-    <div className="px-4">
-      <div className="max-w-4xl mx-auto bg-white p-10 rounded-xl shadow-sm">
-        <form onSubmit={handleSubmit} className="space-y-12">
+    <div>
+      <div className="max-w-4xl mx-auto bg-white p-5 sm:p-10 rounded-xl shadow-sm">
+        <form onSubmit={handleSubmit} className="space-y-8 sm:space-y-12">
           <section>
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   First name *
@@ -155,7 +155,7 @@ export default function AccountPage() {
               </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-5 sm:mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Display name
               </label>
@@ -170,7 +170,7 @@ export default function AccountPage() {
               </p>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-5 sm:mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email address *
               </label>
@@ -184,7 +184,7 @@ export default function AccountPage() {
               />
             </div>
 
-            <div className="mt-6">
+            <div className="mt-5 sm:mt-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Phone number *
               </label>
@@ -204,7 +204,7 @@ export default function AccountPage() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed text-black font-medium px-8 py-3 rounded-md transition"
+            className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed text-black font-medium px-8 py-3 rounded-md transition"
           >
             {loading ? "Saving..." : "Save changes"}
           </button>

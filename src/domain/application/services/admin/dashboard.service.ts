@@ -18,7 +18,7 @@ export class DashboardService {
         url: ADMIN_DASHBOARD_OVERVIEW_URL,
         method: "GET",
         requiresAuth: true,
-      });
+    });
       return response;
     } catch (error) {
       throw handleApiError(error, "getDashboardOverview");

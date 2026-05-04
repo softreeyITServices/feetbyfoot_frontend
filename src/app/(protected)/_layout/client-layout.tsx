@@ -24,18 +24,22 @@ export default function ClientLayout({ children, title, subtitle, }: LayoutProps
     <>
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-12">
-        {/* Header */}
-        <div className="mb-10">
+        {/* Header — hidden on mobile (tab bar provides context) */}
+        <div className="hidden md:block mb-8">
           <h1 className="text-2xl font-semibold">{title}</h1>
-          <p className="text-md text-gray-500 mt-1">
-            {subtitle}
-          </p>
+          <p className="text-md text-gray-500 mt-1">{subtitle}</p>
         </div>
 
         {/* Content */}
-        <div className={isAdminWishlistRoute ? 'grid grid-cols-1' : 'grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10'}>
+        <div
+          className={
+            isAdminWishlistRoute
+              ? "grid grid-cols-1"
+              : "flex flex-col md:grid md:grid-cols-[260px_1fr] md:gap-10 md:items-start"
+          }
+        >
           {!isAdminWishlistRoute && <AccountSidebar />}
-          {children}
+          <div className="flex-1 min-w-0">{children}</div>
         </div>
       </main>
       <Footer />

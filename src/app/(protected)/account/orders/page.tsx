@@ -202,7 +202,7 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="px-6">
+    <div className="px-0 sm:px-4">
       <div className="max-w-5xl mx-auto">
         {error && (
           <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-md">

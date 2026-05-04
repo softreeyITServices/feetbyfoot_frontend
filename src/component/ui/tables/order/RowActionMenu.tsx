@@ -20,17 +20,13 @@ export const RowActionMenu = ({ actions }: RowActionMenuProps) => {
   // Close on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node)
-      ) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -63,7 +59,6 @@ export const RowActionMenu = ({ actions }: RowActionMenuProps) => {
           ))}
         </div>
       )}
-
     </div>
   );
 };

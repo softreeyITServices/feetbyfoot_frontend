@@ -10,6 +10,43 @@
   }
 }
 
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE/Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;             /* Chrome/Safari */
+}
+
+/* Navbar mega-menu category stagger animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cart badge pop animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
 .container {
   max-width: 1280px;
   /* matches Figma desktop frame */
@@ -41,8 +78,62 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 32px;
+
 }
 
+.data-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -1rem; /* Compensate for parent padding on mobile */
+  padding: 0 1rem;
+}
+
+@media (min-width: 640px) {
+  .data-table-wrapper {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Table base styles */
+.data-table-wrapper table {
+  min-width: 800px; /* Minimum width to prevent squishing */
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Sticky first column for better mobile UX (optional) */
+@media (max-width: 639px) {
+  .data-table-wrapper table th:first-child,
+  .data-table-wrapper table td:first-child {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 1;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+  }
+}
+
+/* Scrollbar styling for better visibility */
+.data-table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.data-table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.data-table-wrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.data-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
 /* Shop by category */
 .shop-category-grid {
   display: grid;

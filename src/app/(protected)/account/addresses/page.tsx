@@ -71,8 +71,8 @@ export default function AddressesPage() {
   );
 
   return (
-    <div className="py-10">
-      <div className="max-w-6xl mx-auto px-6">
+    <div className="pt-4 pb-8 sm:py-8">
+      <div className="max-w-6xl mx-auto px-0 sm:px-4">
 
         {loading ? (
           <p>Loading addresses...</p>
