@@ -92,9 +92,15 @@ export class ExchangeService {
     params?: Record<string, string | number>
   ): Promise<ExchangeListResponse> {
     try {
-      const query = params
-        ? "?" + new URLSearchParams(params as Record<string, string>).toString()
-        : "";
+      const queryParams = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            queryParams.append(key, String(value));
+          }
+        });
+      }
+      const query = queryParams.toString() ? "?" + queryParams.toString() : "";
 
       const res = await httpClient.request<ExchangeListResponse>({
         url: `${ADMIN_EXCHANGES_URL}${query}`,

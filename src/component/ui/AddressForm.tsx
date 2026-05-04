@@ -49,38 +49,42 @@ export default function AddressForm({
     longitude: 0,
   });
 
-  // useEffect(() => {
-  //   const checkPin = async () => {
-  //     if (/^[0-9]{6}$/.test(form.pincode)) {
-  //       try {
-  //         setCheckingPincode(true);
-  //         setServiceError(null);
-  //         const res = await DeliveryService.checkServiceability(form.pincode);
-  //         const isServiceable = !!(res.delivery_codes && res.delivery_codes.length > 0);
-  //         setServiceable(isServiceable);
-  //         if (!isServiceable) {
-  //           setErrors(prev => ({ ...prev, pincode: "Sorry, delivery is not available at this pincode" }));
-  //         } else {
-  //           setErrors(prev => {
-  //             const newErrors = { ...prev };
-  //             delete newErrors.pincode;
-  //             return newErrors;
-  //           });
-  //         }
-  //       } catch (err) {
-  //         console.error("Pincode check failed", err);
-  //         setServiceable(null);
-  //         setServiceError("We're having trouble verifying your pincode. You can try saving, or try again later.");
-  //       } finally {
-  //         setCheckingPincode(false);
-  //       }
-  //     } else {
-  //       setServiceable(null);
-  //     }
-  //   };
+  useEffect(() => {
+    const checkPin = async () => {
+      if (/^[0-9]{6}$/.test(form.pincode)) {
+        try {
+          setCheckingPincode(true);
+          setServiceError(null);
+          const res = await DeliveryService.checkServiceability(form.pincode);
+          
+          // 🚀 CONSOLE LOG FOR TESTING
+          console.log("Delhivery Pincode Response:", res);
 
-  //   checkPin();
-  // }, [form.pincode]);
+          const isServiceable = !!(res.delivery_codes && res.delivery_codes.length > 0);
+          setServiceable(isServiceable);
+          if (!isServiceable) {
+            setErrors(prev => ({ ...prev, pincode: "Sorry, delivery is not available at this pincode" }));
+          } else {
+            setErrors(prev => {
+              const newErrors = { ...prev };
+              delete newErrors.pincode;
+              return newErrors;
+            });
+          }
+        } catch (err) {
+          console.error("Pincode check failed", err);
+          setServiceable(null);
+          setServiceError("We're having trouble verifying your pincode. You can try saving, or try again later.");
+        } finally {
+          setCheckingPincode(false);
+        }
+      } else {
+        setServiceable(null);
+      }
+    };
+
+    checkPin();
+  }, [form.pincode]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 

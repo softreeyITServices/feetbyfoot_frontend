@@ -35,6 +35,7 @@ class OrdersService {
     perPage?: number;
     paymentStatus?: string;
     orderStatus?: string;
+    search?: string;
   }): Promise<PaginatedOrders> {
     try {
       const query = new URLSearchParams();
@@ -45,6 +46,7 @@ class OrdersService {
       if (params.paymentStatus)
         query.append("paymentStatus", params.paymentStatus);
       if (params.orderStatus) query.append("orderStatus", params.orderStatus);
+      if (params.search) query.append("search", params.search);
 
       const queryString = query.toString();
 

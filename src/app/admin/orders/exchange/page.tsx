@@ -180,6 +180,8 @@ function ColorDot({ color }: { color?: string }) {
 
 /* ================= PAGE ================= */
 
+/* ================= PAGE ================= */
+
 function ExchangePage() {
   const [data, setData] = useState<ExchangeRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -187,22 +189,33 @@ function ExchangePage() {
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [trackingWaybill, setTrackingWaybill] = useState<string | null>(null);
 
+  const [meta, setMeta] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+  });
 
   const [form, setForm] = useState({ adminNotes: "", rejectReason: "" });
-  const [filters, setFilters] = useState({ status: "", orderNumber: "" });
+  const [filters, setFilters] = useState({ 
+    status: "", 
+    search: "", 
+    page: 1, 
+    limit: 10 
+  });
 
   /* ================= FETCH ================= */
-
 
   const fetchData = async () => {
     try {
       setLoading(true);
 
-      const params: Record<string, string | number> = { page: 1, limit: 10 };
-      if (filters.status) params.status = filters.status;
-      if (filters.orderNumber) params.orderNumber = filters.orderNumber;
-
-      const res = await ExchangeService.getAll(params);
+      const res = await ExchangeService.getAll({
+        page: filters.page,
+        limit: filters.limit,
+        status: filters.status || undefined,
+        search: filters.search || undefined,
+      });
 
       // Flatten: one row per exchange entry
       const rows: ExchangeRow[] = (res.data ?? []).flatMap((order: ExchangeOrder) =>
@@ -220,6 +233,9 @@ function ExchangePage() {
       );
 
       setData(rows);
+      if (res.meta) {
+        setMeta(res.meta);
+      }
     } catch (err) {
       console.error(err);
       if (!isGetRequestError(err)) {
@@ -230,12 +246,11 @@ function ExchangePage() {
     }
   };
 
-  useEffect(() => { fetchData(); }, [filters]);
+  useEffect(() => {
+    fetchData();
+  }, [filters]);
 
   /* ================= ACTION HANDLER ================= */
-
-  console.log("data",data)
-
 
   const handleAction = async () => {
     if (!pending) return;
@@ -250,7 +265,10 @@ function ExchangePage() {
         toast.success("Exchange approved");
 
       } else if (type === "REJECT") {
-        if (!form.rejectReason) { toast.error("Reject reason required"); return; }
+        if (!form.rejectReason) {
+          toast.error("Reject reason required");
+          return;
+        }
         await ExchangeService.exchangeAction(row.orderMongoId, {
           itemId: row.newItem._id,
           action: "REJECT",
@@ -295,7 +313,7 @@ function ExchangePage() {
       label: "Product",
       render: (row) => (
         <div className="flex items-center gap-2">
-          {row.oldItem && typeof row.oldItem === 'object' && row.oldItem.productImage?.startsWith('http') && (
+          {row.oldItem && typeof row.oldItem === "object" && row.oldItem.productImage?.startsWith("http") && (
             <Image
               src={row.oldItem.productImage}
               alt={row.oldItem.productName}
@@ -304,7 +322,7 @@ function ExchangePage() {
               className="rounded object-cover"
             />
           )}
-          <span className="text-xs">{typeof row.oldItem === 'object' ? row.oldItem?.productName : '—'}</span>
+          <span className="text-xs">{typeof row.oldItem === "object" ? row.oldItem?.productName : "—"}</span>
         </div>
       ),
     },
@@ -336,7 +354,9 @@ function ExchangePage() {
       label: "Status",
       render: (row) => (
         <span
-          className={`px-2 py-0.5 text-xs rounded-lg whitespace-nowrap ${STATUS_STYLE[row.newItem?.status] ?? "bg-gray-100 text-gray-600"}`}
+          className={`px-2 py-0.5 text-xs rounded-lg whitespace-nowrap ${
+            STATUS_STYLE[row.newItem?.status] ?? "bg-gray-100 text-gray-600"
+          }`}
         >
           {row.newItem?.status?.replace(/_/g, " ")}
         </span>
@@ -346,21 +366,13 @@ function ExchangePage() {
     {
       key: "details",
       label: "Requested",
-      render: (row) =>
-        row.details.requestedAt
-          ? new Date(row.details.requestedAt).toLocaleDateString()
-          : "—",
+      render: (row) => (row.details.requestedAt ? new Date(row.details.requestedAt).toLocaleDateString() : "—"),
     },
 
     {
       key: "id",
       label: "Actions",
-      render: (row) => (
-        <ActionDropdown
-          row={row}
-          onAction={(type) => setPending({ type, row })}
-        />
-      ),
+      render: (row) => <ActionDropdown row={row} onAction={(type) => setPending({ type, row })} />,
     },
   ];
 
@@ -368,31 +380,28 @@ function ExchangePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold">Exchanges</h1>
-        <p className="text-sm text-neutral-400">Manage product exchange requests</p>
-      </div>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-bold">Exchanges</h1>
+          <p className="text-sm text-neutral-400">Manage product exchange requests</p>
+        </div>
 
-      {/* FILTERS */}
-      <div className="flex gap-3">
-        <input
-          placeholder="Order Number"
-          className="border px-3 py-2 rounded-lg text-sm"
-          value={filters.orderNumber}
-          onChange={(e) => setFilters((p) => ({ ...p, orderNumber: e.target.value }))}
-        />
-        <select
-          className="border px-3 py-2 rounded-lg text-sm"
-          value={filters.status}
-          onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value }))}
-        >
-          <option value="">All Status</option>
-          <option value="REQUESTED">Requested</option>
-          <option value="EXCHANGE_APPROVED">Approved</option>
-          <option value="REPLACEMENT_SHIPPED">Shipped</option>
-          <option value="EXCHANGE_REJECTED">Rejected</option>
-          <option value="COMPLETED">Completed</option>
-        </select>
+        <div className="flex gap-2">
+          <select
+            className="border px-3 py-2 rounded-lg text-sm bg-white"
+            value={filters.status}
+            onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value, page: 1 }))}
+          >
+            <option value="">All Status</option>
+            <option value="EXCHANGE_REQUESTED">Requested</option>
+            <option value="EXCHANGE_APPROVED">Approved</option>
+            <option value="PACKED">Packed</option>
+            <option value="SHIPPED">Shipped</option>
+            <option value="DELIVERED">Delivered</option>
+            <option value="EXCHANGED">Exchanged</option>
+            <option value="EXCHANGE_REJECTED">Rejected</option>
+          </select>
+        </div>
       </div>
 
       {/* TABLE */}
@@ -402,34 +411,48 @@ function ExchangePage() {
         columns={columns}
         data={data}
         loading={loading}
-        searchKeys={["orderNumber", "customerName"]}
+        paginationMode="server"
+        currentPage={filters.page}
+        totalPages={meta.totalPages}
+        pageSize={filters.limit}
+        onPageChange={(page) => setFilters((p) => ({ ...p, page }))}
+        onSearchChange={(search) => setFilters((p) => ({ ...p, search, page: 1 }))}
         onView={(row) => setSelected(row)}
       />
 
       {/* DETAILS MODAL */}
-      <AdminModal
-        isOpen={!!selected}
-        onClose={() => setSelected(null)}
-        title="Exchange Details"
-        size="lg"
-      >
+      <AdminModal isOpen={!!selected} onClose={() => setSelected(null)} title="Exchange Details" size="lg">
         {selected && (
           <div className="space-y-5 text-sm">
             {/* Order info */}
             <div className="grid grid-cols-2 gap-3">
-              <p><b>Order:</b> {selected.orderNumber}</p>
-              <p><b>Customer:</b> {selected.customerName}</p>
-              <p><b>Exchange ID:</b> {selected.details.exchangeId || "—"}</p>
-              <p><b>Requested:</b> {new Date(selected.details.requestedAt).toLocaleString()}</p>
-              <p><b>Status:</b> {selected.details.status}</p>
-              <p><b>Reason:</b> {selected.details.reason || "—"}</p>
+              <p>
+                <b>Order:</b> {selected.orderNumber}
+              </p>
+              <p>
+                <b>Customer:</b> {selected.customerName}
+              </p>
+              <p>
+                <b>Exchange ID:</b> {selected.details.exchangeId || "—"}
+              </p>
+              <p>
+                <b>Requested:</b> {new Date(selected.details.requestedAt).toLocaleString()}
+              </p>
+              <p>
+                <b>Status:</b> {selected.details.status}
+              </p>
+              <p>
+                <b>Reason:</b> {selected.details.reason || "—"}
+              </p>
               {selected.details.pickupAwb && (
                 <div className="col-span-2 mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">Exchange Pickup (Reverse)</p>
+                    <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
+                      Exchange Pickup (Reverse)
+                    </p>
                     <p className="font-mono font-bold text-neutral-800">{selected.details.pickupAwb}</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setTrackingWaybill(selected.details.pickupAwb!)}
                     className="bg-neutral-800 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-neutral-900 transition-colors shadow-sm"
                   >
@@ -438,15 +461,15 @@ function ExchangePage() {
                 </div>
               )}
 
-              {(selected?.details?.replacementAwb ) && (
+              {selected?.details?.replacementAwb && (
                 <div className="col-span-2 mt-2 p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">Replacement Shipment (Forward)</p>
-                    <p className="font-mono font-bold text-blue-900">
-                      {selected?.details?.replacementAwb }
+                    <p className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">
+                      Replacement Shipment (Forward)
                     </p>
+                    <p className="font-mono font-bold text-blue-900">{selected?.details?.replacementAwb}</p>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setTrackingWaybill((selected?.details?.replacementAwb || selected?.newItem?.waybill)!)}
                     className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm"
                   >
@@ -455,7 +478,6 @@ function ExchangePage() {
                 </div>
               )}
             </div>
-
 
             {/* Size / Color change */}
             <div className="border rounded-lg p-3 bg-neutral-50 grid grid-cols-2 gap-3">
@@ -473,14 +495,16 @@ function ExchangePage() {
                   <ColorDot color={selected.details.newColor} />
                 </span>
               </div>
-              <p><b>Qty:</b> {selected.details.quantity}</p>
+              <p>
+                <b>Qty:</b> {selected.details.quantity}
+              </p>
             </div>
 
             {/* Old item */}
             <div>
               <p className="font-semibold mb-2">Original Item</p>
               <div className="border rounded-lg p-3 flex gap-3">
-                {selected.oldItem && typeof selected.oldItem === 'object' && selected.oldItem.productImage?.startsWith('http') && (
+                {selected.oldItem && typeof selected.oldItem === "object" && selected.oldItem.productImage?.startsWith("http") && (
                   <Image
                     src={selected.oldItem.productImage}
                     alt={selected.oldItem.productName}
@@ -492,7 +516,8 @@ function ExchangePage() {
                 <div className="space-y-1">
                   <p className="font-medium">{selected.oldItem?.productName}</p>
                   <p className="text-xs text-neutral-500">
-                    Size: {selected.oldItem?.size} · Color: {selected.oldItem?.color || "—"} · Qty: {selected.oldItem?.quantity}
+                    Size: {selected.oldItem?.size} · Color: {selected.oldItem?.color || "—"} · Qty:{" "}
+                    {selected.oldItem?.quantity}
                   </p>
                   <p className="text-xs text-neutral-500">₹{selected.oldItem?.unitPrice}</p>
                 </div>
@@ -503,7 +528,7 @@ function ExchangePage() {
             <div>
               <p className="font-semibold mb-2">Replacement Item</p>
               <div className="border rounded-lg p-3 flex gap-3">
-                {selected.newItem && typeof selected.newItem === 'object' && selected.newItem.productImage?.startsWith('http') && (
+                {selected.newItem && typeof selected.newItem === "object" && selected.newItem.productImage?.startsWith("http") && (
                   <Image
                     src={selected.newItem.productImage}
                     alt={selected.newItem.productName}
@@ -515,7 +540,8 @@ function ExchangePage() {
                 <div className="space-y-1">
                   <p className="font-medium">{selected.newItem?.productName}</p>
                   <p className="text-xs text-neutral-500">
-                    Size: {selected.newItem?.size} · Color: {selected.newItem?.color || "—"} · Qty: {selected.newItem?.quantity}
+                    Size: {selected.newItem?.size} · Color: {selected.newItem?.color || "—"} · Qty:{" "}
+                    {selected.newItem?.quantity}
                   </p>
                   <p className="text-xs text-neutral-500">₹{selected.newItem?.unitPrice}</p>
                 </div>
@@ -550,15 +576,24 @@ function ExchangePage() {
         {pending && (
           <div className="space-y-4 text-sm">
             <div className="border rounded-lg p-3 bg-neutral-50">
-              <p><b>Order:</b> {pending.row.orderNumber}</p>
-              <p><b>Customer:</b> {pending.row.customerName}</p>
-              <p><b>Product:</b> {pending.row.oldItem?.productName}</p>
               <p>
-                <b>Exchange:</b>{" "}
-                {pending.row.details.oldSize} → {pending.row.details.newSize}
-                {pending.row.details.newColor ? ` · ${pending.row.details.oldColor || "—"} → ${pending.row.details.newColor}` : ""}
+                <b>Order:</b> {pending.row.orderNumber}
               </p>
-              <p><b>Current Status:</b> {pending.row.newItem?.status?.replace(/_/g, " ")}</p>
+              <p>
+                <b>Customer:</b> {pending.row.customerName}
+              </p>
+              <p>
+                <b>Product:</b> {pending.row.oldItem?.productName}
+              </p>
+              <p>
+                <b>Exchange:</b> {pending.row.details.oldSize} → {pending.row.details.newSize}
+                {pending.row.details.newColor
+                  ? ` · ${pending.row.details.oldColor || "—"} → ${pending.row.details.newColor}`
+                  : ""}
+              </p>
+              <p>
+                <b>Current Status:</b> {pending.row.newItem?.status?.replace(/_/g, " ")}
+              </p>
             </div>
 
             {pending.type === "REJECT" && (
@@ -573,15 +608,11 @@ function ExchangePage() {
             {pending.type === "APPROVE" && (
               <p className="text-blue-600">✅ Approve this exchange request? Stock will be reserved.</p>
             )}
-            {pending.type === "PACKED" && (
-              <p className="text-orange-600">📦 Mark this exchange item as Packed?</p>
-            )}
+            {pending.type === "PACKED" && <p className="text-orange-600">📦 Mark this exchange item as Packed?</p>}
             {pending.type === "SHIPPED" && (
               <p className="text-indigo-600">🚚 Mark as Shipped? This will create a Delhivery waybill.</p>
             )}
-            {pending.type === "DELIVERED" && (
-              <p className="text-teal-600">📬 Mark as Delivered to the customer?</p>
-            )}
+            {pending.type === "DELIVERED" && <p className="text-teal-600">📬 Mark as Delivered to the customer?</p>}
             {pending.type === "COMPLETE" && (
               <p className="text-green-600">✅ Complete this exchange? Old item stock will be restored.</p>
             )}
@@ -589,14 +620,8 @@ function ExchangePage() {
         )}
       </AdminModal>
 
-      {trackingWaybill && (
-        <TrackingModal
-          waybill={trackingWaybill}
-          onClose={() => setTrackingWaybill(null)}
-        />
-      )}
+      {trackingWaybill && <TrackingModal waybill={trackingWaybill} onClose={() => setTrackingWaybill(null)} />}
     </div>
-
   );
 }
 

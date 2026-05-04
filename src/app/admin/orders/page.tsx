@@ -538,6 +538,14 @@ function OrderPage() {
   const [filters, setFilters] = useState({
     paymentStatus: "",
     orderStatus: "",
+    search: "",
+    page: 1,
+    perPage: 10,
+  });
+
+  const [meta, setMeta] = useState({
+    totalPages: 1,
+    total: 0,
   });
 
   const [bulkPdfLoading, setBulkPdfLoading] = useState(false);
@@ -549,10 +557,11 @@ function OrderPage() {
       setLoading(true);
 
       const res = await ordersService.getOrders({
-        page: 1,
-        perPage: 10,
+        page: filters.page,
+        perPage: filters.perPage,
         paymentStatus: filters.paymentStatus || undefined,
         orderStatus: filters.orderStatus || undefined,
+        search: filters.search || undefined,
       });
 
       console.log('res', res)
@@ -564,6 +573,12 @@ function OrderPage() {
       }));
 
       setOrders(transformed);
+      if (res.meta) {
+        setMeta({
+          totalPages: res.meta.totalPages,
+          total: res.meta.total,
+        });
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -797,6 +812,7 @@ function OrderPage() {
                 setFilters((p) => ({
                   ...p,
                   paymentStatus: e.target.value,
+                  page: 1,
                 }))
               }
             >
@@ -820,6 +836,7 @@ function OrderPage() {
                 setFilters((p) => ({
                   ...p,
                   orderStatus: e.target.value,
+                  page: 1,
                 }))
               }
             >
@@ -874,7 +891,15 @@ function OrderPage() {
         columns={columns}
         data={orders}
         loading={loading}
-        searchKeys={["orderNumber"]}
+        paginationMode="server"
+        currentPage={filters.page}
+        totalPages={meta.totalPages}
+        pageSize={filters.perPage}
+        onPageChange={(page) => setFilters((p) => ({ ...p, page }))}
+        onPageSizeChange={(perPage) =>
+          setFilters((p) => ({ ...p, perPage, page: 1 }))
+        }
+        onSearchChange={(search) => setFilters((p) => ({ ...p, search, page: 1 }))}
         onView={(row) => setSelectedOrder(row)}
       />
 

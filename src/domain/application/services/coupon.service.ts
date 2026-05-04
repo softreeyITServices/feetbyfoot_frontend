@@ -7,6 +7,7 @@ import {
   GetAllCouponsResponse,
   ApplyCouponApiResponse,
 } from "@/domain/shared/types/coupon.type";
+import { CART_URL } from "@/constants/apis";
 
 class CouponService {
   async createCoupon(payload: {
@@ -64,6 +65,20 @@ class CouponService {
       return response;
     } catch (error) {
       handleApiError(error, "getAllActiveCoupons");
+    }
+  }
+
+  async removeCoupon(): Promise<any> {
+    try {
+      const response = await httpClient.request<any>({
+        url: `${CART_URL}/coupon`,
+        method: "DELETE",
+        requiresAuth: true,
+      });
+
+      return response;
+    } catch (error) {
+      handleApiError(error, "removeCoupon");
     }
   }
 }

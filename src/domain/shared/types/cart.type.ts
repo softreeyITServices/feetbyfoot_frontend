@@ -24,6 +24,7 @@ export interface Cart {
   _id: string;
   userId: string;
   items: CartItem[];
+  couponCode?: string;
   discountAmount: number;
   gstAmount: number;
   platformFee: number;

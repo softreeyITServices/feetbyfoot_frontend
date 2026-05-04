@@ -17,6 +17,8 @@ import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 import { RatingStarIcon } from "@/icons/RatingStarIcon";
 import { RatingHalfStarIcon } from "@/icons/RatingHalfStarIcon";
+import { DeliveryService } from "@/domain/application/services/delivery.service";
+
 
 interface ProductSummaryProps {
   product: {
@@ -56,7 +58,7 @@ export default function ProductSummary({
 
   // Derive unique colors from all variants
   const uniqueColors = Array.from(
-    new Set(product.sizes.map((s) => s.color).filter(Boolean))
+    new Set(product.sizes.map((s) => s.color).filter(Boolean)),
   ) as string[];
 
   // Filter sizes available for the selected color
@@ -66,10 +68,44 @@ export default function ProductSummary({
 
   // Check if currently selected combination is out of stock
   const selectedVariant = product.sizes.find(
-    (s) => s.size === selectedSize && (!selectedColor || s.color === selectedColor)
+    (s) =>
+      s.size === selectedSize && (!selectedColor || s.color === selectedColor),
   );
-  const isOutOfStock = !!selectedVariant && (selectedVariant.quantity <= 0 || !selectedVariant.isActive);
+  const isOutOfStock =
+    !!selectedVariant &&
+    (selectedVariant.quantity <= 0 || !selectedVariant.isActive);
   const [loading, setLoading] = useState(false);
+  
+  // Pincode Check State
+  const [checkingPincode, setCheckingPincode] = useState(false);
+  const [pincodeStatus, setPincodeStatus] = useState<"SUCCESS" | "ERROR" | null>(null);
+  const [serviceableCity, setServiceableCity] = useState<string | null>(null);
+
+  const handlePincodeCheck = async (pincode: string) => {
+    try {
+      setCheckingPincode(true);
+      setPincodeStatus(null);
+      setServiceableCity(null);
+      
+      const res = await DeliveryService.checkServiceability(pincode);
+      console.log("Delhivery API Result:", res);
+
+      const hasCodes = res && res.delivery_codes && res.delivery_codes.length > 0;
+      
+      if (hasCodes) {
+        const city = res.delivery_codes[0].postal_code.city || "your location";
+        setServiceableCity(city);
+        setPincodeStatus("SUCCESS");
+      } else {
+        setPincodeStatus("ERROR");
+      }
+    } catch (err) {
+      console.error("Pincode check failed", err);
+      setPincodeStatus("ERROR");
+    } finally {
+      setCheckingPincode(false);
+    }
+  };
 
   const handleAddToCart = async () => {
     if (!session?.accessToken) {
@@ -103,7 +139,7 @@ export default function ProductSummary({
           size: selectedSize,
           color: selectedColor ?? undefined,
           quantity,
-        })
+        }),
       ).unwrap();
 
       dispatch(openCart());
@@ -164,9 +200,7 @@ export default function ProductSummary({
         <span className="text-green-600 text-xl font-semibold">
           ₹{product.price}
         </span>
-        <span className="line-through text-gray-400">
-          ₹{product.mrp}
-        </span>
+        <span className="line-through text-gray-400">₹{product.mrp}</span>
       </div>
 
       {/* Color Selector */}
@@ -177,7 +211,10 @@ export default function ProductSummary({
             {uniqueColors.map((color) => (
               <button
                 key={color}
-                onClick={() => { setSelectedColor(color); setSelectedSize(null); }}
+                onClick={() => {
+                  setSelectedColor(color);
+                  setSelectedSize(null);
+                }}
                 title={color}
                 className={`w-8 h-8 rounded-full border-2  transition ${
                   selectedColor === color
@@ -202,14 +239,13 @@ export default function ProductSummary({
 
       {/* Out of Stock indicator */}
       {isOutOfStock && (
-        <p className="mt-2 text-sm font-semibold text-red-500">⚠ Out of Stock</p>
+        <p className="mt-2 text-sm font-semibold text-red-500">
+          ⚠ Out of Stock
+        </p>
       )}
 
       <div className="flex gap-4 mt-6 items-center">
-        <QuantitySelector
-          quantity={quantity}
-          onChangeQuantity={setQuantity}
-        />
+        <QuantitySelector quantity={quantity} onChangeQuantity={setQuantity} />
 
         <button
           onClick={handleAddToCart}
@@ -220,9 +256,59 @@ export default function ProductSummary({
               : "bg-black text-white hover:bg-gray-800"
           }`}
         >
-          <CartBasketIcon width={13} height={15} fill={isOutOfStock || loading ? "#9ca3af" : "#fff"} />
-          <span>{loading ? "ADDING..." : isOutOfStock ? "OUT OF STOCK" : "ADD TO BASKET"}</span>
+          <CartBasketIcon
+            width={13}
+            height={15}
+            fill={isOutOfStock || loading ? "#9ca3af" : "#fff"}
+          />
+          <span>
+            {loading
+              ? "ADDING..."
+              : isOutOfStock
+                ? "OUT OF STOCK"
+                : "ADD TO BASKET"}
+          </span>
         </button>
+      </div>
+
+      {/* PINCODE CHECKER - WITH MANUAL BUTTON AND ERROR DETAIL */}
+      <div className="my-8 p-5 border-2 border-dashed border-neutral-200 rounded-2xl bg-white shadow-sm max-w-sm">
+        <p className="text-xs font-bold text-neutral-800 mb-3 uppercase tracking-widest">Delivery Check</p>
+        <div className="flex gap-2">
+          <input 
+            id="pincode-input"
+            type="text" 
+            placeholder="Enter Pincode"
+            maxLength={6}
+            className="flex-1 px-4 py-2.5 border border-neutral-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all"
+          />
+          <button 
+            onClick={() => {
+              const el = document.getElementById('pincode-input') as HTMLInputElement;
+              if (el && /^[0-9]{6}$/.test(el.value)) {
+                handlePincodeCheck(el.value);
+              } else {
+                alert("Please enter a valid 6-digit pincode");
+              }
+            }}
+            disabled={checkingPincode}
+            className="bg-black text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-neutral-800 disabled:opacity-50"
+          >
+            {checkingPincode ? "..." : "CHECK"}
+          </button>
+        </div>
+        {checkingPincode && <p className="text-[10px] text-gray-400 mt-2 animate-pulse">Checking Delhivery servers...</p>}
+        {pincodeStatus === "SUCCESS" && (
+          <p className="text-xs text-green-600 mt-2 font-semibold flex items-center gap-1">
+            ✅ Delivered to {serviceableCity}
+          </p>
+        )}
+        {pincodeStatus === "ERROR" && (
+          <div className="mt-2">
+            <p className="text-xs text-red-500 font-semibold flex items-center gap-1">❌ Not serviceable here</p>
+            <p className="text-[10px] text-gray-400 mt-1 italic">Note: If this is a valid pincode, please check your internet or try refreshing.</p>
+          </div>
+        )}
       </div>
 
       <div id="product-tabs" className="mt-10">
