@@ -89,7 +89,7 @@ export type Exchange = ExchangeOrder;
 export class ExchangeService {
   /* ---------------- GET ALL ---------------- */
   static async getAll(
-    params?: Record<string, string | number>
+    params?: Record<string, string | number | undefined>
   ): Promise<ExchangeListResponse> {
     try {
       const queryParams = new URLSearchParams();

@@ -87,7 +87,7 @@ export type GenericMessageResponse = {
 export class ReturnService {
   /* ---------------- GET ALL RETURNS ---------------- */
   static async getAll(
-    params?: Record<string, string | number>
+    params?: Record<string, string | number | undefined>
   ): Promise<ReturnListResponse> {
     try {
       const queryParams = new URLSearchParams();

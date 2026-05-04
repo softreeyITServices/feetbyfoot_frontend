@@ -13,6 +13,8 @@ export interface PincodeServiceabilityResponse {
       repl: string;
       is_oda: string;
       state_code: string;
+      city?: string;
+      district?: string;
     };
   }[];
 }
