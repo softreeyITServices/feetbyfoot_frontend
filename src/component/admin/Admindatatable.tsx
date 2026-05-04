@@ -46,6 +46,10 @@ export interface DataTableProps<T extends { id: string | number }> {
   totalPages?: number;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  canEdit?: (row: T) => boolean;
+  canDelete?: (row: T) => boolean;
+  canView?: (row: T) => boolean;
+  canSettings?: (row: T) => boolean;
 }
 
 export function DataTable<T extends { id: string | number }>({
@@ -68,6 +72,10 @@ export function DataTable<T extends { id: string | number }>({
   totalPages: totalPagesProp,
   onPageChange,
   onPageSizeChange,
+  canEdit,
+  canDelete,
+  canView,
+  canSettings,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<keyof T | null>(null);
@@ -299,17 +307,17 @@ export function DataTable<T extends { id: string | number }>({
                       </button>
                     )}
 
-                    {onView && (
+                    {(onView && (!canView || canView(row))) && (
                       <button onClick={() => onView(row)}>
                         <Eye size={13} />
                       </button>
                     )}
-                    {onEdit && (
+                    {(onEdit && (!canEdit || canEdit(row))) && (
                       <button onClick={() => onEdit(row)}>
                         <Pencil size={13} />
                       </button>
                     )}
-                    {onDelete && (
+                    {(onDelete && (!canDelete || canDelete(row))) && (
                       <button onClick={() => onDelete(row)}>
                         <Trash2 size={13} />
                       </button>

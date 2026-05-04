@@ -516,8 +516,8 @@ function ExchangePage() {
                 <div className="space-y-1">
                   <p className="font-medium">{selected.oldItem?.productName}</p>
                   <p className="text-xs text-neutral-500">
-                    Size: {selected.oldItem?.size} · Color: {selected.oldItem?.color || "—"} · Qty:{" "}
-                    {selected.oldItem?.quantity}
+                    Size: {selected.details.oldSize} · Color: {selected.details.oldColor || "—"} · Qty:{" "}
+                    {selected.details.quantity}
                   </p>
                   <p className="text-xs text-neutral-500">₹{selected.oldItem?.unitPrice}</p>
                 </div>
@@ -540,8 +540,8 @@ function ExchangePage() {
                 <div className="space-y-1">
                   <p className="font-medium">{selected.newItem?.productName}</p>
                   <p className="text-xs text-neutral-500">
-                    Size: {selected.newItem?.size} · Color: {selected.newItem?.color || "—"} · Qty:{" "}
-                    {selected.newItem?.quantity}
+                    Size: {selected.details.newSize} · Color: {selected.details.newColor || "—"} · Qty:{" "}
+                    {selected.details.quantity}
                   </p>
                   <p className="text-xs text-neutral-500">₹{selected.newItem?.unitPrice}</p>
                 </div>

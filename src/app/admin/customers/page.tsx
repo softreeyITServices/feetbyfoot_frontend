@@ -86,6 +86,28 @@ export default function CustomersPage() {
     []
   );
 
+  const handleDelete = async (customerId: string) => {
+    if (!confirm("Are you sure you want to delete this customer?")) return;
+    try {
+      await CustomerService.softDelete(customerId);
+      toast.success("Customer deleted successfully");
+      fetchCustomers();
+    } catch (error) {
+      toast.error("Failed to delete customer");
+    }
+  };
+
+  const handleCleanup = async () => {
+    if (!confirm("Delete all customers inactive for > 1 year?")) return;
+    try {
+      const res = await CustomerService.cleanupInactive();
+      toast.success(`Cleanup complete! ${res.count || 0} users deleted.`);
+      fetchCustomers();
+    } catch (error) {
+      toast.error("Cleanup failed");
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       void fetchCustomers();
@@ -102,9 +124,16 @@ export default function CustomersPage() {
       key: "role",
       label: "Role",
       render: (row) => (
-        <span className="px-2 py-0.5 text-xs rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
-          {row.role}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 text-xs rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
+            {row.role}
+          </span>
+          {(row as any).isInactive && (
+            <span className="px-2 py-0.5 text-xs rounded-lg bg-red-50 text-red-700 border border-red-200 animate-pulse">
+              Inactive
+            </span>
+          )}
+        </div>
       ),
     },
     {
@@ -123,6 +152,15 @@ export default function CustomersPage() {
         <p className="text-sm text-neutral-400 mt-0.5">
           Manage customer accounts and order history.
         </p>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={handleCleanup}
+          className="h-9 px-4 text-xs font-semibold text-white bg-neutral-800 rounded-lg hover:bg-black transition-colors"
+        >
+          🧹 Cleanup Inactive Users
+        </button>
       </div>
 
       <DataTable<CustomerRow>
@@ -151,6 +189,8 @@ export default function CustomersPage() {
           setOrdersOpen(true);
           await fetchCustomerOrders(row._id, 1);
         }}
+        onDelete={(row) => handleDelete(row._id)}
+        canDelete={(row: any) => row.isInactive}
       />
 
       <AdminModal

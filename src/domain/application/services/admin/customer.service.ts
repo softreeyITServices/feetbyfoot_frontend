@@ -98,5 +98,29 @@ export class CustomerService {
       throw handleApiError(error, "getCustomerOrderById");
     }
   }
+
+  static async softDelete(customerId: string): Promise<any> {
+    try {
+      return await httpClient.request({
+        url: `${ADMIN_CUSTOMERS_URL}/${customerId}/soft-delete`,
+        method: "PATCH",
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "softDeleteCustomer");
+    }
+  }
+
+  static async cleanupInactive(): Promise<any> {
+    try {
+      return await httpClient.request({
+        url: `${ADMIN_CUSTOMERS_URL}/cleanup-inactive`,
+        method: "POST",
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "cleanupInactiveCustomers");
+    }
+  }
 }
 
