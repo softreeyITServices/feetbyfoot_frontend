@@ -51,6 +51,8 @@ function ReturnsPage() {
   // Pagination / Filter
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [meta, setMeta] = useState({ totalPages: 1, total: 0 });
 
   // Action Modal
   const [pending, setPending] = useState<PendingAction | null>(null);
@@ -68,7 +70,8 @@ function ReturnsPage() {
       const res = await ReturnService.getAll({
         page,
         perPage: 10,
-        ...(statusFilter ? { status: statusFilter } : {}),
+        status: statusFilter || undefined,
+        search: search || undefined,
       });
 
       const list = (res.data || []).map((ro) => ({
@@ -77,6 +80,12 @@ function ReturnsPage() {
       }));
 
       setReturns(list);
+      if (res.meta) {
+        setMeta({
+          totalPages: res.meta.totalPages,
+          total: res.meta.total,
+        });
+      }
     } catch (err: unknown) {
       if (!isGetRequestError(err)) {
         toast.error(
@@ -90,7 +99,7 @@ function ReturnsPage() {
 
   useEffect(() => {
     fetchReturns();
-  }, [page, statusFilter]);
+  }, [page, statusFilter, search]);
 
   const handleAction = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -303,13 +312,16 @@ function ReturnsPage() {
         <select
           className="bg-white border border-neutral-300 text-sm rounded-lg px-3 py-2 outline-none"
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => {
+            setStatusFilter(e.target.value);
+            setPage(1);
+          }}
         >
           <option value="">All Statuses</option>
           <option value="RETURN_REQUESTED">Return Requested</option>
           <option value="RETURN_APPROVED">Return Approved</option>
           <option value="RETURN_RECEIVED">Return Received</option>
-          <option value="REFUNDED">Refunded</option>
+          <option value="REFUND_COMPLETED">Refunded</option>
           <option value="RETURN_REJECTED">Return Rejected</option>
         </select>
       </div>
@@ -319,6 +331,14 @@ function ReturnsPage() {
         columns={columns}
         data={returns}
         loading={loading}
+        paginationMode="server"
+        currentPage={page}
+        totalPages={meta.totalPages}
+        onPageChange={(p) => setPage(p)}
+        onSearchChange={(q) => {
+          setSearch(q);
+          setPage(1);
+        }}
       />
 
       <AdminModal
