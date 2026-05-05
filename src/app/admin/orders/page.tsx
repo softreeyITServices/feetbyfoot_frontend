@@ -364,7 +364,28 @@ function OrderDetailsBody({ order }: { order: OrderRow }) {
         />
         <DetailRow
           label="Platform fee"
-          value={formatMoney(order.platformFee)}
+          value={
+            <div className="flex flex-col space-y-1">
+              <span className="font-medium">{formatMoney(order.platformFee)}</span>
+              {order.appliedFees && order.appliedFees.length > 0 && (
+                <div className="mt-1 space-y-1.5 border-t border-neutral-100 pt-1.5">
+                  {order.appliedFees.map((fee, idx) => (
+                    <div key={idx} className="flex flex-col">
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-neutral-600 font-medium">{fee.name}</span>
+                        <span className="text-neutral-900">{formatMoney(fee.amount)}</span>
+                      </div>
+                      {fee.description && (
+                        <span className="text-[9px] text-neutral-400 italic leading-tight">
+                          {fee.description}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          }
         />
         <DetailRow 
           label="Total GST (Included)" 

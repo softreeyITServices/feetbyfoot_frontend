@@ -1,9 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 export default function AdminProfileDropdown() {
   const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
+
+  const getInitials = (name?: string | null) => {
+    if (!name) return "AD";
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  };
+
+  const initials = getInitials(session?.user?.name);
 
   return (
     <div className="relative">
@@ -12,7 +25,7 @@ export default function AdminProfileDropdown() {
         className="flex items-center gap-2"
       >
         <div className="w-8 h-8 bg-black text-white flex items-center justify-center rounded-full text-sm">
-          AS
+          {initials}
         </div>
       </button>
 

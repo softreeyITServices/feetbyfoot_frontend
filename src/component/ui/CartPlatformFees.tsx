@@ -12,6 +12,7 @@ type Props = {
   paymentMethod: CheckoutPaymentMethod;
   onPaymentMethodChange: (method: CheckoutPaymentMethod) => void;
   isCheckoutInProgress?: boolean;
+  isSyncing?: boolean;
   isDisabled?: boolean;
 };
 
@@ -22,6 +23,7 @@ export default function CartPlatformFees({
   paymentMethod,
   onPaymentMethodChange,
   isCheckoutInProgress = false,
+  isSyncing = false,
   isDisabled = false,
 }: Props) {
   const [appliedFees, setAppliedFees] = useState<AppliedFee[]>([]);
@@ -31,7 +33,7 @@ export default function CartPlatformFees({
 
   /* ---------------- FETCH CART WITH PAYMENT METHOD ---------------- */
   useEffect(() => {
-    if (!hasCartItems) return;
+    if (!hasCartItems || isSyncing) return;
 
     const fetchCartPricing = async () => {
       try {
@@ -46,7 +48,7 @@ export default function CartPlatformFees({
     };
 
     fetchCartPricing();
-  }, [paymentMethod, hasCartItems]);
+  }, [paymentMethod, hasCartItems, subtotal, discount, isSyncing]);
 
   const finalTotal = subtotal + platformFee - discount;
 
@@ -82,9 +84,16 @@ export default function CartPlatformFees({
             </div>
           ) : (
             appliedFees.map((fee, i) => (
-              <div key={i} className="flex justify-between text-sm mb-2">
-                <span>{fee.name}</span>
-                <span>₹{fee.amount.toFixed(2)}</span>
+              <div key={i} className="mb-3">
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">{fee.name}</span>
+                  <span>₹{fee.amount.toFixed(2)}</span>
+                </div>
+                {fee.description && (
+                  <p className="text-[10px] text-gray-400 -mt-0.5 italic">
+                    {fee.description}
+                  </p>
+                )}
               </div>
             ))
           )}

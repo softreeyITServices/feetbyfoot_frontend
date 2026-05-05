@@ -18,6 +18,7 @@ export interface CartItem {
 export interface AppliedFee {
   name: string;
   amount: number;
+  description?: string;
 }
 
 export interface Cart {

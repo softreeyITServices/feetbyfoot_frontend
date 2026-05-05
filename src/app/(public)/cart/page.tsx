@@ -806,7 +806,8 @@ export default function CartBody() {
               handlePayment={handlePayment}
               paymentMethod={paymentMethod}
               onPaymentMethodChange={setPaymentMethod}
-              isCheckoutInProgress={isCheckoutInProgress || isSyncing}
+              isCheckoutInProgress={isCheckoutInProgress}
+              isSyncing={isSyncing}
               isDisabled={isServiceable === false || isCheckingServiceability}
             />
           )}

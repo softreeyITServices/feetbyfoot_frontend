@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ADMIN_NAV } from "../adminNav.config";
+import { useSession } from "next-auth/react";
 
 interface AdminSidebarProps {
   collapsed: boolean;
@@ -13,6 +14,7 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ collapsed }: AdminSidebarProps) {
   const pathname = usePathname();
   const [openMenus, setOpenMenus] = useState<string[]>([]);
+  const { data: session } = useSession();
 
   useEffect(() => {
     const activeParents = ADMIN_NAV.filter((item) =>
@@ -29,6 +31,18 @@ export default function AdminSidebar({ collapsed }: AdminSidebarProps) {
       prev.includes(label) ? prev.filter((m) => m !== label) : [...prev, label]
     );
   };
+
+  const getInitials = (name?: string | null) => {
+    if (!name) return "AD";
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  };
+
+  const user = session?.user;
+  const initials = getInitials(user?.name);
 
   return (
     <aside
@@ -135,16 +149,20 @@ export default function AdminSidebar({ collapsed }: AdminSidebarProps) {
 
       {/* Bottom section */}
       <div className="p-3 border-t border-white/6">
-          <div className="rounded-lg bg-white/4 px-3 py-2.5 flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-linear-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0">
-              <span className="text-white text-[10px] font-bold">AS</span>
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-[12px] font-medium text-neutral-200 truncate">Admin Super</p>
-              <p className="text-[11px] text-neutral-500 truncate">admin@feetbyfoot.com</p>
-            </div>
+        <div className="rounded-lg bg-white/4 px-3 py-2.5 flex items-center gap-3">
+          <div className="w-6 h-6 rounded-full bg-linear-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0">
+            <span className="text-white text-[10px] font-bold">{initials}</span>
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-[12px] font-medium text-neutral-200 truncate">
+              {user?.name || "Admin"}
+            </p>
+            <p className="text-[11px] text-neutral-500 truncate">
+              {user?.email || ""}
+            </p>
           </div>
         </div>
+      </div>
     </aside>
   );
 }

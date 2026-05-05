@@ -151,6 +151,11 @@ export interface Order {
   platformFee: number;
   gstAmount: number;
   totalAmount: number;
+  appliedFees?: {
+    name: string;
+    amount: number;
+    description?: string;
+  }[];
 
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;

@@ -19,6 +19,7 @@ type PlatformFee = {
   MinAmount?: number;
   applicableTo?: "ALL" | "COD" | "ONLINE";
   isActive: boolean;
+  description?: string;
 };
 
 type PlatformFeeRow = PlatformFee & {
@@ -37,6 +38,7 @@ type FormType = {
   isActive: boolean;
   feeType: "FLAT" | "PERCENTAGE";
   applicableTo: "ALL" | "COD" | "ONLINE";
+  description: string;
 };
 
 /* ================= ACTION DROPDOWN ================= */
@@ -137,6 +139,7 @@ export default function PlatformFeePage() {
     isActive: true,
     feeType: "FLAT",
     applicableTo: "ALL",
+    description: "",
   });
 
   /* ================= FETCH ================= */
@@ -201,6 +204,7 @@ export default function PlatformFeePage() {
         MinAmount: form.MinAmount ? Number(form.MinAmount) : 0,
         isActive: form.isActive,
         applicableTo: form.applicableTo,
+        description: form.description,
       };
 
       await platformFeesService.create(payload);
@@ -217,6 +221,7 @@ export default function PlatformFeePage() {
         isActive: true,
         feeType: "FLAT",
         applicableTo: "ALL",
+        description: "",
       });
     } catch (err: any) {
       toast.error(err?.message || "Create failed");
@@ -356,6 +361,21 @@ export default function PlatformFeePage() {
               value={form.name}
               onChange={(e) =>
                 setForm((p) => ({ ...p, name: e.target.value }))
+              }
+            />
+          </div>
+
+          {/* DESCRIPTION */}
+          <div>
+            <label className="block text-xs font-medium text-neutral-600 mb-1">
+              Description (Show to User)
+            </label>
+            <input
+              placeholder="e.g. Applied for COD below ₹2000"
+              className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 focus:border-black focus:ring-1 focus:ring-black outline-none transition"
+              value={form.description}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, description: e.target.value }))
               }
             />
           </div>
