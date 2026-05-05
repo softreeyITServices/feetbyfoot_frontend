@@ -175,6 +175,20 @@ function ProductPage() {
       options: [{ label: "INR", value: "INR" }],
       cols: 1,
     },
+    {
+      key: "gstRate",
+      label: "GST Rate (%)",
+      type: "select",
+      required: true,
+      options: [
+        { label: "0%", value: 0 },
+        { label: "5%", value: 5 },
+        { label: "12%", value: 12 },
+        { label: "18%", value: 18 },
+        { label: "28%", value: 28 },
+      ],
+      cols: 1,
+    },
 
     {
       key: "length",
@@ -364,6 +378,7 @@ function ProductPage() {
       colors,
       price: Number(values.price),
       salePrice: Number(values.salePrice || 0),
+      gstRate: Number(values.gstRate || 18),
       currency: String(values.currency ?? "INR"),
       imageUrls: normalizedImageUrls,
       sizes,
@@ -455,20 +470,26 @@ function ProductPage() {
     // ✅ PRICE + SALE PRICE
     {
       key: "price",
-      label: "Price",
-      render: (row) => (
-        <div className="flex flex-col">
-          <span className="font-medium">
-            ₹{row.salePrice > 0 ? row.salePrice : row.price}
-          </span>
-
-          {row.salePrice > 0 && (
-            <span className="text-xs line-through text-gray-400">
-              ₹{row.price}
-            </span>
-          )}
-        </div>
-      ),
+      label: "Pricing (Incl. Tax)",
+      render: (row) => {
+        const finalPrice = row.salePrice > 0 ? row.salePrice : row.price;
+        return (
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-900">₹{finalPrice}</span>
+              {row.salePrice > 0 && (
+                <span className="text-xs line-through text-gray-400">₹{row.price}</span>
+              )}
+            </div>
+            {row.gstRate > 0 && (
+              <div className="text-[10px] text-gray-500 flex flex-col leading-tight mt-1">
+                <span>Base: ₹{(row.basePrice || 0).toFixed(2)}</span>
+                <span>GST ({row.gstRate}%): ₹{(row.gstAmount || 0).toFixed(2)}</span>
+              </div>
+            )}
+          </div>
+        );
+      },
     },
 
     // ✅ COLOR PILLS
@@ -545,6 +566,7 @@ function ProductPage() {
           quantity: sizeEntry.quantity ?? 0,
           isActive: sizeEntry.isActive ?? true,
         })) ?? [{ color: "", size: "", quantity: 0, isActive: true }],
+      gstRate: editing.gstRate ?? 18,
     }
     : {
       name: "",
@@ -555,6 +577,7 @@ function ProductPage() {
       currency: "INR",
       categoryId: "",
       categoryTypeIds: [],
+      gstRate: 18,
       length: "",
       sizes: [{ color: "", size: "", quantity: 0, isActive: true }],
       gender: [],

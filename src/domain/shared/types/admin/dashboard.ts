@@ -9,6 +9,8 @@ export interface DashboardMetric {
 
 export interface AdminDashboardSummary {
   totalRevenue: DashboardMetric;
+  baseRevenue: DashboardMetric;
+  gstAmount: DashboardMetric;
   totalOrders: DashboardMetric;
   newCustomers: DashboardMetric;
   productsListed: DashboardMetric;

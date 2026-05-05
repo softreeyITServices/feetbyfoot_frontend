@@ -32,6 +32,9 @@ export interface Product {
   isNewArrival?: boolean;
   isBestseller?: boolean;
   isGiftPack?: boolean;
+  gstRate: number;
+  basePrice?: number;
+  gstAmount?: number;
   ratingAverage: number;
   totalRatings: number;
   isInWishlist: boolean;

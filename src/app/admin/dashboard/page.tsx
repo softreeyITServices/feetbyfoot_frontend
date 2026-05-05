@@ -245,7 +245,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <StatCard
           label="Total Revenue"
           value={formatNumber(summary?.totalRevenue.current ?? 0)}
@@ -257,6 +257,30 @@ export default function AdminDashboard() {
             summary?.totalRevenue.trend ?? "same"
           )}
           accent="bg-amber-500"
+        />
+        <StatCard
+          label="Base Revenue"
+          value={formatNumber(summary?.baseRevenue.current ?? 0)}
+          sub={`Excl. Tax | Prev: ${formatNumber(summary?.baseRevenue.previous ?? 0)}`}
+          icon={IndianRupee}
+          trend={summary?.baseRevenue.trend ?? "same"}
+          trendVal={formatTrendVal(
+            summary?.baseRevenue.changePercent ?? 0,
+            summary?.baseRevenue.trend ?? "same"
+          )}
+          accent="bg-emerald-600"
+        />
+        <StatCard
+          label="GST Collected"
+          value={formatNumber(summary?.gstAmount.current ?? 0)}
+          sub={`Total Tax | Prev: ${formatNumber(summary?.gstAmount.previous ?? 0)}`}
+          icon={IndianRupee}
+          trend={summary?.gstAmount.trend ?? "same"}
+          trendVal={formatTrendVal(
+            summary?.gstAmount.changePercent ?? 0,
+            summary?.gstAmount.trend ?? "same"
+          )}
+          accent="bg-blue-600"
         />
         <StatCard
           label="Total Orders"

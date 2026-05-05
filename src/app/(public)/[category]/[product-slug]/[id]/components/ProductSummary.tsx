@@ -196,12 +196,13 @@ export default function ProductSummary({
       </div>
 
       {/* Price */}
-      <div className="flex gap-3 mb-4">
+      <div className="flex gap-3 mb-1">
         <span className="text-green-600 text-xl font-semibold">
           ₹{product.price}
         </span>
         <span className="line-through text-gray-400">₹{product.mrp}</span>
       </div>
+      <p className="text-[10px] text-gray-500 mb-4">(Inclusive of all taxes)</p>
 
       {/* Color Selector */}
       {hasColors && (

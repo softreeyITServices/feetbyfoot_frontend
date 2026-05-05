@@ -105,7 +105,10 @@ export default function CartPlatformFees({
         {cartLoading ? (
           <div className="h-7 bg-gray-200 rounded w-24 animate-pulse" />
         ) : (
-          <p className="text-xl font-semibold">₹{finalTotal.toFixed(2)}</p>
+          <div className="text-right">
+            <p className="text-xl font-semibold">₹{finalTotal.toFixed(2)}</p>
+            <p className="text-[10px] text-gray-500 mt-1">(Inclusive of GST)</p>
+          </div>
         )}
       </div>
 

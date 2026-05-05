@@ -130,6 +130,8 @@ export interface OrderItem {
   waybill?: string;
   trackingUrl?: string;
 
+  gstRate?: number;
+  gstAmount?: number;
   product?: ProductSnapshot; // snapshot at order time
 }
 

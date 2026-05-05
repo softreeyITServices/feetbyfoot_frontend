@@ -171,6 +171,18 @@ function OrderLineItemDetail({
             label="Line total"
             value={formatMoney(item.unitPrice * item.quantity, item.currency)}
           />
+          {item.gstRate !== undefined && (
+            <>
+              <DetailRow
+                label="Taxable value"
+                value={formatMoney((item.unitPrice * item.quantity) - (item.gstAmount || 0), item.currency)}
+              />
+              <DetailRow
+                label="GST"
+                value={`${item.gstAmount ? formatMoney(item.gstAmount, item.currency) : "—"} (${item.gstRate}%)`}
+              />
+            </>
+          )}
           {item.waybill && !hideWaybill && (
             <div className="flex items-center justify-between pt-1 mt-1 border-t border-neutral-100">
               <DetailRow 
@@ -354,11 +366,19 @@ function OrderDetailsBody({ order }: { order: OrderRow }) {
           label="Platform fee"
           value={formatMoney(order.platformFee)}
         />
-        <DetailRow label="GST" value={formatMoney(order.gstAmount)} />
-        <DetailRow
-          label="Total"
+        <DetailRow 
+          label="Total GST (Included)" 
           value={
-            <span className="font-semibold">
+            <div className="flex flex-col">
+              <span className="font-medium text-emerald-600">{formatMoney(order.gstAmount)}</span>
+              <span className="text-[10px] text-neutral-400">CGST: {formatMoney(order.gstAmount / 2)} | SGST: {formatMoney(order.gstAmount / 2)}</span>
+            </div>
+          } 
+        />
+        <DetailRow
+          label="Grand Total"
+          value={
+            <span className="font-bold text-lg text-indigo-600">
               {formatMoney(order.totalAmount)}
             </span>
           }
