@@ -97,6 +97,11 @@ function ProductCard({
       return;
     }
 
+    if ((session.user as any)?.role === "admin") {
+      setError("Admins are restricted from making purchases.");
+      return;
+    }
+
     if (!selectedSize) {
       setError("Size not selected");
       return;

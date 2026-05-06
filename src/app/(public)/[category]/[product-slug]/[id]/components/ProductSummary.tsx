@@ -113,6 +113,12 @@ export default function ProductSummary({
       return;
     }
 
+    // Friendly check for Admin role
+    if ((session.user as any)?.role === "admin") {
+      alert("Admins are restricted from making purchases. Please use a customer account to shop.");
+      return;
+    }
+
     if (hasColors && !selectedColor) {
       alert("Please select a color");
       return;

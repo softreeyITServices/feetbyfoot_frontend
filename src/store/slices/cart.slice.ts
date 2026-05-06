@@ -34,8 +34,9 @@ export const migrateCartAsync = createAsyncThunk(
   async (items: CartItem[]) => {
     const session = await getSession();
     const isAuth = !!session?.accessToken;
+    const isAdmin = (session?.user as any)?.role === "admin";
 
-    if (!isAuth || items.length === 0) return null;
+    if (!isAuth || isAdmin || items.length === 0) return null;
 
     try {
       // ✅ Push each local item to the server
@@ -76,8 +77,9 @@ export const addToCartAsync = createAsyncThunk(
 
     const session = await getSession();
     const isAuth = !!session?.accessToken;
+    const isAdmin = (session?.user as any)?.role === "admin";
 
-    if (isAuth) {
+    if (isAuth && !isAdmin) {
       const response = await cartService.addItem({
         productId: payload.id,
         size: normalizedSize,
