@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Editor } from "@tinymce/tinymce-react";
+import LexicalEditor from "@/component/admin/LexicalEditor";
 import { CmsService } from "@/domain/application/services/admin/cms.service";
 import toast from "react-hot-toast";
 import { isGetRequestError } from "@/lib/httpClientError";
@@ -283,20 +283,9 @@ function CmsCreateEditPageContent() {
             </div>
 
             <div style={styles.editorWrapper}>
-              <Editor
-                apiKey="bep73yuqiicvrn8vne9fslnk6czp869xx97eh8ditokk4y8i"
+              <LexicalEditor
                 value={form.content}
-                onEditorChange={(value) => setForm({ ...form, content: value })}
-                init={{
-                  height: 420,
-                  menubar: false,
-                  skin: "oxide",
-                  plugins: ["lists", "link", "image", "code", "table"],
-                  toolbar:
-                    "undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image | code",
-                  content_style:
-                    "body { font-family: 'DM Sans', sans-serif; font-size: 14px; color: #1a1a2e; line-height: 1.7; }",
-                }}
+                onChange={(value) => setForm({ ...form, content: value })}
               />
             </div>
           </section>
