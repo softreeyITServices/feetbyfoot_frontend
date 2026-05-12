@@ -9,6 +9,7 @@ import { productService } from "@/domain/application/services/product.service";
 import { uploadService } from "@/domain/application/services/upload.service";
 import { ConfirmModal } from "@/component/admin/modal/ConfirmModal";
 import { toast } from "react-hot-toast";
+import { Star } from "lucide-react";
 import { CategoryService } from "@/domain/application/services/admin/category.service";
 import { CategoryTypeService } from "@/domain/application/services/admin/subcategory.service";
 import type {
@@ -490,6 +491,24 @@ function ProductPage() {
           </div>
         );
       },
+    },
+
+    // ✅ RATING
+    {
+      key: "ratingAverage",
+      label: "Rating",
+      sortable: true,
+      render: (row) => (
+        <div className="flex items-center gap-1">
+          <div className="flex items-center text-amber-500">
+            <Star size={12} fill="currentColor" />
+            <span className="ml-1 font-medium text-gray-900">
+              {row.ratingAverage > 0 ? row.ratingAverage.toFixed(1) : "0.0"}
+            </span>
+          </div>
+          <span className="text-[10px] text-gray-400">({row.totalRatings || 0})</span>
+        </div>
+      ),
     },
 
     // ✅ COLOR PILLS

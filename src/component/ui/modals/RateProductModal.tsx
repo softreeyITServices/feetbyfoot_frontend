@@ -40,6 +40,11 @@ export default function RateProductModal({
       return;
     }
 
+    if (!comment.trim()) {
+      setError("Please enter your comments/review about the product");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -51,9 +56,11 @@ export default function RateProductModal({
       });
 
       onSuccess();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Failed to submit rating.");
+      // Use specific backend message if available, otherwise fallback to generic
+      const errorMessage = err.data?.message || err.message || "Failed to submit rating.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -76,7 +83,7 @@ export default function RateProductModal({
         {/* Select Product */}
         <div>
           <label className="block text-sm font-medium mb-2">
-            Select Product
+            Select Product <span className="text-red-500">*</span>
           </label>
           <select
             value={selectedItem}
@@ -96,7 +103,7 @@ export default function RateProductModal({
         {/* Rating Stars */}
         <div>
           <label className="block text-sm font-medium mb-2">
-            Rating
+            Rating <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -116,7 +123,7 @@ export default function RateProductModal({
         {/* Comment */}
         <div>
           <label className="block text-sm font-medium mb-2">
-            Comment
+            Comment <span className="text-red-500">*</span>
           </label>
           <textarea
             value={comment}

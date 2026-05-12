@@ -83,19 +83,54 @@ export default async function ContactPage() {
           </p>
         </div>
 
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16">
-          <div>
-            {active && html ? (
-              <div
-                className="contact-info-cms"
-                dangerouslySetInnerHTML={{ __html: html }}
-              />
-            ) : (
-              <DefaultContactInfo />
-            )}
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 lg:gap-20">
+          {/* Left Column: Info & Map */}
+          <div className="space-y-10">
+            <div>
+              {active && html ? (
+                <div
+                  className="contact-info-cms"
+                  dangerouslySetInnerHTML={{ __html: html }}
+                />
+              ) : (
+                <DefaultContactInfo />
+              )}
+            </div>
+
+            {/* Concise Map Container */}
+            <div className="relative group overflow-hidden rounded-2xl shadow-md border border-gray-100 h-[350px]">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3493.5818317765955!2d77.03154807550882!3d28.983424975475654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390db1711204859f%3A0xc00833a6b328905e!2sSCO%209%2C%20Sector%2019%2C%20Sonipat%2C%20Haryana%20131001!5e0!3m2!1sen!2sin!4v1715505300000!5m2!1sen!2sin"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Office Location"
+              ></iframe>
+              
+              {/* Concise Address Overlay */}
+              <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-gray-100 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                <div className="flex items-start gap-3">
+                  <div className="bg-yellow-400 p-1.5 rounded-lg shrink-0">
+                    <img src="/icons/contact/location.svg" width={12} height={12} alt="" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Our Office</p>
+                    <p className="text-xs font-semibold text-gray-900 leading-tight">
+                      SCO 9, Sector 19, Sonipat, Haryana
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <ContactMessageForm />
+          {/* Right Column: Form */}
+          <div>
+            <ContactMessageForm />
+          </div>
         </div>
       </div>
     </>

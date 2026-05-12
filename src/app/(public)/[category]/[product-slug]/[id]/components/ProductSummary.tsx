@@ -202,11 +202,16 @@ export default function ProductSummary({
       </div>
 
       {/* Price */}
-      <div className="flex gap-3 mb-1">
+      <div className="flex items-center gap-3 mb-1">
         <span className="text-green-600 text-xl font-semibold">
           ₹{product.price}
         </span>
         <span className="line-through text-gray-400">₹{product.mrp}</span>
+        {product.mrp > product.price && (
+          <span className="text-sm font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded">
+            {Math.round(((product.mrp - product.price) / product.mrp) * 100)}% OFF
+          </span>
+        )}
       </div>
       <p className="text-[10px] text-gray-500 mb-4">(Inclusive of all taxes)</p>
 

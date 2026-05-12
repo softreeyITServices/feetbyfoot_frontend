@@ -14,6 +14,18 @@ type FAQ = {
   description: string;
 };
 
+const PREDEFINED_PAGES = [
+  { title: "Privacy Policy", name: "privacy_policy" },
+  { title: "Terms & Conditions", name: "terms_conditions" },
+  { title: "Shipping Policy", name: "shipping_policy" },
+  { title: "Refund & Returns Policy", name: "refund_returns_policy" },
+  { title: "FAQs", name: "faq" },
+  { title: "Size Guide", name: "size_guide" },
+  { title: "About Us", name: "about_us" },
+  { title: "Contact Us", name: "contact_us" },
+  { title: "Changes to Orders", name: "changes_to_orders" },
+];
+
 function CmsCreateEditPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -211,20 +223,47 @@ function CmsCreateEditPageContent() {
 
             <div style={styles.fieldGroup}>
               <label style={styles.label}>Page Title</label>
-              <input
+              <select
                 value={form.title}
                 onChange={(e) => {
-                  const nextTitle = e.target.value;
+                  const selectedTitle = e.target.value;
+                  const selectedPage = PREDEFINED_PAGES.find(p => p.title === selectedTitle);
                   setForm((prev) => ({
                     ...prev,
-                    title: nextTitle,
-                    name: isEdit ? prev.name : toPageName(nextTitle),
+                    title: selectedTitle,
+                    name: isEdit ? prev.name : (selectedPage?.name || toPageName(selectedTitle)),
                   }));
                 }}
                 style={styles.input}
-                placeholder="e.g. Privacy Policy"
-              />
+                disabled={isEdit}
+              >
+                <option value="">Select a page type...</option>
+                {PREDEFINED_PAGES.map((page) => (
+                  <option key={page.name} value={page.title}>
+                    {page.title}
+                  </option>
+                ))}
+                <option value="custom">Custom Page...</option>
+              </select>
             </div>
+
+            {form.title === "custom" && !isEdit && (
+               <div style={styles.fieldGroup}>
+                <label style={styles.label}>Custom Title</label>
+                <input
+                  onChange={(e) => {
+                    const nextTitle = e.target.value;
+                    setForm((prev) => ({
+                      ...prev,
+                      title: nextTitle,
+                      name: toPageName(nextTitle),
+                    }));
+                  }}
+                  style={styles.input}
+                  placeholder="Enter custom title"
+                />
+              </div>
+            )}
           </section>
 
           {/* Content card */}

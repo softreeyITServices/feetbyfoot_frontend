@@ -224,6 +224,16 @@ function ProductCard({
           <span className="text-green-600 font-bold text-sm sm:text-lg">
             ₹{discountedPrice}
           </span>
+          {parseFloat(originalPrice) > parseFloat(discountedPrice) && (
+            <span className="text-[10px] sm:text-xs font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
+              {Math.round(
+                ((parseFloat(originalPrice) - parseFloat(discountedPrice)) /
+                  parseFloat(originalPrice)) *
+                  100
+              )}
+              % OFF
+            </span>
+          )}
         </div>
 
         {colors.length > 0 && (
