@@ -123,8 +123,9 @@ function CmsCreateEditPageContent() {
       }
       toast.success("Saved successfully");
       router.push("/admin/cms");
-    } catch {
-      toast.error("Failed to save");
+    } catch (error: any) {
+      const backendMessage = error?.data?.message || "Failed to save";
+      toast.error(backendMessage);
     } finally {
       setSaving(false);
     }
