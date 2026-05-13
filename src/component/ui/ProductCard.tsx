@@ -60,6 +60,12 @@ function ProductCard({
   wishlistSelect?: boolean;
   onWishlistChange?: (id: string, removed: boolean) => void;
 }) {
+  const original = parseFloat(originalPrice);
+  const discounted = parseFloat(discountedPrice);
+  const discountPercentage = original > 0 && original > discounted 
+    ? Math.round(((original - discounted) / original) * 100) 
+    : 0;
+
   const colors = [...new Set(size.map((s) => s.color).filter(Boolean))] as string[];
 
   const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null);
@@ -197,7 +203,7 @@ function ProductCard({
         )}
       </Link>
 
-      <div className="flex flex-col flex-1 p-0 pt-3 sm:pt-4 md:pt-5">
+      <div className="flex flex-col flex-1 p-0 pt-2 sm:pt-3">
         <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wide line-clamp-1">
           {categories}
         </p>
@@ -207,36 +213,41 @@ function ProductCard({
           className="no-underline hover:underline text-black"
           title={title}
         >
-          <h3 className="font-semibold text-xs sm:text-sm mt-1 sm:mt-2 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]">
+          <h3 className="font-semibold text-xs sm:text-sm mt-1 line-clamp-1">
             {title}
           </h3>
         </Link>
 
-        <div className="mt-2 sm:mt-3 flex items-center gap-2 flex-wrap">
-          <span className="line-through text-gray-400 text-xs sm:text-sm">
+        <div className="mt-1 sm:mt-1.5 flex items-center gap-1.5 flex-wrap">
+          <span className="line-through text-gray-400 text-[10px] sm:text-xs">
             ₹{originalPrice}
           </span>
-          <span className="text-green-600 font-bold text-sm sm:text-lg">
+          <span className="text-green-600 font-bold text-xs sm:text-base">
             ₹{discountedPrice}
           </span>
+          {discountPercentage > 0 && (
+            <span className="text-red-500 font-bold text-[10px] sm:text-xs ml-auto">
+              {discountPercentage}% OFF
+            </span>
+          )}
         </div>
 
         {colors.length > 0 && (
-          <div className="mt-2 sm:mt-3">
-            <p className="text-[10px] sm:text-xs md:text-sm font-medium mb-1.5 sm:mb-2">
+          <div className="mt-1.5 sm:mt-2">
+            <p className="text-[9px] sm:text-[10px] font-medium mb-1 uppercase text-gray-500">
               SELECT COLOR
             </p>
-            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            <div className="flex flex-wrap gap-1">
               {colors.map((color) => (
                 <button
                   key={color}
                   type="button"
                   title={color}
                   onClick={() => handleColor(color)}
-                  className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 transition-all ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border transition-all ${
                     selectedColor === color
                       ? "border-black scale-110"
-                      : "border-transparent hover:border-gray-400"
+                      : "border-gray-200 hover:border-gray-400"
                   }`}
                   style={{ backgroundColor: colorToCss(color) }}
                 />
@@ -245,7 +256,7 @@ function ProductCard({
           </div>
         )}
 
-        <div className="mt-2 sm:mt-3">
+        <div className="mt-1.5 sm:mt-2">
           <SizeSelector
             sizes={filteredSizes}
             selectedSize={selectedSize}
@@ -255,9 +266,9 @@ function ProductCard({
 
         <span className="text-red-500 text-[10px] sm:text-xs md:text-sm mt-1">{error}</span>
 
-        <div className="mt-auto pt-2 sm:pt-3">
+        <div className="mt-auto pt-1.5 sm:pt-2">
           <button
-            className="w-full bg-black text-white py-1.5 sm:py-2 rounded-md hover:bg-gray-800 flex items-center justify-center gap-1.5 sm:gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed text-[11px] sm:text-xs md:text-sm transition-colors"
+            className="w-full bg-black text-white py-1 sm:py-1.5 rounded-md hover:bg-gray-800 flex items-center justify-center gap-1.5 sm:gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed text-[10px] sm:text-xs transition-colors"
             onClick={handleCart}
             disabled={loading}
           >
@@ -267,7 +278,7 @@ function ProductCard({
               className="sm:w-[13px] sm:h-[15px]" 
               fill="#fff" 
             />
-            <span>{loading ? "ADDING..." : "ADD TO BASKET"}</span>
+            <span>{loading ? "ADDING..." : "ADD TO CART"}</span>
           </button>
         </div>
       </div>

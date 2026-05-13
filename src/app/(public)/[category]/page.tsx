@@ -259,7 +259,7 @@ export default async function CategoryPage({
 
       {/* Content */}
       <section className="w-full px-4 mt-10 max-w-none">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-x-8 px-0 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-x-8 px-0 w-full">
           {/* Filters */}
           <aside className="hidden lg:block sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto">
             <FiltersSidebar />
@@ -278,7 +278,7 @@ export default async function CategoryPage({
 
             {/* Product Grid */}
             {products.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-8 px-0 w-full">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4 gap-8 px-0 w-full">
                 {products.map((product) => (
                   <ProductCard
                     wishlist={true}
