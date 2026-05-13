@@ -130,7 +130,7 @@ export const startRazorpayCheckout = async ({
               address_id: addressId,
             },
           });
-          onSuccess?.();
+          await onSuccess?.();
           const orderId = verifyResponse.orderId;
           window.location.href = `/order/success?orderId=${orderId}`;
 

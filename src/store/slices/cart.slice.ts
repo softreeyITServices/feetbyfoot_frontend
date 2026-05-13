@@ -182,10 +182,7 @@ const cartSlice = createSlice({
 
     clearCart(state) {
       state.items = [];
-
-      if (!state.isAuthenticatedMode) {
-        saveCartToStorage([]);
-      }
+      saveCartToStorage([]); // Always clear storage for safety
     },
   },
   extraReducers: (builder) => {
