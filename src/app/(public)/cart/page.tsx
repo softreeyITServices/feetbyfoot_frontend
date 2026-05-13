@@ -15,7 +15,7 @@ import {
   startRazorpayCheckout,
 } from "@/lib/payments/razorpay/razorpay.client";
 import { cartService } from "@/domain/application/services/cart.service";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { AddressService } from "@/domain/application/services/address.service";
 import { Address } from "@/domain/shared/types/address.types";
 import CartPlatformFees from "@/component/ui/CartPlatformFees";
@@ -32,6 +32,7 @@ import { DeliveryService } from "@/domain/application/services/delivery.service"
 
 export default function CartBody() {
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, status } = useSession();
 
   const dispatch = useAppDispatch();

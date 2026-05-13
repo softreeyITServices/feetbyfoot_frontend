@@ -7,7 +7,7 @@ interface StartCheckoutParams {
   addressId?: string;
   discount?: number;
   onSuccess?: () => void;
-  onFailure?: () => void;
+  onFailure?: (error?: any) => void;
 }
 interface RazorpayOrder {
   razorpayOrderId: string;
@@ -136,7 +136,7 @@ export const startRazorpayCheckout = async ({
 
         } catch (err) {
           console.error("Verification failed", err);
-          onFailure?.();
+          onFailure?.(err);
           window.location.href = `/order/failure`;
         }
       },
@@ -161,6 +161,6 @@ export const startRazorpayCheckout = async ({
 
   } catch (error) {
     console.error("Checkout error:", error);
-    onFailure?.();
+    onFailure?.(error);
   }
 };
