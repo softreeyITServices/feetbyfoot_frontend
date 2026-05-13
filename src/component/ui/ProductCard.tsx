@@ -97,11 +97,6 @@ function ProductCard({
       return;
     }
 
-    if ((session.user as any)?.role === "admin") {
-      setError("Admins are restricted from making purchases.");
-      return;
-    }
-
     if (!selectedSize) {
       setError("Size not selected");
       return;
@@ -183,7 +178,7 @@ function ProductCard({
 
       <Link
         href={productHref}
-        className="relative block aspect-square w-full shrink-0 overflow-hidden rounded-md sm:rounded-lg bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
+        className="relative block aspect-[3/4] sm:aspect-[4/5] w-full shrink-0 overflow-hidden rounded-md sm:rounded-lg bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
         title={title}
       >
         {!imgError && imageSrc ? (
@@ -224,16 +219,6 @@ function ProductCard({
           <span className="text-green-600 font-bold text-sm sm:text-lg">
             ₹{discountedPrice}
           </span>
-          {parseFloat(originalPrice) > parseFloat(discountedPrice) && (
-            <span className="text-[10px] sm:text-xs font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">
-              {Math.round(
-                ((parseFloat(originalPrice) - parseFloat(discountedPrice)) /
-                  parseFloat(originalPrice)) *
-                  100
-              )}
-              % OFF
-            </span>
-          )}
         </div>
 
         {colors.length > 0 && (
@@ -282,7 +267,7 @@ function ProductCard({
               className="sm:w-[13px] sm:h-[15px]" 
               fill="#fff" 
             />
-            <span>{loading ? "ADDING..." : "ADD TO CART"}</span>
+            <span>{loading ? "ADDING..." : "ADD TO BASKET"}</span>
           </button>
         </div>
       </div>

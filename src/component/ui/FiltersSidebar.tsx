@@ -90,8 +90,8 @@ export default function FiltersSidebar() {
   }
 
   return (
-    <aside className="w-full max-w-[260px]">
-      <div className="flex flex-row justify-between items-center p-2">
+    <aside className="w-full">
+      <div className="flex flex-row justify-between items-center py-2 px-0">
         <h3 className="text-sm font-semibold mb-4">Filters</h3>
         <button
           className="text-sm mb-6 p-0"
