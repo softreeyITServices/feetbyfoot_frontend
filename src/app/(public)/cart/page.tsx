@@ -332,8 +332,16 @@ export default function CartBody() {
           }
 
           router.push("/order/success");
-        } catch (err) {
+        } catch (err: any) {
           console.error("COD checkout error:", err);
+          
+          // 🔥 Handle Expired Session
+          if (err?.status === 401 || err?.response?.status === 401) {
+            toast.error("Your session has expired. Please login again.");
+            router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+            return;
+          }
+
           toast.error(
             err instanceof Error ? err.message : "Could not complete order",
           );
@@ -362,14 +370,30 @@ export default function CartBody() {
             setIsCheckoutInProgress(false);
           }
         },
-        onFailure: () => {
+        onFailure: (error: any) => {
+          localStorage.removeItem("is_processing_payment"); // 🔥 UNLOCK
           setIsCheckoutInProgress(false);
-          alert("Payment cancelled or failed");
+          
+          // 🔥 Handle Expired Session in Online Flow
+          if (error?.status === 401 || error?.response?.status === 401) {
+            toast.error("Your session has expired. Please login again.");
+            router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+            return;
+          }
+
+          alert(error || "Payment cancelled or failed");
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       setIsCheckoutInProgress(false);
       console.error("Checkout error:", error);
+
+      // 🔥 Handle Expired Session in Initial Order Creation
+      if (error?.status === 401 || error?.response?.status === 401) {
+        toast.error("Your session has expired. Please login again.");
+        router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+        return;
+      }
     }
   };
 

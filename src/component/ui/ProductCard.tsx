@@ -183,7 +183,7 @@ function ProductCard({
 
       <Link
         href={productHref}
-        className="relative block aspect-[3/4] sm:aspect-[4/5] w-full shrink-0 overflow-hidden rounded-md sm:rounded-lg bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
+        className="relative block aspect-square w-full shrink-0 overflow-hidden rounded-md sm:rounded-lg bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
         title={title}
       >
         {!imgError && imageSrc ? (
@@ -282,7 +282,7 @@ function ProductCard({
               className="sm:w-[13px] sm:h-[15px]" 
               fill="#fff" 
             />
-            <span>{loading ? "ADDING..." : "ADD TO BASKET"}</span>
+            <span>{loading ? "ADDING..." : "ADD TO CART"}</span>
           </button>
         </div>
       </div>
