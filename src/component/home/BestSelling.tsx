@@ -24,7 +24,7 @@ export default async function BestSelling() {
   }
 
   return (
-    <Container>
+    // <Container>
       <section className="flex flex-col gap-6 sm:gap-8 py-8 sm:py-10 md:py-12">
         <FadeIn direction="up" className="text-center">
           <h2 className="inline-block bg-yellow-400 px-4 sm:px-6 py-1.5 sm:py-2 text-2xl sm:text-3xl md:text-4xl font-bold">
@@ -58,6 +58,6 @@ export default async function BestSelling() {
           ))}
         </div>
       </section>
-    </Container>
+    // </Container>
   );
 }

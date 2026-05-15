@@ -11,7 +11,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/services/auth/[...nextauth]/route";
 import { SectionBannerService } from "@/domain/application/services/admin/sectionBanner.service";
 
-
 const CATEGORY_CONFIG = {
   mens: {
     label: "Mens",
@@ -159,33 +158,32 @@ export default async function CategoryPage({
     }
   }
 
-  const { products, total, totalPages } = await productService.getPublicProducts({
-    gender:
-      resolvedSearchParams.gender !== undefined
-        ? toArray(resolvedSearchParams.gender)
-        : defaultGender
-          ? [defaultGender]
-          : [],
-    page,
-    limit: perpage,
-    search: resolvedSearchParams.search?.trim(),
-    sortBy,
-    categories: toArray(resolvedSearchParams.category),
-    subcategories: toArray(resolvedSearchParams.subcategory),
-    sizes: toArray(resolvedSearchParams.size),
-    colors: toArray(resolvedSearchParams.color),
-    minDiscount: resolvedSearchParams.discount
-      ? Number(resolvedSearchParams.discount)
-      : undefined,
-    packTypes:
-      resolvedSearchParams.packType !== undefined
-        ? toArray(resolvedSearchParams.packType).map((v) => v === "true")
-        : "isGiftPack" in config && config.isGiftPack
-          ? [true]
-          : [],
-  });
-
-
+  const { products, total, totalPages } =
+    await productService.getPublicProducts({
+      gender:
+        resolvedSearchParams.gender !== undefined
+          ? toArray(resolvedSearchParams.gender)
+          : defaultGender
+            ? [defaultGender]
+            : [],
+      page,
+      limit: perpage,
+      search: resolvedSearchParams.search?.trim(),
+      sortBy,
+      categories: toArray(resolvedSearchParams.category),
+      subcategories: toArray(resolvedSearchParams.subcategory),
+      sizes: toArray(resolvedSearchParams.size),
+      colors: toArray(resolvedSearchParams.color),
+      minDiscount: resolvedSearchParams.discount
+        ? Number(resolvedSearchParams.discount)
+        : undefined,
+      packTypes:
+        resolvedSearchParams.packType !== undefined
+          ? toArray(resolvedSearchParams.packType).map((v) => v === "true")
+          : "isGiftPack" in config && config.isGiftPack
+            ? [true]
+            : [],
+    });
 
   // FIX 2: build a base query string that preserves all current filters
   const buildPageHref = (pageNum: number) => {
@@ -218,7 +216,7 @@ export default async function CategoryPage({
   if ("sectionBannerKey" in config) {
     try {
       const list = await SectionBannerService.getBySectionKey(
-        config.sectionBannerKey
+        config.sectionBannerKey,
       );
       sectionBanners = list.filter((b) => b.isActive);
     } catch {
@@ -226,10 +224,8 @@ export default async function CategoryPage({
     }
   }
 
-
-
   return (
-    <main className="w-full">
+    <>
       {/* Heading */}
       <div className="text-center mt-10">
         <h2 className="inline-block bg-yellow-400 px-40 py-2 text-4xl font-bold">
@@ -241,7 +237,7 @@ export default async function CategoryPage({
       </div>
 
       {/* Banner: section banners from admin when present, else static fallback */}
-      <section className="max-w-7xl mx-auto px-4 mt-6 mb-2">
+      <section className=" px-4 mt-6 mb-2">
         {sectionBanners.length > 0 ? (
           <div className="flex flex-col gap-4">
             {sectionBanners.map((b) => (
@@ -262,8 +258,8 @@ export default async function CategoryPage({
       </section>
 
       {/* Content */}
-      <section className="max-w-7xl mx-auto px-4 mt-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
+      <section className="w-full px-4 mt-10 max-w-none">
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-x-8 px-0 w-full">
           {/* Filters */}
           <aside className="hidden lg:block sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto">
             <FiltersSidebar />
@@ -282,7 +278,7 @@ export default async function CategoryPage({
 
             {/* Product Grid */}
             {products.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4 gap-8 px-0 w-full">
                 {products.map((product) => (
                   <ProductCard
                     wishlist={true}
@@ -324,6 +320,6 @@ export default async function CategoryPage({
           </div>
         </div>
       </section>
-    </main>
+    </>
   );
 }

@@ -7,9 +7,7 @@ export default function CategoryLayout({
 }) {
   return (
     <>
-      <Container>
         {children}
-      </Container>
     </>
   );
 }

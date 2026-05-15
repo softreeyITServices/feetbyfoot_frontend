@@ -201,7 +201,7 @@ export default async function ShopPage({
       </section>
 
       <section className="max-w-7xl mx-auto px-4 mt-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8">
           <aside className="hidden lg:block sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto">
             <FiltersSidebar />
           </aside>
