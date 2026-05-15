@@ -2,6 +2,7 @@ import Image from "next/image";
 import Container from "../ui/Container";
 import FadeIn from "../ui/FadeIn";
 import Link from "next/link";
+import HomeBlogSection from "./HomeBlogSection";
 
 export default function TrendingGallery() {
   const images = [
@@ -68,6 +69,8 @@ export default function TrendingGallery() {
             </button>
           </Link>
         </FadeIn>
+
+        <HomeBlogSection />
       </section>
     </Container>
   );
