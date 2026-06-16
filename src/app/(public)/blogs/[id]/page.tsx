@@ -155,9 +155,9 @@ export default function BlogDetailPage() {
             </p>
           </div>
 
-          {/* Hero Image */}
-          <HeroImage
-            src={safeNextImageSrc(blog.coverImage?.url, FALLBACK_IMAGE)}
+          {/* Hero Media */}
+          <HeroMedia
+            url={blog.coverImage?.url || ""}
             alt={blog.title || "Blog image"}
           />
 
@@ -356,23 +356,46 @@ export default function BlogDetailPage() {
   );
 }
 
-function HeroImage({ src, alt }: { src: string; alt: string }) {
-  const [imageSrc, setImageSrc] = React.useState(src || FALLBACK_IMAGE);
+/** Returns true when a Cloudinary/general URL points to a video */
+function isVideoUrl(url: string): boolean {
+  if (!url) return false;
+  if (url.includes('/video/upload/')) return true;
+  return /\.(mp4|webm|mov|ogg)(\?|$)/i.test(url);
+}
+
+function HeroMedia({ url, alt }: { url: string; alt: string }) {
+  const [imgSrc, setImgSrc] = React.useState(url || FALLBACK_IMAGE);
 
   React.useEffect(() => {
-    setImageSrc(src || FALLBACK_IMAGE);
-  }, [src]);
+    setImgSrc(url || FALLBACK_IMAGE);
+  }, [url]);
+
+  if (isVideoUrl(url)) {
+    return (
+      <div className="mt-6 overflow-hidden">
+        <video
+          src={url}
+          className="h-auto w-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          controls
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="mt-6 overflow-hidden">
       <Image
-        src={imageSrc}
+        src={safeNextImageSrc(imgSrc, FALLBACK_IMAGE)}
         alt={alt}
         width={1600}
         height={900}
         className="h-auto w-full object-cover"
         priority
-        onError={() => setImageSrc(FALLBACK_IMAGE)}
+        onError={() => setImgSrc(FALLBACK_IMAGE)}
       />
     </div>
   );

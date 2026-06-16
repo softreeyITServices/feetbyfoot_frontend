@@ -82,6 +82,7 @@ function CreateBlogPageContent() {
   const [slug, setSlug] = useState("");
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [cover, setCover] = useState("");
+  const [coverIsVideo, setCoverIsVideo] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [loadingBlog, setLoadingBlog] = useState(false);
@@ -113,7 +114,10 @@ function CreateBlogPageContent() {
         setAuthorName(blog.authorName || "");
         setSlug(blog.slug || "");
         setSlugManuallyEdited(Boolean(blog.slug));
-        setCover(blog.coverImage?.url || "");
+        const coverUrl = blog.coverImage?.url || "";
+        setCover(coverUrl);
+        // Detect if existing cover is a video by URL extension
+        setCoverIsVideo(/\.(mp4|webm|mov|ogg)$/i.test(coverUrl));
         setSections(
           blog.sections && blog.sections.length > 0
             ? blog.sections
@@ -150,11 +154,22 @@ function CreateBlogPageContent() {
 
   const handleUpload = async (file: File) => {
     if (!file) return;
+    const isVideo = file.type.startsWith("video/");
+
+    // Client-side size guard
+    const maxBytes = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    const maxLabel = isVideo ? "50 MB" : "10 MB";
+    if (file.size > maxBytes) {
+      toast.error(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max ${maxLabel} allowed for ${isVideo ? "videos" : "images"}.`);
+      return;
+    }
+
     try {
       setUploading(true);
       const url = await uploadService.uploadFile(file);
       setCover(url);
-      toast.success("Cover uploaded ✨");
+      setCoverIsVideo(isVideo);
+      toast.success(isVideo ? "Video uploaded ✨" : "Cover uploaded ✨");
     } catch (err: any) {
       toast.error(err?.message || "Upload failed");
     } finally {
@@ -353,7 +368,18 @@ function CreateBlogPageContent() {
         {cover ? (
           /* ── Has cover ── */
           <div className="w-full h-full relative group">
-            <img src={cover} className="w-full h-full object-cover" alt="cover" />
+            {coverIsVideo ? (
+              <video
+                src={cover}
+                className="w-full h-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <img src={cover} className="w-full h-full object-cover" alt="cover" />
+            )}
             {/* Hover overlay */}
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-3">
               <div className="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-sm font-medium text-gray-700 shadow flex items-center gap-2">
@@ -362,7 +388,7 @@ function CreateBlogPageContent() {
               </div>
               <button
                 type="button"
-                onClick={(e) => { e.preventDefault(); setCover(""); }}
+                onClick={(e) => { e.preventDefault(); setCover(""); setCoverIsVideo(false); }}
                 className="text-white/80 text-xs underline hover:text-white"
               >
                 Remove
@@ -384,7 +410,7 @@ function CreateBlogPageContent() {
                 {uploading ? "Uploading…" : "Click to upload or drag & drop"}
               </p>
               <p className="text-xs text-gray-300 mt-0.5">
-                PNG, JPG, WEBP up to 10MB
+                Images up to 10 MB · Videos up to 50 MB
               </p>
             </div>
           </div>
@@ -392,7 +418,7 @@ function CreateBlogPageContent() {
 
         <input
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -410,7 +436,7 @@ function CreateBlogPageContent() {
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           rows={2}
-          className="w-full text-4xl font-bold bg-transparent outline-none resize-none text-gray-900 placeholder:text-gray-200 leading-tight"
+          className="w-full text-4xl font-bold bg-transparent outline-none resize-none text-gray-900 placeholder:text-gray-400 leading-tight"
         />
 
         {/* Meta */}

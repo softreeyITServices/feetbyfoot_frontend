@@ -1,41 +1,43 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { BlogService, type Blog } from "@/domain/application/services/admin/blog.service";
-import { safeNextImageSrc } from "@/lib/safeImageSrc";
 import FadeIn from "../ui/FadeIn";
 
 const FALLBACK_IMAGE = "/assets/images/Frame 44.png";
 
+/** Returns true when a URL points to a video (Cloudinary or extension-based) */
+function isVideoUrl(url: string): boolean {
+  if (!url) return false;
+  if (url.includes("/video/upload/")) return true;
+  return /\.(mp4|webm|mov|ogg|avi|mkv)(\?|#|$)/i.test(url);
+}
+
 export default function HomeBlogSection() {
-  const [blog, setBlog] = useState<Blog | null>(null);
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchLatestBlog = async () => {
+    const fetchLatestBlogs = async () => {
       try {
-        const res = await BlogService.getPublicList({ page: 1, limit: 1 });
+        const res = await BlogService.getPublicList({ page: 1, limit: 3 });
         if (res.items && res.items.length > 0) {
-          setBlog(res.items[0]);
+          setBlogs(res.items);
         }
       } catch (error) {
-        console.error("Error fetching latest blog:", error);
+        console.error("Error fetching latest blogs:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLatestBlog();
+    fetchLatestBlogs();
   }, []);
 
-  if (loading || !blog) {
+  if (loading || blogs.length === 0) {
     return null;
   }
-
-  const imageSrc = safeNextImageSrc(blog.coverImage?.url, FALLBACK_IMAGE);
-  const href = `/blogs/${blog._id}`;
 
   return (
     <div className="mt-12 sm:mt-16 md:mt-20 flex flex-col items-center">
@@ -48,24 +50,60 @@ export default function HomeBlogSection() {
         </p>
       </FadeIn>
 
-      <FadeIn direction="up" delay={500} className="w-full max-w-2xl px-4">
-        <Link href={href} className="group block overflow-hidden">
-          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100">
-            <Image
-              src={imageSrc}
-              alt={blog.title}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 800px"
-            />
-          </div>
-          <div className="mt-4 text-center">
-            <h2 className="text-xl sm:text-2xl font-medium text-neutral-900 group-hover:text-yellow-600 transition-colors">
-              {blog.title}
-            </h2>
-          </div>
-        </Link>
-      </FadeIn>
+      <div className="w-full max-w-6xl px-4">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {blogs.map((blog, index) => (
+            <BlogCard key={blog._id} blog={blog} delay={500 + index * 100} />
+          ))}
+        </div>
+      </div>
     </div>
+  );
+}
+
+function BlogCard({ blog, delay }: { blog: Blog; delay: number }) {
+  const [imgError, setImgError] = useState(false);
+  const coverUrl = blog.coverImage?.url || "";
+  const href = `/blogs/${blog._id}`;
+  const isVideo = isVideoUrl(coverUrl);
+  const hasUrl = Boolean(coverUrl.trim());
+
+  return (
+    <FadeIn direction="up" delay={delay} className="w-full">
+      <Link href={href} className="group block overflow-hidden">
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-gray-100">
+          {isVideo && hasUrl ? (
+            <video
+              src={coverUrl}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          ) : hasUrl && !imgError ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={coverUrl}
+              alt={blog.title}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={FALLBACK_IMAGE}
+              alt={blog.title}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          )}
+        </div>
+        <div className="mt-4 text-center">
+          <h2 className="text-lg sm:text-xl font-medium text-neutral-900 group-hover:text-yellow-600 transition-colors line-clamp-2">
+            {blog.title}
+          </h2>
+        </div>
+      </Link>
+    </FadeIn>
   );
 }

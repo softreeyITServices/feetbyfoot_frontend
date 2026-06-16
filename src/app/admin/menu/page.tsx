@@ -194,28 +194,28 @@ function megaMenuPayloadToFinalGroups(
 
 type DragItem =
   | {
-      type: "source-catalog-category";
-      groupId: string;
-      catalogCategoryId: string;
-    }
+    type: "source-catalog-category";
+    groupId: string;
+    catalogCategoryId: string;
+  }
   | {
-      type: "source-subcategory";
-      groupId: string;
-      catalogCategoryId: string;
-      subcategoryId: string;
-    }
+    type: "source-subcategory";
+    groupId: string;
+    catalogCategoryId: string;
+    subcategoryId: string;
+  }
   | { type: "final-group"; id: string }
   | {
-      type: "final-catalog-category";
-      groupId: string;
-      catalogCategoryId: string;
-    }
+    type: "final-catalog-category";
+    groupId: string;
+    catalogCategoryId: string;
+  }
   | {
-      type: "final-subcategory";
-      groupId: string;
-      catalogCategoryId: string;
-      subcategoryId: string;
-    };
+    type: "final-subcategory";
+    groupId: string;
+    catalogCategoryId: string;
+    subcategoryId: string;
+  };
 
 /** Top-level nav slots: same API categories/subcategories are shown under each */
 const NAV_SOURCE_GROUP_TEMPLATES: Omit<SourceGroup, "categories">[] = [
@@ -390,7 +390,7 @@ export default function AdminMenuCreationPage() {
           if (!isGetRequestError(error)) {
             toast.error(
               (error as { message?: string })?.message ??
-                "Failed to load categories from API"
+              "Failed to load categories from API"
             );
           }
           setSharedCatalog([]);
@@ -930,8 +930,8 @@ export default function AdminMenuCreationPage() {
     finalMenu.length === 0
       ? null
       : activeGroupTab && finalMenu.some((g) => g.id === activeGroupTab)
-      ? activeGroupTab
-      : finalMenu[0]?.id ?? null;
+        ? activeGroupTab
+        : finalMenu[0]?.id ?? null;
   const activeTabGroup = finalMenu.find((g) => g.id === activeTabId) ?? null;
   const activeTabIndex = finalMenu.findIndex((g) => g.id === activeTabId);
 
@@ -939,12 +939,12 @@ export default function AdminMenuCreationPage() {
   const [catalogExpandedId, setCatalogExpandedId] = useState<string | null>(null);
   const filteredCatalog = catalogSearch.trim()
     ? sharedCatalog.filter(
-        (c) =>
-          c.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
-          c.subcategories.some((s) =>
-            s.name.toLowerCase().includes(catalogSearch.toLowerCase())
-          )
-      )
+      (c) =>
+        c.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
+        c.subcategories.some((s) =>
+          s.name.toLowerCase().includes(catalogSearch.toLowerCase())
+        )
+    )
     : sharedCatalog;
 
   /** All source groups share the same catalog — use any to resolve category lookups */
@@ -1048,7 +1048,7 @@ export default function AdminMenuCreationPage() {
 
       <div className="bg-white rounded-xl border border-neutral-200 p-5">
         <div className="max-w-md space-y-1.5">
-          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          {/* <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
             Menu Name
           </label>
           <input
@@ -1057,7 +1057,7 @@ export default function AdminMenuCreationPage() {
             onChange={(e) => setMenuMetaName(e.target.value)}
             placeholder="e.g. Main Navigation"
             className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-          />
+          /> */}
         </div>
       </div>
 
@@ -1179,9 +1179,8 @@ export default function AdminMenuCreationPage() {
                           }}
                           disabled={catAdded}
                           title={catAdded ? "Already in menu" : `Add "${cat.name}" to active section`}
-                          className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
-                            catAdded ? "text-neutral-300 cursor-default" : "bg-black text-white hover:bg-neutral-700"
-                          }`}
+                          className={`w-6 h-6 rounded flex items-center justify-center transition-all ${catAdded ? "text-neutral-300 cursor-default" : "bg-black text-white hover:bg-neutral-700"
+                            }`}
                         >
                           {catAdded ? <CheckCircle className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
                         </button>
@@ -1208,11 +1207,10 @@ export default function AdminMenuCreationPage() {
                                 }
                               }}
                               title={subAdded ? "Already added" : "Click or drag to add"}
-                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
-                                subAdded
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${subAdded
                                   ? "bg-neutral-100 text-neutral-400 cursor-default"
                                   : "bg-white border border-neutral-200 text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50 cursor-grab active:cursor-grabbing"
-                              }`}
+                                }`}
                             >
                               {subAdded ? <CheckCircle className="h-2.5 w-2.5 shrink-0" /> : <Plus className="h-2.5 w-2.5 shrink-0" />}
                               {sub.name}
@@ -1275,11 +1273,10 @@ export default function AdminMenuCreationPage() {
                       draggable
                       onDragStart={onDragStart({ type: "final-group", id: group.id })}
                       onDragEnd={onDragEnd}
-                      className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-grab active:cursor-grabbing ${
-                        activeTabId === group.id
+                      className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-grab active:cursor-grabbing ${activeTabId === group.id
                           ? "border-black text-black bg-white"
                           : "border-transparent text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100"
-                      }`}
+                        }`}
                     >
                       <GripVertical className="h-3.5 w-3.5 text-neutral-300 shrink-0" />
                       {group.name}
