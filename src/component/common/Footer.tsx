@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { newsletterService } from "@/domain/application/services/newsletter.service";
 import { YoutubeIcon } from "@/icons/YoutubeIcon";
 import { FacebookIcon } from "@/icons/FacebookIcon";
 import { InstagramIcon } from "@/icons/InstagramIcon";
@@ -21,7 +22,7 @@ const DEFAULT_ABOUT = (
     At <span className="font-semibold text-green-700">Feet by Foot</span>, every pair of
     socks is a canvas. Collaborating with graphic designers, illustrators,
     street artists, and creators from across visual universes, we turn bold
-    imagination into wearable art. These aren’t just socks — they’re
+    imagination into wearable art. These aren't just socks — they're
     expressions of creativity, crafted to bring color, story, and originality
     to every step you take.
   </>
@@ -38,6 +39,24 @@ const DEFAULT_NEWSLETTER_BODY = (
 export default function Footer() {
   const [about, setAbout] = useState<CmsItem | null>(null);
   const [newsletter, setNewsletter] = useState<CmsItem | null>(null);
+  const [subscribeEmail, setSubscribeEmail] = useState("");
+  const [subscribeStatus, setSubscribeStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [subscribeError, setSubscribeError] = useState("");
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subscribeEmail.trim()) return;
+    setSubscribeStatus("loading");
+    setSubscribeError("");
+    try {
+      await newsletterService.subscribe(subscribeEmail.trim());
+      setSubscribeStatus("success");
+      setSubscribeEmail("");
+    } catch {
+      setSubscribeStatus("error");
+      setSubscribeError("Something went wrong. Please try again.");
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -67,6 +86,13 @@ export default function Footer() {
     <footer className="mt-20 bg-white shadow-[3px_3px_10px_#BFBFBE]">
       <div className="max-w-7xl mx-auto grid grid-cols-1 gap-12 px-4 py-14 text-sm md:grid-cols-12 md:items-start md:gap-x-8 lg:gap-x-12">
         <div className="min-w-0 md:col-span-3">
+          <Image
+            src="/assets/images/footer_logo.png"
+            alt="Feet by Foot"
+            width={150}
+            height={38}
+            className="mb-4 h-auto w-[150px]"
+          />
           {showAboutCms ? (
             <div
               className="footer-cms text-gray-700 leading-relaxed"
@@ -82,19 +108,18 @@ export default function Footer() {
         </div>
 
         <div className="min-w-0 md:col-span-3">
+          <h4 className="font-semibold mb-3 text-gray-900 text-lg">
+            {newsletterHeading}
+          </h4>
           {showNewsletterCmsBody ? (
-            <>
-              <div
-                className="footer-cms text-gray-700 leading-relaxed mb-4 text-md"
-                dangerouslySetInnerHTML={{ __html: newsletter!.content }}
-              />
-
-            </>
+            <div
+              className="footer-cms text-gray-700 leading-relaxed mb-4 text-sm"
+              dangerouslySetInnerHTML={{ __html: newsletter!.content }}
+            />
           ) : (
-            <>
-             
-
-            </>
+            <p className="text-gray-700 leading-relaxed mb-4 text-sm">
+              Get on the list and get 20% off your first order!
+            </p>
           )}
         </div>
       </div>

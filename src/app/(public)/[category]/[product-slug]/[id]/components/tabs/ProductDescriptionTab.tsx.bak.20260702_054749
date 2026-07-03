@@ -4,10 +4,9 @@ import React from 'react'
 function ProductDescriptionTab({ description }: { description: string }) {
   return (
     <div className="flex flex-col gap-8">
-      <div
-        className="text-[16px] product-description"
-        dangerouslySetInnerHTML={{ __html: description }}
-      />
+      <p className='text-[16px]'>
+        {description}
+      </p>
 
       {/* <div className="grid md:grid-cols-2 gap-8 text-[16px]">
         <div>

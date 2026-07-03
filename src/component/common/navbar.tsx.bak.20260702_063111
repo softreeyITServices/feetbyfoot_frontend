@@ -107,11 +107,11 @@ function DesktopMegaNav({
               role="region"
               aria-label={`${g.name} categories`}
             >
-              <div className="bg-white border-t border-neutral-200 shadow-2xl w-full px-6 sm:px-12 py-8 sm:py-10 max-h-[70vh] overflow-y-auto">
+              <div className="bg-[#f4f4f4] border-t border-neutral-300 shadow-xl w-full px-4 sm:px-8 py-6 sm:py-8 max-h-[70vh] overflow-y-auto">
                 <div
-                  className="grid gap-8 sm:gap-10 mx-auto max-w-7xl"
+                  className="grid gap-4 sm:gap-6 mx-auto max-w-7xl"
                   style={{
-                    gridTemplateColumns: `repeat(auto-fit, minmax(160px, 200px))`,
+                    gridTemplateColumns: `repeat(auto-fit, minmax(140px, 160px))`,
                   }}
                 >
                   {categories.map((c) => {

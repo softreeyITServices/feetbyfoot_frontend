@@ -34,7 +34,7 @@ export default function HeroBanner() {
 
   return (
     <section className="w-full">
-      <BannerSlider slides={slides} />
+      <BannerSlider slides={slides} sideBanner={{ label: "LOTTERY DISCOUNT", href: "/collections/sale" }} />
     </section>
   );
 }

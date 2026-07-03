@@ -77,6 +77,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
       { label: "Home marquee", href: "/admin/settings/marquee" },
       { label: "Home Banners", href: "/admin/banners" },
       { label: "Section Banners", href: "/admin/section-banners" },
+      { label: "Customer Showcase", href: "/admin/showcase" },
       { label: "Platforms Fees", href: "/admin/platforms-fees" },
       { label: "Coupons", href: "/admin/coupons" },
     ],

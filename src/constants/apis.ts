@@ -74,6 +74,7 @@ export const RETURN_URL = API_BASE_URL + "/user/order/return";
 export const CANCEL_UPDATE_ORDER_URL = API_BASE_URL + "/orders";
 export const CONTACT_URL = API_BASE_URL + "/contact";
 export const BANNERS_URL = API_BASE_URL + "/banners";
+export const SHOWCASES_URL = API_BASE_URL + "/showcases";
 export const COUPONS_URL = API_BASE_URL + "/coupons";
 export const RATING_URL = API_BASE_URL + "/rating";
 
@@ -249,3 +250,5 @@ export const EX_ANNOUNCEMENTS_ADMIN_URL =
 export function exAnnouncementsAdminByIdUrl(id: string): string {
   return `${EXTERNAL_API_BASE_URL}/announcements/admin/${encodeURIComponent(id)}`;
 }
+
+export const NEWSLETTER_SUBSCRIBE_URL = API_BASE_URL + "/newsletter/subscribe";

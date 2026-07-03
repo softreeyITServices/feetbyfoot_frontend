@@ -57,7 +57,7 @@ export default function LoginForm() {
     if (type === 'email') {
       setAuthType('email')
     } else {
-      setAuthType('phone')
+      setAuthType('phone' as ValidType)
     }
     setIdentifier(value);
     setError("");

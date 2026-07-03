@@ -29,7 +29,7 @@ const COLOR_CSS_MAP: Record<string, string> = {
 };
 
 function colorToCss(name: string): string {
-  return COLOR_CSS_MAP[name] ?? name.toLowerCase();
+  return COLOR_CSS_MAP[name] ?? (name && name !== "Default" ? name.toLowerCase() : "transparent");
 }
 
 /** All unique active sizes from the product (including the item's current size). */

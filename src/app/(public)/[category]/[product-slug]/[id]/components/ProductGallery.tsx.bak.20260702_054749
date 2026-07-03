@@ -39,12 +39,12 @@ export default function ProductGallery({
       </div>
 
       {/* Main Image */}
-      <div className="group flex-1 rounded-lg overflow-hidden bg-gray-50 aspect-square relative">
+      <div className="flex-1 rounded-lg overflow-hidden bg-gray-50 aspect-square relative">
         <Image
           src={mainImage}
           fill
           alt="Product image"
-          className="object-cover transition-transform duration-300 ease-out group-hover:scale-125"
+          className="object-cover"
           priority
         />
       </div>

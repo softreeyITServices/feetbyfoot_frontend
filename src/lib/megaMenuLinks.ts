@@ -26,7 +26,10 @@ export function categoryHref(g: MenuGroup, c: MenuCategory): string {
   if (c.href) return c.href;
   if (g.storefrontPath) {
     const qs = new URLSearchParams();
-    qs.set("category", c.id);
+    // Items in this tier are actually categoryTypes (e.g. "Ankle", "12-24 Month"),
+    // not real Category documents, so they must map to the "subcategory"
+    // param (-> categoryTypeIds on the backend), not "category" (-> categoryIds).
+    qs.set("subcategory", c.id);
     return `${g.storefrontPath}?${qs.toString()}`;
   }
   return "#";

@@ -18,6 +18,7 @@ import { ordersService } from "@/domain/application/services/order.service";
 import { DataTable } from "@/component/ui/DataTable";
 import { getStatusBadgeClasses } from "@/lib/common";
 import { canDownloadOrderInvoicePdf } from "@/lib/orderPdf";
+import { formatDateIST } from "@/lib/formatDate";
 import ExchangeModal from "@/component/ui/modals/ExchangeModal";
 import { RowActionMenu } from "@/component/ui/tables/order/RowActionMenu";
 import { OrderPdfDownloadIcon } from "@/component/ui/tables/order/OrderPdfDownloadIcon";
@@ -149,7 +150,7 @@ export default function OrdersPage() {
   const formattedOrders: FormattedOrder[] = orders.map((order) => ({
     orderId: order._id,
     orderNumber: order.orderNumber,
-    date: new Date(order.createdAt).toLocaleDateString(),
+    date: formatDateIST(order.createdAt),
     total: order.totalAmount,
     status: order.orderStatus,
     paymentStatus: order.paymentStatus,

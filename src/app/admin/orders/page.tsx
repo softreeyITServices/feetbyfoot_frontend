@@ -28,7 +28,16 @@ const isCodOrder = (order: Order) =>
 function formatDateTime(iso?: string | null) {
   if (iso == null || iso === "") return "—";
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleString();
+  return Number.isNaN(d.getTime())
+    ? String(iso)
+    : d.toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 }
 
 function formatMoney(amount: number, currency?: string) {
@@ -796,8 +805,7 @@ function OrderPage() {
     {
       key: "createdAt",
       label: "Date",
-      render: (row) =>
-        new Date(row.createdAt).toLocaleDateString(),
+      render: (row) => formatDateTime(row.createdAt),
     },
     {
       key: "invoicePdf",

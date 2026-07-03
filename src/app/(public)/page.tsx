@@ -1,6 +1,7 @@
 
 import BestSelling from "@/component/home/BestSelling";
 import CategoryStrip from "@/component/home/CategoryStrip";
+import CustomerShowcase from "@/component/home/CustomerShowcase";
 import HelpCTA from "@/component/home/HelpCTA";
 import HeroBanner from "@/component/home/HeroBanner";
 import PromoSection from "@/component/home/PromoSection";
@@ -19,6 +20,7 @@ export default function HomePage() {
       <PromoSection />
       <ShopByCategory />
       <HelpCTA />
+      <CustomerShowcase />
       <TrendingGallery />
     </>
   );

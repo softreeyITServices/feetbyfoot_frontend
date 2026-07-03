@@ -31,7 +31,6 @@ function colorToCss(name: string | undefined | null): string {
 function ProductCard({
   id,
   imageSrc,
-  hoverImageSrc,
   altText,
   categories,
   title,
@@ -47,7 +46,6 @@ function ProductCard({
   wishlist?: boolean;
   id: string;
   imageSrc: string;
-  hoverImageSrc?: string;
   size: {
     _id?: string;
     size: string;
@@ -188,28 +186,17 @@ function ProductCard({
       <Link
         href={productHref}
         className="group relative block aspect-[3/4] sm:aspect-[4/5] w-full shrink-0 overflow-hidden rounded-md sm:rounded-lg bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
-          title={title}
-        >
+        title={title}
+      >
         {!imgError && imageSrc ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageSrc}
-              alt={altText}
-              onError={() => setImgError(true)}
-              className={`absolute inset-0 object-cover object-center w-full h-full transition-opacity duration-500 ease-out ${hoverImageSrc ? "group-hover:opacity-0" : ""}`}
-              loading="lazy"
-            />
-            {hoverImageSrc && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={hoverImageSrc}
-                alt={altText}
-                className="absolute inset-0 object-cover object-center w-full h-full opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
-                loading="lazy"
-              />
-            )}
-          </>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageSrc}
+            alt={altText}
+            onError={() => setImgError(true)}
+            className="object-cover object-center w-full h-full transition-transform duration-300 ease-out group-hover:scale-125"
+            loading="lazy"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-[10px] sm:text-xs text-center px-2">
             {altText}

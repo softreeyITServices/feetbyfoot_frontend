@@ -19,7 +19,7 @@ function FooterColumn({ group }: { group: MenuGroup }) {
     categories.length === 0 && !groupIsHeaderOnly(group);
 
   return (
-    <div className="min-w-35">
+    <div className="w-full">
       <h4 className="font-semibold mb-3 text-gray-900 text-lg">{group.name}</h4>
       <ul className="space-y-2 text-gray-700">
         {showSingleGroupLink ? (
@@ -79,7 +79,7 @@ function FooterCategoryRows({
 function StaticFooterColumns() {
   return (
     <>
-      <div className="min-w-35">
+      <div className="w-full">
         <h4 className="font-semibold mb-3 text-gray-900 text-lg">About Us</h4>
         <ul className="space-y-2 text-gray-700">
           <li>
@@ -100,7 +100,7 @@ function StaticFooterColumns() {
         </ul>
       </div>
 
-      <div className="min-w-40">
+      <div className="w-full">
         <h4 className="font-semibold mb-3 text-gray-900 text-lg">Support</h4>
         <ul className="space-y-2 text-gray-700">
           <li>
@@ -121,7 +121,7 @@ function StaticFooterColumns() {
         </ul>
       </div>
 
-      <div className="min-w-35">
+      <div className="w-full">
         <h4 className="font-semibold mb-3 text-gray-900 text-lg">Quick Links</h4>
         <ul className="space-y-2 text-gray-700">
           <li>
@@ -170,9 +170,9 @@ export default function FooterMenuColumns() {
 
   if (!ready) {
     return (
-      <div className="flex w-full flex-wrap gap-12 md:flex-nowrap">
+      <div className="grid w-full grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-5">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="min-w-35 space-y-3">
+          <div key={i} className="w-full space-y-3">
             <div className="h-6 w-28 rounded bg-neutral-200 animate-pulse" />
             <div className="space-y-2">
               {[1, 2, 3, 4].map((j) => (
@@ -190,7 +190,7 @@ export default function FooterMenuColumns() {
 
   if (groups && groups.length > 0) {
     return (
-      <div className="flex w-full flex-wrap gap-12 md:flex-nowrap">
+      <div className="grid w-full grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-5">
         {groups.map((g) => (
           <FooterColumn key={g.id} group={g} />
         ))}
@@ -199,7 +199,7 @@ export default function FooterMenuColumns() {
   }
 
   return (
-    <div className="flex w-full flex-wrap gap-12 md:flex-nowrap">
+    <div className="grid w-full grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-5">
       <StaticFooterColumns />
     </div>
   );
