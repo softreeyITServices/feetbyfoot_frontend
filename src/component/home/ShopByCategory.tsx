@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Container from "../ui/Container";
-import { UpRightArrowIcon } from "@/icons/UpRightArrowIcon";
 import Link from "next/link";
 import FadeIn from "../ui/FadeIn";
 
@@ -40,7 +39,6 @@ export default function ShopByCategory() {
               <Link href="/kids" className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 z-10">
                 <button className="bg-yellow-400 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-semibold flex items-center gap-1 sm:gap-2 hover:bg-yellow-300 transition-colors shadow-lg">
                   <span className="sm:text-base md:text-lg line-clamp-1">Kids Socks</span>
-                  <UpRightArrowIcon width={16} height={16} className="sm:w-[20px] sm:h-[20px] md:w-[24px] md:h-[24px] shrink-0" />
                 </button>
               </Link>
             </div>
@@ -63,7 +61,6 @@ export default function ShopByCategory() {
               <Link href="/gifts" className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 z-10">
                 <button className="bg-yellow-400 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-semibold flex items-center gap-1 sm:gap-2 hover:bg-yellow-300 transition-colors shadow-lg">
                   <span className="sm:text-base md:text-lg line-clamp-1">Socks Gift Packs</span>
-                  <UpRightArrowIcon width={16} height={16} className="sm:w-[20px] sm:h-[20px] md:w-[24px] md:h-[24px] shrink-0" />
                 </button>
               </Link>
             </div>
@@ -83,7 +80,6 @@ export default function ShopByCategory() {
               <Link href="/womens" className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 z-10">
                 <button className="bg-yellow-400 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-semibold flex items-center gap-1 sm:gap-2 hover:bg-yellow-300 transition-colors shadow-lg max-w-[180px] sm:max-w-[250px] md:max-w-none">
                   <span className="sm:text-base md:text-lg line-clamp-1">Women Food Socks</span>
-                  <UpRightArrowIcon width={16} height={16} className="sm:w-[20px] sm:h-[20px] md:w-[24px] md:h-[24px] shrink-0" />
                 </button>
               </Link>
             </div>
@@ -105,7 +101,6 @@ export default function ShopByCategory() {
               <Link href="/mens" className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 z-10">
                 <button className="bg-yellow-400 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-semibold flex items-center gap-1 sm:gap-2 hover:bg-yellow-300 transition-colors shadow-lg">
                   <span className="sm:text-base md:text-lg line-clamp-1">Men Funky Socks</span>
-                  <UpRightArrowIcon width={16} height={16} className="sm:w-[20px] sm:h-[20px] md:w-[24px] md:h-[24px] shrink-0" />
                 </button>
               </Link>
             </div>

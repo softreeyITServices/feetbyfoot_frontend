@@ -7,6 +7,7 @@ import HeroBanner from "@/component/home/HeroBanner";
 import PromoSection from "@/component/home/PromoSection";
 import ShopByCategory from "@/component/home/ShopByCategory";
 import TrendingGallery from "@/component/home/TrendingGallery";
+import PopularSearches from "@/component/home/PopularSearches";
 import { Marquee } from "@/component/ui/Marquee";
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default function HomePage() {
       <HelpCTA />
       <CustomerShowcase />
       <TrendingGallery />
+      <PopularSearches />
     </>
   );
 }

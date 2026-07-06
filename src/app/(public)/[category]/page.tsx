@@ -201,7 +201,8 @@ export default async function CategoryPage({
     // Preserve the default gender filter in pagination links,
     // so clicking "page 2" doesn't drop the /mens:/womens:/kids filter.
     if (resolvedSearchParams.gender === undefined && defaultGender) {
-      qs.set("gender", defaultGender);
+      qs.append("gender", defaultGender);
+      qs.append("gender", "UNISEX");
     }
     if (
       resolvedSearchParams.packType === undefined &&

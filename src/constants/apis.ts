@@ -252,3 +252,13 @@ export function exAnnouncementsAdminByIdUrl(id: string): string {
 }
 
 export const NEWSLETTER_SUBSCRIBE_URL = API_BASE_URL + "/newsletter/subscribe";
+export const NEWSLETTER_LIST_URL = API_BASE_URL + "/newsletter";
+
+/** Storefront popular searches (home section) */
+export const POPULAR_SEARCHES_PUBLIC_URL = API_BASE_URL + "/popular-searches/public";
+/** Admin popular searches CRUD → proxies to backend `/popular-searches/admin` */
+export const POPULAR_SEARCHES_ADMIN_URL = API_BASE_URL + "/popular-searches/admin";
+
+export function popularSearchesAdminByIdUrl(id: string): string {
+  return `${API_BASE_URL}/popular-searches/admin/${encodeURIComponent(id)}`;
+}

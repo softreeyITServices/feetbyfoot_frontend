@@ -6,7 +6,6 @@ export function groupPrimaryHref(g: MenuGroup): string {
   return "#";
 }
 
-/** No own link: label only (still may open a flyout if the group has categories). */
 export function groupIsHeaderOnly(g: MenuGroup): boolean {
   return !g.href && !g.storefrontPath;
 }
@@ -22,15 +21,18 @@ export function subcategoryIsHeaderOnly(
   return !s.href && !g.storefrontPath;
 }
 
+/** Build a URL from a base path, merging any query it already carries. */
+function buildHref(base: string, extra: Record<string, string>): string {
+  const [path, existingQs] = base.split("?");
+  const qs = new URLSearchParams(existingQs ?? "");
+  for (const [k, v] of Object.entries(extra)) qs.set(k, v);
+  return `${path}?${qs.toString()}`;
+}
+
 export function categoryHref(g: MenuGroup, c: MenuCategory): string {
   if (c.href) return c.href;
   if (g.storefrontPath) {
-    const qs = new URLSearchParams();
-    // Items in this tier are actually categoryTypes (e.g. "Ankle", "12-24 Month"),
-    // not real Category documents, so they must map to the "subcategory"
-    // param (-> categoryTypeIds on the backend), not "category" (-> categoryIds).
-    qs.set("subcategory", c.id);
-    return `${g.storefrontPath}?${qs.toString()}`;
+    return buildHref(g.storefrontPath, { subcategory: c.id });
   }
   return "#";
 }
@@ -42,10 +44,7 @@ export function subcategoryHref(
 ): string {
   if (s.href) return s.href;
   if (g.storefrontPath) {
-    const qs = new URLSearchParams();
-    qs.set("category", c.id);
-    qs.set("subcategory", s.id);
-    return `${g.storefrontPath}?${qs.toString()}`;
+    return buildHref(g.storefrontPath, { subcategory: s.id });
   }
   return "#";
 }

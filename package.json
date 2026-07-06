@@ -38,6 +38,7 @@
     "react-hot-toast": "^2.6.0",
     "react-redux": "^9.2.0",
     "recharts": "^3.7.0",
+    "sharp": "^0.35.3",
     "swiper": "^12.1.0",
     "zod": "^4.3.6"
   },

@@ -70,6 +70,16 @@ export const ADMIN_NAV: AdminNavItem[] = [
     icon: MailIcon,
   },
   {
+    label: "Newsletter",
+    href: "/admin/newsletter",
+    icon: Rows3,
+  },
+  {
+    label: "Popular Searches",
+    href: "/admin/popular-searches",
+    icon: LayoutPanelTopIcon,
+  },
+  {
     label: "Settings",
     icon: SlidersHorizontal,
     children: [

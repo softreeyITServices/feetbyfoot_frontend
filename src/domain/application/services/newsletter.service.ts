@@ -25,3 +25,15 @@ class NewsletterService {
 }
 
 export const newsletterService = new NewsletterService();
+
+export class NewsletterAdminService {
+  static async getAll() {
+    const { NEWSLETTER_LIST_URL } = await import("@/constants/apis");
+    const res: any = await httpClient.request<any>({
+      url: NEWSLETTER_LIST_URL,
+      method: "GET",
+      requiresAuth: true,
+    });
+    return Array.isArray(res) ? res : res?.data ?? [];
+  }
+}

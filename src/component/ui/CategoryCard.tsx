@@ -1,4 +1,3 @@
-import { UpRightArrowIcon } from "@/icons/UpRightArrowIcon";
 import { CategoryItem } from "@/domain/shared/types/category";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,11 +22,6 @@ export default function CategoryCard({ label, image, href }: CategoryItem) {
         <span className="text-xs sm:text-sm md:text-base lg:text-lg line-clamp-1">
           {label}
         </span>
-        <UpRightArrowIcon 
-          width={18} 
-          height={18} 
-          className="sm:w-[20px] sm:h-[20px] md:w-[24px] md:h-[24px] shrink-0" 
-        />
       </span>
 
       {/* Subtle bottom gradient for modern UI */}

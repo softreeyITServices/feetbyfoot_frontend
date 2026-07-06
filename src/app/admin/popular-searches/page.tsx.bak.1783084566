@@ -1,0 +1,152 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import {
+  PopularSearchAdminService,
+  type PopularSearchAdminItem,
+} from "@/domain/application/services/popularSearch.service";
+
+export default function PopularSearchesPage() {
+  const [rows, setRows] = useState<PopularSearchAdminItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [label, setLabel] = useState("");
+  const [href, setHref] = useState("");
+
+  const load = async () => {
+    try {
+      setLoading(true);
+      setRows(await PopularSearchAdminService.getAll());
+    } catch {
+      toast.error("Failed to load popular searches");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const add = async () => {
+    if (!label.trim() || !href.trim()) {
+      toast.error("Label and link are required");
+      return;
+    }
+    try {
+      await PopularSearchAdminService.create({
+        label: label.trim(),
+        href: href.trim(),
+        order: rows.length + 1,
+      });
+      setLabel("");
+      setHref("");
+      toast.success("Added");
+      load();
+    } catch {
+      toast.error("Failed to add");
+    }
+  };
+
+  const toggle = async (r: PopularSearchAdminItem) => {
+    try {
+      await PopularSearchAdminService.update(r._id, { isActive: !r.isActive });
+      load();
+    } catch {
+      toast.error("Failed to update");
+    }
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("Delete this item?")) return;
+    try {
+      await PopularSearchAdminService.remove(id);
+      toast.success("Deleted");
+      load();
+    } catch {
+      toast.error("Failed to delete");
+    }
+  };
+
+  return (
+    <div className="p-6">
+      <h1 className="mb-4 text-2xl font-semibold">Popular Searches</h1>
+
+      {/* Add form */}
+      <div className="mb-6 flex flex-wrap gap-2 rounded border p-4">
+        <input
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder="Label (e.g. Best Sellers)"
+          className="flex-1 rounded border px-3 py-2 text-sm"
+        />
+        <input
+          value={href}
+          onChange={(e) => setHref(e.target.value)}
+          placeholder="Link (e.g. /shop?isBestseller=true)"
+          className="flex-1 rounded border px-3 py-2 text-sm"
+        />
+        <button
+          onClick={add}
+          className="rounded bg-black px-4 py-2 text-sm text-white"
+        >
+          Add
+        </button>
+      </div>
+
+      {loading ? (
+        <p>Loading…</p>
+      ) : (
+        <div className="overflow-x-auto rounded border">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-3">#</th>
+                <th className="p-3">Label</th>
+                <th className="p-3">Link</th>
+                <th className="p-3">Active</th>
+                <th className="p-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={r._id} className="border-t">
+                  <td className="p-3">{i + 1}</td>
+                  <td className="p-3">{r.label}</td>
+                  <td className="p-3 text-blue-600">{r.href}</td>
+                  <td className="p-3">
+                    <button
+                      onClick={() => toggle(r)}
+                      className={`rounded px-2 py-1 text-xs ${
+                        r.isActive
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      {r.isActive ? "Active" : "Hidden"}
+                    </button>
+                  </td>
+                  <td className="p-3">
+                    <button
+                      onClick={() => remove(r._id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-6 text-center text-gray-500">
+                    No popular searches yet
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}

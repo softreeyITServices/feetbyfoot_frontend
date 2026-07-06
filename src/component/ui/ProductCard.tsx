@@ -41,10 +41,12 @@ function ProductCard({
   home,
   wishlist,
   wishlistSelect,
-  onWishlistChange
+  onWishlistChange,
+  isBestseller,
 }: {
   home?: boolean;
   wishlist?: boolean;
+  isBestseller?: boolean;
   id: string;
   imageSrc: string;
   hoverImageSrc?: string;
@@ -190,6 +192,16 @@ function ProductCard({
         className="group relative block aspect-[3/4] sm:aspect-[4/5] w-full shrink-0 overflow-hidden rounded-md sm:rounded-lg bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
           title={title}
         >
+        {(isBestseller || discountPercentage > 0) && (
+          <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
+            {isBestseller && (
+              <span className="rounded bg-neutral-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Bestseller</span>
+            )}
+            {discountPercentage > 0 && (
+              <span className="rounded bg-red-600 px-2 py-0.5 text-[10px] font-semibold text-white">{discountPercentage}% OFF</span>
+            )}
+          </div>
+        )}
         {!imgError && imageSrc ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -246,9 +246,6 @@ export default function BannerSlider({
                 >
                   <span className="absolute inset-0 bg-[#f5c518] scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-[400ms] -z-[1]" />
                   {slide.ctaText ?? "Shop Now"}
-                  <span className="transition-transform duration-300 group-hover:translate-x-1.5">
-                    →
-                  </span>
                 </Link>
               )}
             </div>

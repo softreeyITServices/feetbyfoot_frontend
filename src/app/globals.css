@@ -1018,3 +1018,22 @@ body {
       padding: 3.5rem 1.25rem 2.5rem;
     }
   }
+/* Keep autofilled footer newsletter input dark instead of browser blue/yellow */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0px 1000px #404040 inset;
+  caret-color: #ffffff;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Keep footer newsletter input dark, not browser-blue, when autofilled */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0px 1000px #404040 inset;
+  caret-color: #ffffff;
+  transition: background-color 9999s ease-in-out 0s;
+}
