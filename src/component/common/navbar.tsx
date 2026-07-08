@@ -5,7 +5,7 @@ import Image from "next/image";
 import { ProfileIcon } from "@/icons/ProfileIcon";
 import { CartIcon } from "@/icons/CartIcon";
 import { SearchIcon } from "@/icons/SearchIcon";
-import CartDrawer from "../ui/CartDrawer";
+import CartDrawer from "../ui/drawers/CartDrawer";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { openCart, closeCart } from "@/store/slices/ui.slice";
 import { WishlistIcon } from "@/icons/WishlistIcon";
@@ -477,7 +477,8 @@ export default function Navbar() {
     setMobileMenuOpen(false);
     setMobileSearchOpen(false);
     setSearchOpen(false);
-  }, [pathname]);
+    dispatch(closeCart());
+  }, [pathname, dispatch]);
 
   const handleCart = (e: React.MouseEvent) => {
     e.preventDefault();

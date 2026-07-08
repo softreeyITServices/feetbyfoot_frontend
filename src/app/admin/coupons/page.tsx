@@ -27,9 +27,13 @@ type PendingAction =
 function ActionDropdown({
   row,
   onDelete,
+  onToggleActive,
+  onTogglePublic,
 }: {
   row: CouponRow;
   onDelete: (type: "soft" | "hard") => void;
+  onToggleActive: () => void;
+  onTogglePublic: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -76,12 +80,22 @@ function ActionDropdown({
                 <div className="py-1 text-xs">
                   <button
                     onClick={() => {
-                      onDelete("soft");
+                      onToggleActive();
                       setOpen(false);
                     }}
                     className="w-full text-left px-3 py-2 hover:bg-neutral-100"
                   >
-                    Soft Delete
+                    {row.isActive ? "Deactivate (Soft Delete)" : "Activate"}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      onTogglePublic();
+                      setOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-neutral-100"
+                  >
+                    {row.isPublic ? "Hide from Website" : "Make Public"}
                   </button>
 
                   <button
@@ -121,6 +135,7 @@ function CouponPage() {
     maxUsage: 0,
     perUserLimit: 0,
     isActive: true,
+    isPublic: true,
   });
 
   /* ================= FETCH ================= */
@@ -128,18 +143,16 @@ function CouponPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-
       const res = await CouponService.getAll();
-      console.log("res", res)
-
-      const transformed: CouponRow[] = res?.map((x) => ({
-        ...x,
-        id: x._id,
-      }));
-
-      setData(transformed);
-    } catch (err) {
-      console.error(err);
+      setData(
+        res.map((r) => ({
+          ...r,
+          id: r._id,
+        }))
+      );
+    } catch (err: any) {
+      if (isGetRequestError(err)) return;
+      toast.error(err?.message || "Failed to load coupons");
     } finally {
       setLoading(false);
     }
@@ -148,6 +161,26 @@ function CouponPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleToggleActive = async (id: string) => {
+    try {
+      await CouponService.toggleActive(id);
+      toast.success("Coupon status updated");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update status");
+    }
+  };
+
+  const handleTogglePublic = async (id: string) => {
+    try {
+      await CouponService.togglePublic(id);
+      toast.success("Coupon visibility updated");
+      fetchData();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update visibility");
+    }
+  };
 
   /* ================= ACTION HANDLER ================= */
 
@@ -186,6 +219,7 @@ function CouponPage() {
         maxUsage: 0,
         perUserLimit: 0,
         isActive: true,
+        isPublic: true,
       });
     }
   };
@@ -243,14 +277,24 @@ function CouponPage() {
       key: "isActive",
       label: "Status",
       render: (row) => (
-        <span
-          className={`px-2 py-0.5 text-xs rounded-lg ${row.isActive
-            ? "bg-emerald-50 text-emerald-700"
-            : "bg-red-50 text-red-600"
-            }`}
-        >
-          {row.isActive ? "Active" : "Inactive"}
-        </span>
+        <div className="flex flex-col gap-1">
+          <span
+            className={`px-2 py-0.5 text-[10px] rounded-lg w-fit ${row.isActive
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+              : "bg-red-50 text-red-600 border border-red-200"
+              }`}
+          >
+            {row.isActive ? "Active" : "Inactive"}
+          </span>
+          <span
+            className={`px-2 py-0.5 text-[10px] rounded-lg w-fit ${row.isPublic
+              ? "bg-blue-50 text-blue-700 border border-blue-200"
+              : "bg-gray-50 text-gray-600 border border-gray-200"
+              }`}
+          >
+            {row.isPublic ? "Public" : "Private"}
+          </span>
+        </div>
       ),
     },
 
@@ -263,6 +307,8 @@ function CouponPage() {
           onDelete={(type) => {
             setPending({ type: "DELETE", row, deleteType: type });
           }}
+          onToggleActive={() => handleToggleActive(row._id)}
+          onTogglePublic={() => handleTogglePublic(row._id)}
         />
       ),
     },
@@ -296,6 +342,7 @@ function CouponPage() {
         data={data}
         loading={loading}
         searchKeys={["code"]}
+        selectable={false}
       />
 
       {/* MODAL */}
@@ -468,26 +515,51 @@ function CouponPage() {
             </div>
 
             {/* ACTIVE TOGGLE */}
-            <div className="flex items-center justify-between border rounded-xl p-3">
-              <div>
-                <p className="text-sm font-medium">Active Coupon</p>
-                <p className="text-xs text-neutral-400">
-                  Enable or disable this coupon
-                </p>
+            <div className="flex flex-col gap-2 mt-4">
+              <div className="flex items-center justify-between border rounded-xl p-3">
+                <div>
+                  <p className="text-sm font-medium">Active Coupon</p>
+                  <p className="text-xs text-neutral-400">
+                    Enable or disable this coupon
+                  </p>
+                </div>
+
+                <button
+                  onClick={() =>
+                    setForm((p) => ({ ...p, isActive: !p.isActive }))
+                  }
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition ${form.isActive ? "bg-black" : "bg-neutral-300"
+                    }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition ${form.isActive ? "translate-x-5" : ""
+                      }`}
+                  />
+                </button>
               </div>
 
-              <button
-                onClick={() =>
-                  setForm((p) => ({ ...p, isActive: !p.isActive }))
-                }
-                className={`w-11 h-6 flex items-center rounded-full p-1 transition ${form.isActive ? "bg-black" : "bg-neutral-300"
-                  }`}
-              >
-                <div
-                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition ${form.isActive ? "translate-x-5" : ""
+              {/* PUBLIC TOGGLE */}
+              <div className="flex items-center justify-between border rounded-xl p-3">
+                <div>
+                  <p className="text-sm font-medium">Public on Website</p>
+                  <p className="text-xs text-neutral-400">
+                    If enabled, everyone can see this in the Cart drawer. If disabled, it's hidden and users must type the code manually.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() =>
+                    setForm((p) => ({ ...p, isPublic: !p.isPublic }))
+                  }
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition ${form.isPublic ? "bg-black" : "bg-neutral-300"
                     }`}
-                />
-              </button>
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition ${form.isPublic ? "translate-x-5" : ""
+                      }`}
+                  />
+                </button>
+              </div>
             </div>
           </div>
         )}

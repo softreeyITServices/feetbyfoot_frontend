@@ -12,6 +12,7 @@ export type Coupon = {
   minOrderValue: number;
   expiryDate: string;
   isActive: boolean;
+  isPublic: boolean;
   maxUsage: number;
   usedCount: number;
   perUserLimit: number;
@@ -28,6 +29,7 @@ export type CouponPayload = {
   maxUsage: number;
   perUserLimit: number;
   isActive: boolean;
+  isPublic: boolean;
 };
 
 /* ✅ API RESPONSE (matches your backend) */
@@ -49,7 +51,7 @@ export class CouponService {
   static async getAll(): Promise<Coupon[]> {
     try {
       const res :any = await httpClient.request<ApiResponse<Coupon[]>>({
-        url: COUPONS_URL,
+        url: `${COUPONS_URL}/all-admin`,
         method: "GET",
         requiresAuth: true,
       });
@@ -87,6 +89,32 @@ export class CouponService {
       });
     } catch (error) {
       throw handleApiError(error, "deleteCoupon");
+    }
+  }
+
+  /* ---------------- TOGGLE ACTIVE ---------------- */
+  static async toggleActive(id: string): Promise<void> {
+    try {
+      await httpClient.request({
+        url: `${COUPONS_URL}/${id}/toggle-active`,
+        method: "POST",
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "toggleCoupon");
+    }
+  }
+
+  /* ---------------- TOGGLE PUBLIC ---------------- */
+  static async togglePublic(id: string): Promise<void> {
+    try {
+      await httpClient.request({
+        url: `${COUPONS_URL}/${id}/toggle-public`,
+        method: "POST",
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "togglePublicCoupon");
     }
   }
 }
