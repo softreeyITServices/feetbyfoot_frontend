@@ -59,6 +59,24 @@ function extractMegaMenuDocument(input: unknown): MegaMenuDocument | null {
   return withGroups(input);
 }
 
+function mapRawMegaMenuGroups(doc: MegaMenuDocument): MegaMenuDocument {
+  const rawGroups = (doc.groups as unknown as Array<Record<string, any>>) || [];
+  const groups = rawGroups.map((g) => ({
+    id: g.categoryId ?? g.id,
+    name: g.name ?? g.label ?? "",
+    href: g.href,
+    storefrontPath: g.storefrontPath ?? (g.slug ? (["mens","womens","kids","gifts","outlet","brand"].includes(g.slug === "gift-packs" ? "gifts" : g.slug) ? `/${g.slug === "gift-packs" ? "gifts" : g.slug}` : `/shop?categoryIds=${g.categoryId ?? ""}`) : undefined),
+    categories: (g.categories ?? g.items ?? []).map((it: Record<string, any>) => ({
+      id: it.categoryTypeId ?? it.id,
+      name: it.name ?? it.label ?? "",
+      href: it.href,
+      image: it.image,
+      subcategories: it.subcategories ?? [],
+    })),
+  }));
+  return { ...doc, groups: groups as MegaMenuDocument["groups"] };
+}
+
 function extractMegaMenuList(input: unknown): MegaMenuListItem[] | null {
   const raw = unwrapNextData<unknown>(input);
   return Array.isArray(raw) ? (raw as MegaMenuListItem[]) : null;
@@ -186,7 +204,7 @@ class ProductService {
       });
 
       const doc = extractMegaMenuDocument(raw);
-      if (doc) return doc;
+      if (doc) return mapRawMegaMenuGroups(doc);
 
       throw new Error("Invalid mega menu response");
     } catch (error) {
@@ -211,7 +229,7 @@ class ProductService {
       });
 
       const doc = extractMegaMenuDocument(raw);
-      if (doc) return doc;
+      if (doc) return mapRawMegaMenuGroups(doc);
 
       throw new Error("Invalid mega menu response");
     } catch (error) {
@@ -231,7 +249,7 @@ class ProductService {
       });
 
       const doc = extractMegaMenuDocument(raw);
-      if (doc) return doc;
+      if (doc) return mapRawMegaMenuGroups(doc);
 
       throw new Error("Invalid mega menu response");
     } catch (error) {

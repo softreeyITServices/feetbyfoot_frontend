@@ -70,6 +70,16 @@ export const ADMIN_NAV: AdminNavItem[] = [
     icon: MailIcon,
   },
   {
+    label: "Newsletter",
+    href: "/admin/newsletter",
+    icon: Rows3,
+  },
+  {
+    label: "Popular Searches",
+    href: "/admin/popular-searches",
+    icon: LayoutPanelTopIcon,
+  },
+  {
     label: "Settings",
     icon: SlidersHorizontal,
     children: [
@@ -77,6 +87,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
       { label: "Home marquee", href: "/admin/settings/marquee" },
       { label: "Home Banners", href: "/admin/banners" },
       { label: "Section Banners", href: "/admin/section-banners" },
+      { label: "Customer Showcase", href: "/admin/showcase" },
       { label: "Platforms Fees", href: "/admin/platforms-fees" },
       { label: "Coupons", href: "/admin/coupons" },
     ],

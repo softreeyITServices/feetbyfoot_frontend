@@ -23,13 +23,15 @@ const COLOR_CSS_MAP: Record<string, string> = {
   Cream: "#FFFDD0",
 };
 
-function colorToCss(name: string): string {
+function colorToCss(name: string | undefined | null): string {
+  if (!name || name === "Default") return "transparent";
   return COLOR_CSS_MAP[name] ?? name.toLowerCase();
 }
 
 function ProductCard({
   id,
   imageSrc,
+  hoverImageSrc,
   altText,
   categories,
   title,
@@ -39,12 +41,15 @@ function ProductCard({
   home,
   wishlist,
   wishlistSelect,
-  onWishlistChange
+  onWishlistChange,
+  isBestseller,
 }: {
   home?: boolean;
   wishlist?: boolean;
+  isBestseller?: boolean;
   id: string;
   imageSrc: string;
+  hoverImageSrc?: string;
   size: {
     _id?: string;
     size: string;
@@ -66,7 +71,7 @@ function ProductCard({
     ? Math.round(((original - discounted) / original) * 100) 
     : 0;
 
-  const colors = [...new Set(size.map((s) => s.color).filter(Boolean))] as string[];
+  const colors = [...new Set(size.map((s) => s.color).filter((c) => c && c !== "Default"))] as string[];
 
   const [selectedColor, setSelectedColor] = useState<string | null>(colors[0] ?? null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -184,18 +189,39 @@ function ProductCard({
 
       <Link
         href={productHref}
-        className="relative block aspect-[3/4] sm:aspect-[4/5] w-full shrink-0 overflow-hidden rounded-md sm:rounded-lg bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
-        title={title}
-      >
+        className="group relative block aspect-[3/4] sm:aspect-[4/5] w-full shrink-0 overflow-hidden rounded-md sm:rounded-lg bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
+          title={title}
+        >
+        {(isBestseller || discountPercentage > 0) && (
+          <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
+            {isBestseller && (
+              <span className="rounded bg-neutral-900 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">Bestseller</span>
+            )}
+            {discountPercentage > 0 && (
+              <span className="rounded bg-red-600 px-2 py-0.5 text-[10px] font-semibold text-white">{discountPercentage}% OFF</span>
+            )}
+          </div>
+        )}
         {!imgError && imageSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageSrc}
-            alt={altText}
-            onError={() => setImgError(true)}
-            className="object-cover object-center w-full h-full"
-            loading="lazy"
-          />
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageSrc}
+              alt={altText}
+              onError={() => setImgError(true)}
+              className={`absolute inset-0 object-cover object-center w-full h-full transition-opacity duration-500 ease-out ${hoverImageSrc ? "group-hover:opacity-0" : ""}`}
+              loading="lazy"
+            />
+            {hoverImageSrc && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={hoverImageSrc}
+                alt={altText}
+                className="absolute inset-0 object-cover object-center w-full h-full opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
+                loading="lazy"
+              />
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-[10px] sm:text-xs text-center px-2">
             {altText}

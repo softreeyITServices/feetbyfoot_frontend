@@ -171,7 +171,7 @@ function ColorDot({ color }: { color?: string }) {
     <span className="inline-flex items-center gap-1">
       <span
         className="w-3 h-3 rounded-full border border-neutral-300 inline-block"
-        style={{ backgroundColor: color.toLowerCase() }}
+        style={{ backgroundColor: color ? color.toLowerCase() : "transparent" }}
       />
       {color}
     </span>

@@ -144,6 +144,7 @@ class HttpClient {
       data,
       params,
       responseType,
+      timeout: isFormData ? 60000 : undefined,
       headers: {
         ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...headers,

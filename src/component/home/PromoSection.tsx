@@ -39,7 +39,7 @@ export default function PromoCarousel() {
                 href="/shop?isNewArrival=true"
                 className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold underline underline-offset-4 w-fit text-white sm:text-[#1b5e3c] hover:text-[#00C484] transition-colors"
               >
-                Shop Now ↗
+                Shop Now
               </Link>
 
               <span className="text-lg sm:text-2xl md:text-[65px] mt-3 sm:mt-4 md:mt-0 text-white/90 sm:text-[#1b5e3c]/70 font-bold tracking-wide">
@@ -87,7 +87,7 @@ export default function PromoCarousel() {
                   href="/shop"
                   className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold underline underline-offset-4 w-fit text-[#1b5e3c] hover:text-[#00C484] transition-colors"
                 >
-                  Shop Now ↗
+                  Shop Now
                 </Link>
 
                 {/* Mobile SOCKS text */}

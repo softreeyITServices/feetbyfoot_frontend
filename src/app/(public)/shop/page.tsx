@@ -241,6 +241,7 @@ export default async function ShopPage({
                       id={product._id}
                       size={product.sizes}
                       imageSrc={product.imageUrls?.[0]}
+                      hoverImageSrc={product.imageUrls?.[1]}
                       altText={product.name}
                       categories={
                         (product.tags ?? []).length > 0

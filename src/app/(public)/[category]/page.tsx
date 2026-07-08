@@ -86,7 +86,7 @@ export async function generateMetadata({
   params: { category: string };
 }): Promise<Metadata> {
   const { category } = await params;
-  const key = category.toLowerCase() as CategoryKey;
+  const key = (category ?? "").toLowerCase() as CategoryKey;
   const config = CATEGORY_CONFIG[key];
 
   if (!config) notFound();
@@ -117,7 +117,7 @@ export default async function CategoryPage({
   };
 }) {
   const { category } = await params;
-  const key = category.toLowerCase() as CategoryKey;
+  const key = (category ?? "").toLowerCase() as CategoryKey;
   const config = CATEGORY_CONFIG[key];
 
   if (!config) notFound();
@@ -164,7 +164,11 @@ export default async function CategoryPage({
         resolvedSearchParams.gender !== undefined
           ? toArray(resolvedSearchParams.gender)
           : defaultGender
-            ? [defaultGender]
+            // All migrated products are currently tagged UNISEX only (no
+            // MENS/WOMENS/KIDS-specific data yet), so include UNISEX
+            // alongside the page's default gender or every filtered
+            // view (subcategory, age-range, etc.) returns zero results.
+            ? [defaultGender, "UNISEX"]
             : [],
       page,
       limit: perpage,
@@ -197,7 +201,8 @@ export default async function CategoryPage({
     // Preserve the default gender filter in pagination links,
     // so clicking "page 2" doesn't drop the /mens:/womens:/kids filter.
     if (resolvedSearchParams.gender === undefined && defaultGender) {
-      qs.set("gender", defaultGender);
+      qs.append("gender", defaultGender);
+      qs.append("gender", "UNISEX");
     }
     if (
       resolvedSearchParams.packType === undefined &&
@@ -288,6 +293,7 @@ export default async function CategoryPage({
                     id={product._id}
                     size={product.sizes}
                     imageSrc={product.imageUrls[0]}
+                    hoverImageSrc={product.imageUrls?.[1]}
                     altText={product.name}
                     categories={product.tags.join(", ")}
                     title={product.name}

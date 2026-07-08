@@ -173,7 +173,12 @@ export default function BlogDetailPage() {
                   </h2>
                 ) : null}
 
-                {section.content ? <p className="mt-3">{section.content}</p> : null}
+                {section.content ? (
+                  <div
+                    className="mt-3 space-y-3 [&_a]:text-emerald-700 [&_a]:underline [&_strong]:font-semibold"
+                    dangerouslySetInnerHTML={{ __html: section.content }}
+                  />
+                ) : null}
 
                 {section.bullets?.length ? (
                   <ul className="mt-3 space-y-2">

@@ -74,6 +74,7 @@ const WishlistPageClient = () => {
             id={product._id}
             size={product.sizes}
             imageSrc={product.imageUrls[0]}
+            hoverImageSrc={product.imageUrls?.[1]}
             altText={product.name}
             categories={product.tags.join(", ")}
             title={product.name}

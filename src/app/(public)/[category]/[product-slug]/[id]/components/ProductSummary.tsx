@@ -62,7 +62,7 @@ export default function ProductSummary({
 
   // Derive unique colors from all variants
   const uniqueColors = Array.from(
-    new Set(product.sizes.map((s) => s.color).filter(Boolean)),
+    new Set(product.sizes.map((s) => s.color).filter((c) => c && c !== "Default")),
   ) as string[];
 
   // Filter sizes available for the selected color
@@ -237,7 +237,7 @@ export default function ProductSummary({
                     ? "border-black scale-110"
                     : "border-gray-400 hover:border-gray-400"
                 }`}
-                style={{ backgroundColor: color.toLowerCase() }}
+                style={{ backgroundColor: color ? color.toLowerCase() : "transparent" }}
               />
             ))}
           </div>

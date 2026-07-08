@@ -1,0 +1,263 @@
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { newsletterService } from "@/domain/application/services/newsletter.service";
+import { YoutubeIcon } from "@/icons/YoutubeIcon";
+import { FacebookIcon } from "@/icons/FacebookIcon";
+import { InstagramIcon } from "@/icons/InstagramIcon";
+import { TwitterIcon } from "@/icons/TwitterIcon";
+import { LinkedinIcon } from "@/icons/LinkedinIcon";
+import FooterMenuColumns from "@/component/common/FooterMenuColumns";
+import { CmsService } from "@/domain/application/services/admin/cms.service";
+import type { CmsItem } from "@/domain/shared/types/admin/cms";
+
+/** Admin → CMS page names (underscores). */
+export const FOOTER_ABOUT_CMS_NAME = "footer_about_us";
+export const FOOTER_NEWSLETTER_CMS_NAME = "footer_newsletter";
+
+const DEFAULT_ABOUT = (
+  <>
+    At <span className="font-semibold text-yellow-400">Feet by Foot</span>, every
+    pair of socks is a canvas. We turn bold imagination into wearable art —
+    crafted to bring color, story, and originality to every step you take.
+  </>
+);
+
+/** About Us column links (left link column, like Image 1). */
+const ABOUT_LINKS = [
+  { label: "About Us", href: "/workofart" },
+  { label: "Blog", href: "/blogs" },
+  { label: "Privacy Policy", href: "/privacypolicy" },
+  { label: "Shipping Policy", href: "/shippingpolicy" },
+  { label: "Terms & Conditions", href: "/termsandconditions" },
+];
+
+/** Customer Service column links (right link column, like Image 1). */
+const SERVICE_LINKS = [
+  { label: "Help Centre", href: "/faqs" },
+  { label: "Contact Us", href: "/contactus" },
+  { label: "Returns & Refunds", href: "/refundreturnpolicy" },
+  { label: "Changes to Orders", href: "/changesorders" },
+  { label: "Size Guide", href: "/sizeguide" },
+];
+
+export default function Footer() {
+  const [about, setAbout] = useState<CmsItem | null>(null);
+  const [newsletter, setNewsletter] = useState<CmsItem | null>(null);
+  const [subscribeEmail, setSubscribeEmail] = useState("");
+  const [subscribeStatus, setSubscribeStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [subscribeError, setSubscribeError] = useState("");
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!subscribeEmail.trim()) return;
+    setSubscribeStatus("loading");
+    setSubscribeError("");
+    try {
+      await newsletterService.subscribe(subscribeEmail.trim());
+      setSubscribeStatus("success");
+      setSubscribeEmail("");
+    } catch {
+      setSubscribeStatus("error");
+      setSubscribeError("Something went wrong. Please try again.");
+    }
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      CmsService.getPublicByName(FOOTER_ABOUT_CMS_NAME),
+      CmsService.getPublicByName(FOOTER_NEWSLETTER_CMS_NAME),
+    ]).then(([a, n]) => {
+      if (!cancelled) {
+        setAbout(a);
+        setNewsletter(n);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const showAboutCms = about?.isActive === true && !!about.content?.trim();
+  const newsletterActive = newsletter?.isActive === true;
+  const newsletterHeading =
+    newsletterActive && newsletter.title?.trim()
+      ? newsletter.title.trim()
+      : "Sign up to get the latest on sales, new releases and more…";
+
+  return (
+    <footer className="mt-20">
+      {/* ---------------------------------------------------------------- */}
+      {/* TOP: category columns on white (keeps your shopping links)        */}
+      {/* ---------------------------------------------------------------- */}
+      <Image src="/assets/images/footer_bottom.png" alt="" width={1920} height={120} className="w-full h-auto" aria-hidden="true" />
+      <div className="bg-neutral-700 text-neutral-200">
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
+            <div className="min-w-0 md:w-1/4">
+              <div className="mb-4 flex items-center gap-3">
+                <Image
+                  src="/assets/images/logo.png"
+                  alt="Feet by Foot"
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 rounded-full"
+                />
+                <span className="text-2xl font-bold text-white">Feet by Foot</span>
+              </div>
+              {showAboutCms ? (
+                <div
+                  className="footer-cms text-neutral-300 leading-relaxed text-base"
+                  dangerouslySetInnerHTML={{ __html: about!.content }}
+                />
+              ) : (
+                <p className="text-neutral-300 leading-relaxed text-base">
+                  {DEFAULT_ABOUT}
+                </p>
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <FooterMenuColumns />
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      {/* ---------------------------------------------------------------- */}
+      {/* DARK BAND: About / Customer Service / Newsletter (Image 1 style)  */}
+      {/* ---------------------------------------------------------------- */}
+      <div className="bg-neutral-700 text-neutral-200">
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
+            {/* About Us links */}
+            <div>
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-widest text-white">
+                About Us
+              </h4>
+              <ul className="space-y-3 text-sm">
+                {ABOUT_LINKS.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      className="transition-colors hover:text-white"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Customer Service links */}
+            <div>
+              <h4 className="mb-4 text-xs font-semibold uppercase tracking-widest text-white">
+                Customer Service
+              </h4>
+              <ul className="space-y-3 text-sm">
+                {SERVICE_LINKS.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      className="transition-colors hover:text-white"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Newsletter + socials (spans 2 columns like Image 1) */}
+            <div className="md:col-span-2">
+              <p className="mb-4 text-sm leading-relaxed">{newsletterHeading}</p>
+
+              <form
+                onSubmit={handleSubscribe}
+                className="flex items-center border-b border-neutral-400 pb-1"
+              >
+                <input
+                  type="email"
+                  value={subscribeEmail}
+                  onChange={(e) => setSubscribeEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full bg-transparent py-2 text-sm text-white placeholder-neutral-400 outline-none"
+                  aria-label="Email address"
+                />
+                <button
+                  type="submit"
+                  disabled={subscribeStatus === "loading"}
+                  aria-label="Subscribe"
+                  className="ml-2 shrink-0 border border-neutral-400 px-2 py-1 text-neutral-200 transition-colors hover:border-white hover:text-white disabled:opacity-50"
+                >
+                  ✉
+                </button>
+              </form>
+
+              {subscribeStatus === "success" && (
+                <p className="mt-2 text-sm text-yellow-400">
+                  Thanks — you're on the list!
+                </p>
+              )}
+              {subscribeStatus === "error" && (
+                <p className="mt-2 text-sm text-red-400">{subscribeError}</p>
+              )}
+
+              {/* Social icons */}
+              <div className="mt-8 flex items-center gap-3">
+                <Link href="#" aria-label="Instagram" className="flex h-11 w-11 items-center justify-center rounded-full text-white bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 transition-transform duration-200 hover:-translate-y-1">
+                  <InstagramIcon className="h-5 w-5" />
+                </Link>
+                <Link href="#" aria-label="Facebook" className="flex h-11 w-11 items-center justify-center rounded-full text-white bg-[#1877F2] transition-transform duration-200 hover:-translate-y-1">
+                  <FacebookIcon className="h-5 w-5" />
+                </Link>
+                <Link href="#" aria-label="YouTube" className="flex h-11 w-11 items-center justify-center rounded-full text-white bg-[#FF0000] transition-transform duration-200 hover:-translate-y-1">
+                  <YoutubeIcon className="h-5 w-5" />
+                </Link>
+                <Link href="#" aria-label="Twitter" className="flex h-11 w-11 items-center justify-center rounded-full text-white bg-black transition-transform duration-200 hover:-translate-y-1">
+                  <TwitterIcon className="h-5 w-5" />
+                </Link>
+                <Link href="#" aria-label="LinkedIn" className="flex h-11 w-11 items-center justify-center rounded-full text-white bg-[#0A66C2] transition-transform duration-200 hover:-translate-y-1">
+                  <LinkedinIcon className="h-5 w-5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Country / currency line */}
+          <div className="mt-10 flex justify-center border-t border-neutral-600 pt-6">
+            <span className="text-sm text-neutral-300">India (INR ₹)</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* BOTTOM BAR: copyright + payment/ssl                               */}
+      {/* ---------------------------------------------------------------- */}
+      <div className="bg-neutral-800 text-neutral-300">
+        <div className="max-w-7xl mx-auto flex flex-col items-center justify-between gap-4 px-4 py-4 text-sm md:flex-row">
+          <p>
+            Copyright © {new Date().getFullYear()}{" "}
+            <span className="font-semibold text-white">Feet By Foot</span> All
+            Rights Reserved. Powered by{" "}
+            <span className="font-semibold text-white">
+              Elemetos Private Limited
+            </span>
+          </p>
+          <Image
+            src="/assets/images/ssl_secure.png"
+            alt="SSL Secure"
+            width={250}
+            height={40}
+          />
+        </div>
+      </div>
+    </footer>
+  );
+}
