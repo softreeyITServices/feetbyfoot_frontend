@@ -39,6 +39,8 @@ interface ProductSummaryProps {
   totalRatings: number;
   averageRating: number;
   reviews: Review[];
+  selectedColor?: string | null;
+  onColorSelect?: (color: string | null) => void;
 }
 
 export default function ProductSummary({
@@ -46,6 +48,8 @@ export default function ProductSummary({
   totalRatings,
   averageRating,
   reviews,
+  selectedColor = null,
+  onColorSelect,
 }: ProductSummaryProps) {
   const dispatch = useAppDispatch();
   const { data: session } = useSession();
@@ -53,7 +57,7 @@ export default function ProductSummary({
   const pathname = usePathname();
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  // selectedColor is now managed by parent
   const [quantity, setQuantity] = useState<number>(1);
 
   // Derive unique colors from all variants
@@ -224,7 +228,7 @@ export default function ProductSummary({
               <button
                 key={color}
                 onClick={() => {
-                  setSelectedColor(color);
+                  onColorSelect?.(color);
                   setSelectedSize(null);
                 }}
                 title={color}

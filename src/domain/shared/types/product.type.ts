@@ -1,11 +1,21 @@
 // domain/shared/types/product.type.ts
 
 export interface ProductSize {
+  _id?: string;
   size: string;
   quantity: number;
   isActive: boolean;
   color?: string;
-  isInCart?: boolean;
+  title?: string;
+  description?: string;
+  imageUrls?: string[];
+}
+
+export interface ProductColorDetail {
+  color: string;
+  title?: string;
+  description?: string;
+  imageUrls?: string[];
 }
 
 export interface Product {
@@ -17,6 +27,7 @@ export interface Product {
   color: string;
   colors?: string[];
   sizes: ProductSize[];
+  colorDetails?: ProductColorDetail[];
   price: number;
   salePrice: number;
   currency: string;

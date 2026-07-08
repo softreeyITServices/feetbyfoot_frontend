@@ -724,6 +724,11 @@ function OrderPage() {
       render: (row) => <>{row.shippingAddress.fullName}</>,
     },
     {
+      key: "phone" as any,
+      label: "Phone",
+      render: (row) => <>{row.shippingAddress?.phone || "N/A"}</>,
+    },
+    {
       key: "totalAmount",
       label: "Amount",
       render: (row) => <>₹{row.totalAmount}</>,

@@ -1,8 +1,7 @@
 // [category]/[product-slug]/[id]/page.tsx
 
 import { productService } from "@/domain/application/services/product.service";
-import ProductGallery from "./components/ProductGallery";
-import ProductSummary from "./components/ProductSummary";
+import ProductDetailView from "./components/ProductDetailView";
 import ProductTabs from "./components/ProductTabs";
 import RelatedProducts from "./components/RelatedProducts";
 import { ratingService } from "@/domain/application/services/rating.service";
@@ -38,6 +37,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     description,
     imageUrls,
     sizes,
+    colorDetails,
     brand
   } = product;
 
@@ -49,6 +49,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     description,
     images: imageUrls,
     sizes,
+    colorDetails,
     baseImage: imageUrls.length > 0 ? imageUrls[0] : "",
   };
 
@@ -65,15 +66,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <main className="max-w-7xl mx-auto px-4 py-10">
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <ProductGallery images={products.images} />
-        <ProductSummary
-          product={products}
-          totalRatings={ratingResponse?.totalRatings ?? 0}
-          averageRating={ratingResponse?.averageRating ?? 0}
-          reviews={ratingResponse?.reviews ?? []}
-        />
-      </section>
+      <ProductDetailView
+        product={products}
+        totalRatings={ratingResponse?.totalRatings ?? 0}
+        averageRating={ratingResponse?.averageRating ?? 0}
+        reviews={ratingResponse?.reviews ?? []}
+      />
 
       {relatedProducts.length > 0 && (
         <div className="mt-20">

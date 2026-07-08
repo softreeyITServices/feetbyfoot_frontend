@@ -576,11 +576,18 @@ function ColorFieldInput({
 
 const STANDARD_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "FREE"];
 
+/* =========================================================
+   SIZES INPUT
+========================================================= */
+
 type SizeRow = {
-  color: string;
   size: string;
   quantity: number;
   isActive: boolean;
+  color: string;
+  title: string;
+  description: string;
+  imageUrls: (File | string)[];
 };
 
 function SizesFieldInput({
@@ -595,17 +602,18 @@ function SizesFieldInput({
   colorOptions?: FieldOption[];
 }) {
   const rows: SizeRow[] = Array.isArray(value)
-    ? value
-      .filter((item): item is Partial<SizeRow> => !!item && typeof item === "object")
-      .map((item) => ({
+    ? value.map((item) => ({
+        size: String(item.size ?? ""),
+        quantity: Number(item.quantity) || 0,
+        isActive: item.isActive !== false,
         color: String(item.color ?? ""),
-        size: String(item.size ?? "").toUpperCase(),
-        quantity: Number(item.quantity ?? 0),
-        isActive: Boolean(item.isActive ?? true),
+        title: String(item.title ?? ""),
+        description: String(item.description ?? ""),
+        imageUrls: Array.isArray(item.imageUrls) ? item.imageUrls : [],
       }))
     : [];
 
-  const emptyRow: SizeRow = { color: "", size: "", quantity: 0, isActive: true };
+  const emptyRow: SizeRow = { size: "", quantity: 0, isActive: true, color: "", title: "", description: "", imageUrls: [] };
   const nextRows = rows.length > 0 ? rows : [emptyRow];
 
   const updateRow = (index: number, patch: Partial<SizeRow>) => {
@@ -626,108 +634,151 @@ function SizesFieldInput({
 
   return (
     <div
-      className={`rounded-xl border p-3 space-y-3 ${error ? "border-red-300 bg-red-50/20" : "border-neutral-200 bg-neutral-50/70"
-        }`}
+      className={`rounded-xl border p-3 space-y-3 ${
+        error ? "border-red-300 bg-red-50/20" : "border-neutral-200 bg-neutral-50/70"
+      }`}
     >
       {nextRows.map((row, index) => (
         <div
           key={`size-row-${index}`}
-          className="grid grid-cols-12 gap-2 items-end"
+          className="bg-white border border-neutral-200 rounded-xl p-3 relative space-y-4"
         >
-          {/* Color */}
-          <div className="col-span-12 sm:col-span-3">
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
-              Color
-            </label>
-            {colorOptions?.length ? (
-              <div className="relative">
-                <select
+          <div className="flex flex-col md:flex-row gap-3 pr-8">
+            <div className="flex-1 min-w-[120px]">
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                Color
+              </label>
+              {colorOptions?.length ? (
+                <div className="relative">
+                  <select
+                    value={row.color}
+                    onChange={(e) => updateRow(index, { color: e.target.value })}
+                    className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400 appearance-none pr-7 cursor-pointer"
+                  >
+                    <option value="" disabled>Select</option>
+                    {colorOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
+                </div>
+              ) : (
+                <input
+                  type="text"
                   value={row.color}
                   onChange={(e) => updateRow(index, { color: e.target.value })}
+                  placeholder="e.g. Red"
+                  className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400"
+                />
+              )}
+            </div>
+
+            <div className="flex-1 min-w-[120px]">
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                Size
+              </label>
+              <div className="relative">
+                <select
+                  value={row.size}
+                  onChange={(e) => updateRow(index, { size: e.target.value })}
                   className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400 appearance-none pr-7 cursor-pointer"
                 >
                   <option value="" disabled>Select</option>
-                  {colorOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
+                  <option value="XS">XS</option>
+                  <option value="S">S</option>
+                  <option value="M">M</option>
+                  <option value="L">L</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                  <option value="FREE">FREE</option>
                 </select>
                 <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
               </div>
-            ) : (
+            </div>
+
+            <div className="w-24">
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                Qty
+              </label>
               <input
-                type="text"
-                value={row.color}
-                onChange={(e) => updateRow(index, { color: e.target.value })}
-                placeholder="e.g. Black"
+                type="number"
+                min="0"
+                value={row.quantity}
+                onChange={(e) => updateRow(index, { quantity: parseInt(e.target.value) || 0 })}
                 className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400"
               />
-            )}
-          </div>
+            </div>
 
-          {/* Size */}
-          <div className="col-span-12 sm:col-span-3">
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
-              Size
-            </label>
-            <div className="relative">
-              <select
-                value={row.size}
-                onChange={(e) => updateRow(index, { size: e.target.value })}
-                className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400 appearance-none pr-7 cursor-pointer"
-              >
-                <option value="" disabled>Select</option>
-                {STANDARD_SIZES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-              <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
+            <div className="w-24">
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                Active
+              </label>
+              <label className="flex items-center h-9 px-3 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={row.isActive}
+                  onChange={(e) => updateRow(index, { isActive: e.target.checked })}
+                  className="w-3.5 h-3.5 text-amber-500 rounded border-neutral-300 focus:ring-amber-500 cursor-pointer"
+                />
+                <span className="ml-2 text-xs font-medium text-neutral-700">
+                  {row.isActive ? "Yes" : "No"}
+                </span>
+              </label>
             </div>
           </div>
 
-          {/* Quantity */}
-          <div className="col-span-6 sm:col-span-2">
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
-              Qty
-            </label>
-            <input
-              type="number"
-              min={0}
-              value={Number.isFinite(row.quantity) ? row.quantity : 0}
-              onChange={(e) =>
-                updateRow(index, { quantity: Math.max(0, Number(e.target.value || 0)) })
-              }
-              placeholder="0"
-              className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400"
-            />
-          </div>
-
-          {/* Active */}
-          <div className="col-span-4 sm:col-span-2">
-            <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
-              Active
-            </label>
-            <label className="h-9 px-3 rounded-lg border border-neutral-200 bg-white flex items-center gap-2 text-xs text-neutral-700 cursor-pointer">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-8">
+            {/* Title */}
+            <div>
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                Specific Title
+              </label>
               <input
-                type="checkbox"
-                checked={row.isActive}
-                onChange={(e) => updateRow(index, { isActive: e.target.checked })}
-                className="h-4 w-4 rounded border-neutral-300 accent-amber-500"
+                type="text"
+                value={row.title}
+                onChange={(e) => updateRow(index, { title: e.target.value })}
+                placeholder="Leave blank to use default name"
+                className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400"
               />
-              Yes
-            </label>
+            </div>
           </div>
 
-          {/* Remove */}
-          <div className="col-span-2 sm:col-span-2">
-            <button
-              type="button"
-              onClick={() => removeRow(index)}
-              className="h-9 w-full rounded-lg border border-neutral-200 bg-white hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-neutral-600 transition-all flex items-center justify-center"
-              aria-label={`Remove size row ${index + 1}`}
-            >
-              <Trash2 size={14} />
-            </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-8">
+             {/* Description */}
+             <div>
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                Specific Description
+              </label>
+              <textarea
+                value={row.description}
+                onChange={(e) => updateRow(index, { description: e.target.value })}
+                placeholder="Leave blank to use default description"
+                rows={3}
+                className="w-full py-2.5 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400 resize-none"
+              />
+            </div>
+            
+            {/* Images */}
+            <div>
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                Specific Images
+              </label>
+              <DropZone
+                field={{ key: "images", type: "image", label: "Images", multiple: true }}
+                value={row.imageUrls}
+                onChange={(files) => updateRow(index, { imageUrls: files })}
+              />
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => removeRow(index)}
+            className="absolute top-2 right-2 h-7 w-7 rounded-lg hover:bg-red-50 text-neutral-400 hover:text-red-600 transition-all flex items-center justify-center"
+            aria-label={`Remove size row ${index + 1}`}
+          >
+            <Trash2 size={14} />
+          </button>
         </div>
       ))}
 
@@ -739,6 +790,7 @@ function SizesFieldInput({
         <Plus size={13} />
         Add size
       </button>
+      {error && <p className="text-xs text-red-500 font-medium pl-1">{error}</p>}
     </div>
   );
 }
@@ -896,7 +948,7 @@ function FieldInput({
     return (
       <SizesFieldInput
         value={value}
-        onChange={(next) => onChange(next)}
+        onChange={onChange as (v: SizeRow[]) => void}
         error={error}
         colorOptions={field.options}
       />

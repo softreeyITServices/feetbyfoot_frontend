@@ -381,8 +381,13 @@ export default function CartBody() {
             router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
             return;
           }
-
-          alert(error || "Payment cancelled or failed");
+          let msg = "Payment cancelled or failed";
+          if (error && typeof error === "object") {
+            msg = error.message || error.data?.message || JSON.stringify(error.data || error);
+          } else if (typeof error === "string") {
+            msg = error;
+          }
+          toast.error(msg);
         },
       });
     } catch (error: any) {

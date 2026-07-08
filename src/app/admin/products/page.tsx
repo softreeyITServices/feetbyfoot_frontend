@@ -18,6 +18,9 @@ import type {
 } from "@/domain/shared/types/admin/category";
 import { isGetRequestError } from "@/lib/httpClientError";
 
+import Papa from "papaparse";
+import { ImportProductsModal } from "@/component/admin/modal/ImportProductsModal";
+
 const ALLOWED_PRODUCT_LENGTHS = ["ANKLE", "CALF", "NO_SHOW", "CREW"] as const;
 
 type ProductSizeInput = {
@@ -58,6 +61,7 @@ function ProductPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [categories, setCategories] = useState<AdminCategory[]>([]);
@@ -329,13 +333,35 @@ function ProductPage() {
       : [];
 
     const length = String(values.length ?? "").trim();
-    const sizes = normalizeProductSizes(values.sizes);
-    const colors = [...new Set(sizes.map((s) => s.color).filter(Boolean))];
-
-    if (sizes.length === 0) {
+    const rawSizes = Array.isArray(values.sizes) ? values.sizes : [];
+    
+    if (rawSizes.length === 0) {
       toast.error("Add at least one valid size with quantity greater than 0");
       return;
     }
+
+    const sizes = await Promise.all(
+      rawSizes.map(async (size: any) => {
+        const sizeImages = Array.isArray(size.imageUrls) ? size.imageUrls : [];
+        const uploadedSizeImages = await Promise.all(
+          sizeImages
+            .filter((v: any) => typeof v === "string" || v instanceof File)
+            .map(async (v: any) => {
+              if (typeof v === "string") return v.trim();
+              return uploadService.uploadFile(v);
+            })
+        );
+        return {
+          ...size,
+          size: String(size.size ?? "").toUpperCase(),
+          quantity: Number(size.quantity ?? 0),
+          isActive: Boolean(size.isActive ?? true),
+          imageUrls: uploadedSizeImages.filter(url => url.length > 0),
+        };
+      })
+    );
+    
+    const colors = [...new Set(sizes.map((s) => s.color).filter(Boolean))];
 
     const name = String(values.name ?? "").trim();
     const autoSlug = toSlug(name);
@@ -418,7 +444,6 @@ function ProductPage() {
       setDeleting(false);
     }
   };
-
   /* ================= COLUMNS ================= */
   const columns: Column<Product>[] = [
     // ✅ NAME + SIZE PILLS
@@ -584,6 +609,9 @@ function ProductPage() {
           size: sizeEntry.size ?? "",
           quantity: sizeEntry.quantity ?? 0,
           isActive: sizeEntry.isActive ?? true,
+          title: (sizeEntry as any).title ?? "",
+          description: (sizeEntry as any).description ?? "",
+          imageUrls: (sizeEntry as any).imageUrls ?? [],
         })) ?? [{ color: "", size: "", quantity: 0, isActive: true }],
       gstRate: String(editing.gstRate ?? 18),
     }
@@ -610,8 +638,143 @@ function ProductPage() {
       isActive: true,
     };
 
+  const handleExport = async () => {
+    try {
+      const res = await productService.getAdminProductsList({ page: 1, limit: 10000 });
+      const allProducts = res?.products || [];
+
+      if (allProducts.length === 0) {
+        toast.error("No products to export");
+        return;
+      }
+
+      const rows: any[] = [];
+
+      allProducts.forEach((product) => {
+        if (!product.sizes || product.sizes.length === 0) {
+          rows.push({
+            Handle: product.slug,
+            Name: product.name,
+            Description: product.description,
+            Brand: product.brand,
+            Price: product.price,
+            SalePrice: product.salePrice || 0,
+            Currency: product.currency || "INR",
+            Category_ID: product.categoryId,
+            CategoryType_ID: product.categoryTypeId,
+            Gender: product.gender?.join(", ") || "",
+            Tags: product.tags?.join(", ") || "",
+            Length: product.length || "",
+            BaseImageUrls: product.imageUrls?.join(", ") || "",
+            GSTRate: product.gstRate || 18,
+            IsActive: product.isActive,
+            Color: "",
+            Size: "",
+            Quantity: 0,
+            SpecificTitle: "",
+            SpecificDescription: "",
+            SpecificImageUrls: "",
+          });
+          return;
+        }
+
+        product.sizes.forEach((size, index) => {
+          rows.push({
+            Handle: product.slug,
+            Name: index === 0 ? product.name : "",
+            Description: index === 0 ? product.description : "",
+            Brand: index === 0 ? product.brand : "",
+            Price: index === 0 ? product.price : "",
+            SalePrice: index === 0 ? (product.salePrice || 0) : "",
+            Currency: index === 0 ? (product.currency || "INR") : "",
+            Category_ID: index === 0 ? product.categoryId : "",
+            CategoryType_ID: index === 0 ? product.categoryTypeId : "",
+            Gender: index === 0 ? (product.gender?.join(", ") || "") : "",
+            Tags: index === 0 ? (product.tags?.join(", ") || "") : "",
+            Length: index === 0 ? (product.length || "") : "",
+            BaseImageUrls: index === 0 ? (product.imageUrls?.join(", ") || "") : "",
+            GSTRate: index === 0 ? (product.gstRate || 18) : "",
+            IsActive: size.isActive,
+            Color: size.color,
+            Size: size.size,
+            Quantity: size.quantity,
+            SpecificTitle: size.title || "",
+            SpecificDescription: size.description || "",
+            SpecificImageUrls: size.imageUrls?.join(", ") || "",
+          });
+        });
+      });
+
+      const csv = Papa.unparse(rows);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `products_export_${new Date().toISOString().slice(0, 10)}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to export CSV");
+    }
+  };
+
+  const handleDownloadReference = () => {
+    if (!categories.length) {
+      toast.error("Categories not loaded yet");
+      return;
+    }
+    
+    let csvContent = "Category Name,Category ID,Subcategory Name,Subcategory ID\n";
+    
+    categories.forEach(cat => {
+      const relatedSubs = subcategories.filter(sub => sub.categoryId === cat._id);
+      
+      if (relatedSubs.length === 0) {
+        csvContent += `"${cat.name || ''}",${cat._id},,\n`;
+      } else {
+        relatedSubs.forEach(sub => {
+          csvContent += `"${cat.name || ''}",${cat._id},"${sub.name || ''}",${sub._id}\n`;
+        });
+      }
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "category_reference.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Reference file downloaded");
+  };
+
   return (
     <div className="space-y-6">
+      <div className="flex justify-end gap-3 mb-2">
+        <button
+          onClick={handleDownloadReference}
+          className="px-4 py-2 bg-white hover:bg-neutral-50 text-neutral-700 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 border border-neutral-200 shadow-sm"
+        >
+          Category IDs
+        </button>
+        <button
+          onClick={handleExport}
+          className="px-4 py-2 bg-white hover:bg-neutral-50 text-neutral-700 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 border border-neutral-200 shadow-sm"
+        >
+          Export CSV
+        </button>
+        <button
+          onClick={() => setImportOpen(true)}
+          className="px-4 py-2 bg-white hover:bg-neutral-50 text-neutral-700 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 border border-neutral-200 shadow-sm"
+        >
+          Import CSV
+        </button>
+      </div>
+
       <DataTable<Product & { id: string }>
         data={tableData}
         title="Products"
@@ -701,6 +864,13 @@ function ProductPage() {
         loading={deleting}
         title="Delete Product"
         description={`Are you sure you want to delete "${deleteItem?.name}"?`}
+      />
+
+      {/* ================= IMPORT MODAL ================= */}
+      <ImportProductsModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        onSuccess={() => fetchProducts()}
       />
     </div>
   );

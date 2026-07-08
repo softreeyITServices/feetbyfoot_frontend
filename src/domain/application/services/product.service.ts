@@ -410,6 +410,19 @@ class ProductService {
       throw handleApiError(error, "createProduct");
     }
   }
+
+  async createBulk(payload: { products: CreateProductPayload[] }): Promise<void> {
+    try {
+      await httpClient.request({
+        url: `${PRODUCTS_URL}/bulk`,
+        method: "POST",
+        data: payload,
+        requiresAuth: true,
+      });
+    } catch (error) {
+      throw handleApiError(error, "createBulkProducts");
+    }
+  }
 }
 
 export const productService = new ProductService();
