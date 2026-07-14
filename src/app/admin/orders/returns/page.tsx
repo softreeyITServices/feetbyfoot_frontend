@@ -331,6 +331,7 @@ function ReturnsPage() {
         columns={columns}
         data={returns}
         loading={loading}
+        selectable={false}
         paginationMode="server"
         currentPage={page}
         totalPages={meta.totalPages}

@@ -33,6 +33,7 @@ type ExchangeRow = {
 type PendingAction =
   | { type: "APPROVE"; row: ExchangeRow }
   | { type: "REJECT"; row: ExchangeRow }
+  | { type: "RECEIVED"; row: ExchangeRow }
   | { type: "PACKED"; row: ExchangeRow }
   | { type: "SHIPPED"; row: ExchangeRow }
   | { type: "DELIVERED"; row: ExchangeRow }
@@ -44,6 +45,7 @@ const STATUS_STYLE: Record<string, string> = {
   // item-level statuses
   EXCHANGE_REQUESTED:  "bg-yellow-50 text-yellow-700 border border-yellow-200",
   EXCHANGE_APPROVED:   "bg-blue-50 text-blue-700 border border-blue-200",
+  EXCHANGE_RECEIVED:   "bg-teal-50 text-teal-700 border border-teal-200",
   PACKED:              "bg-orange-50 text-orange-700 border border-orange-200",
   SHIPPED:             "bg-indigo-50 text-indigo-700 border border-indigo-200",
   DELIVERED:           "bg-teal-50 text-teal-700 border border-teal-200",
@@ -117,8 +119,18 @@ function ActionDropdown({
               </>
             )}
 
-            {/* EXCHANGE_APPROVED → can mark Packed */}
+            {/* EXCHANGE_APPROVED → can Mark as Received */}
             {itemStatus === "EXCHANGE_APPROVED" && (
+              <button
+                onClick={() => { onAction("RECEIVED"); setOpen(false); }}
+                className="w-full text-left px-3 py-2 hover:bg-neutral-100 text-teal-700"
+              >
+                📥 Mark as Received
+              </button>
+            )}
+
+            {/* EXCHANGE_RECEIVED → can mark Packed */}
+            {itemStatus === "EXCHANGE_RECEIVED" && (
               <button
                 onClick={() => { onAction("PACKED"); setOpen(false); }}
                 className="w-full text-left px-3 py-2 hover:bg-neutral-100 text-orange-700"
@@ -220,7 +232,7 @@ function ExchangePage() {
       // Flatten: one row per exchange entry
       const rows: ExchangeRow[] = (res.data ?? []).flatMap((order: ExchangeOrder) =>
         (order.exchanges ?? []).map((entry: ExchangeEntry) => ({
-          id: entry.details._id,
+          id: String(entry.details.exchangeId), // Parent Exchange document _id
           exchangeId: entry.details.exchangeId,
           customerName: order.customerName,
           orderNumber: order.orderNumber,
@@ -258,12 +270,27 @@ function ExchangePage() {
 
     try {
       if (type === "APPROVE") {
-        await ExchangeService.exchangeAction(row.orderMongoId, {
+        const result = await ExchangeService.exchangeAction(row.orderMongoId, {
           itemId: row.newItem._id,
           action: "APPROVE",
         });
-        toast.success("Exchange approved");
 
+        // The approval always succeeds; the courier pickup may not. Saying
+        // "approved" alone would leave nobody aware that no pickup exists.
+        if (result?.pickupScheduled === false) {
+          toast.error(
+            `Exchange approved, but no pickup was booked: ${
+              result.pickupError ?? "courier did not respond"
+            }. Schedule it manually.`,
+            { duration: 8000 },
+          );
+        } else {
+          toast.success(
+            result?.pickupAwb
+              ? `Exchange approved. Pickup booked (${result.pickupAwb})`
+              : "Exchange approved",
+          );
+        }
       } else if (type === "REJECT") {
         if (!form.rejectReason) {
           toast.error("Reject reason required");
@@ -275,6 +302,12 @@ function ExchangePage() {
           reason: form.rejectReason,
         });
         toast.success("Exchange rejected");
+
+      } else if (type === "RECEIVED") {
+        // Updates the order item's status to EXCHANGE_RECEIVED, updates exchange status to RECEIVED,
+        // and restores the old returned item's stock in inventory on the backend.
+        await ExchangeService.updateItemStatus(row.orderMongoId, row.newItem._id, "EXCHANGE_RECEIVED");
+        toast.success("Marked as Received — Old Stock Restored");
 
       } else if (type === "PACKED") {
         await ExchangeService.updateItemStatus(row.orderMongoId, row.newItem._id, "PACKED");
@@ -361,6 +394,21 @@ function ExchangePage() {
           {row.newItem?.status?.replace(/_/g, " ")}
         </span>
       ),
+    },
+
+    {
+      key: "details",
+      label: "Courier Status",
+      render: (row) => {
+        const courierStatus = row.newItem?.packageStatus;
+        return (
+          <span
+            className={`px-2 py-0.5 text-xs rounded-lg whitespace-nowrap bg-neutral-100 text-neutral-700`}
+          >
+            {courierStatus ? courierStatus.replace(/_/g, " ") : "—"}
+          </span>
+        );
+      },
     },
 
     {
@@ -607,6 +655,9 @@ function ExchangePage() {
 
             {pending.type === "APPROVE" && (
               <p className="text-blue-600">✅ Approve this exchange request? Stock will be reserved.</p>
+            )}
+            {pending.type === "RECEIVED" && (
+              <p className="text-teal-600">📥 Mark this exchange item as Received at warehouse? Old item stock will be restored.</p>
             )}
             {pending.type === "PACKED" && <p className="text-orange-600">📦 Mark this exchange item as Packed?</p>}
             {pending.type === "SHIPPED" && (

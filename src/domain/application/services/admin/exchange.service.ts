@@ -47,6 +47,7 @@ export type ExchangeItemInfo = {
   currency: string;
   status: string;
   waybill?: string;
+  packageStatus?: string;
 };
 
 export type ExchangeEntry = {
@@ -86,6 +87,19 @@ export type Exchange = ExchangeOrder;
    SERVICE
 ========================================================= */
 
+/**
+ * Approving an exchange also books a courier pickup. The approval is a business
+ * decision and stands even when the courier call fails — but a silent failure
+ * means no pickup is ever scheduled and nobody finds out, so the backend now
+ * reports it and the UI has to show it.
+ */
+export interface ExchangeActionResult {
+  message: string;
+  pickupScheduled?: boolean;
+  pickupAwb?: string | null;
+  pickupError?: string | null;
+}
+
 export class ExchangeService {
   /* ---------------- GET ALL ---------------- */
   static async getAll(
@@ -118,9 +132,9 @@ export class ExchangeService {
   static async exchangeAction(
     orderId: string,
     payload: { itemId: string; action: string; reason?: string }
-  ): Promise<void> {
+  ): Promise<ExchangeActionResult> {
     try {
-      await httpClient.request({
+      return await httpClient.request<ExchangeActionResult>({
         url: `${API_BASE_URL}/Admin/${orderId}/exchange-action`,
         method: "POST",
         data: payload,
@@ -153,7 +167,7 @@ export class ExchangeService {
   ): Promise<void> {
     try {
       await httpClient.request({
-        url: `${ADMIN_EXCHANGES_URL}/${id}/approve`,
+        url: `${API_BASE_URL}/admin/exchanges/${id}/approve`,
         method: "PATCH",
         data: { adminNotes },
         requiresAuth: true,
@@ -170,7 +184,7 @@ export class ExchangeService {
   ): Promise<void> {
     try {
       await httpClient.request({
-        url: `${ADMIN_EXCHANGES_URL}/${id}/reject`,
+        url: `${API_BASE_URL}/admin/exchanges/${id}/reject`,
         method: "PATCH",
         data: { rejectReason },
         requiresAuth: true,
@@ -187,7 +201,7 @@ export class ExchangeService {
   ): Promise<void> {
     try {
       await httpClient.request({
-        url: `${ADMIN_EXCHANGES_URL}/${id}/pickup`,
+        url: `${API_BASE_URL}/admin/exchanges/${id}/pickup`,
         method: "PATCH",
         data: payload,
         requiresAuth: true,
@@ -204,7 +218,7 @@ export class ExchangeService {
   ): Promise<void> {
     try {
       await httpClient.request({
-        url: `${ADMIN_EXCHANGES_URL}/${id}/replacement`,
+        url: `${API_BASE_URL}/admin/exchanges/${id}/replacement`,
         method: "PATCH",
         data: payload,
         requiresAuth: true,
@@ -218,7 +232,7 @@ export class ExchangeService {
   static async shipReplacement(id: string): Promise<void> {
     try {
       await httpClient.request({
-        url: `${ADMIN_EXCHANGES_URL}/${id}/ship-replacement`,
+        url: `${API_BASE_URL}/admin/exchanges/${id}/ship-replacement`,
         method: "PATCH",
         data: {},
         requiresAuth: true,
@@ -235,7 +249,7 @@ export class ExchangeService {
   ): Promise<void> {
     try {
       await httpClient.request({
-        url: `${ADMIN_EXCHANGES_URL}/${id}/status`,
+        url: `${API_BASE_URL}/admin/exchanges/${id}/status`,
         method: "PATCH",
         data: payload,
         requiresAuth: true,
@@ -249,7 +263,7 @@ export class ExchangeService {
   static async updateItemStatus(
     orderId: string,
     itemId: string,
-    status: "PACKED" | "SHIPPED" | "DELIVERED"
+    status: "PACKED" | "SHIPPED" | "DELIVERED" | "EXCHANGE_RECEIVED"
   ): Promise<void> {
     try {
       await httpClient.request({

@@ -12,6 +12,7 @@ import {
   LayoutPanelTopIcon,
   Users,
   Rows3,
+  TruckIcon,
 } from "lucide-react";
 
 export interface AdminNavChild {
@@ -55,6 +56,17 @@ export const ADMIN_NAV: AdminNavItem[] = [
     ],
   },
   {
+    label: "Delivery",
+    icon: TruckIcon,
+    children: [
+      { label: "Shipments", href: "/admin/delivery" },
+      // First in importance, not in the list: an unactioned failed delivery
+      // becomes an automatic return, and on COD that is a total loss.
+      { label: "Failed Deliveries", href: "/admin/delivery/ndr" },
+      { label: "COD Reconciliation", href: "/admin/delivery/cod" },
+    ],
+  },
+  {
     label: "CMS",
     href: "/admin/cms",
     icon: LayoutPanelTopIcon,
@@ -90,6 +102,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
       { label: "Customer Showcase", href: "/admin/showcase" },
       { label: "Platforms Fees", href: "/admin/platforms-fees" },
       { label: "Coupons", href: "/admin/coupons" },
+      { label: "Profile Settings", href: "/admin/settings/profile" },
     ],
   },
 ];

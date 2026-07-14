@@ -149,19 +149,24 @@ export default function AdminSidebar({ collapsed }: AdminSidebarProps) {
 
       {/* Bottom section */}
       <div className="p-3 border-t border-white/6">
-        <div className="rounded-lg bg-white/4 px-3 py-2.5 flex items-center gap-3">
-          <div className="w-6 h-6 rounded-full bg-linear-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0">
-            <span className="text-white text-[10px] font-bold">{initials}</span>
+        <Link
+          href="/admin/settings/profile"
+          className="rounded-lg bg-white/4 px-3 py-2.5 flex items-center gap-3 hover:bg-white/10 transition-all duration-150 group cursor-pointer block"
+        >
+          <div className="flex items-center gap-3 w-full">
+            <div className="w-6 h-6 rounded-full bg-linear-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0">
+              <span className="text-white text-[10px] font-bold">{initials}</span>
+            </div>
+            <div className="overflow-hidden flex-1">
+              <p className="text-[12px] font-medium text-neutral-200 truncate group-hover:text-amber-400 transition-colors duration-150">
+                {user?.name || "Admin"}
+              </p>
+              <p className="text-[11px] text-neutral-500 truncate">
+                {user?.email || ""}
+              </p>
+            </div>
           </div>
-          <div className="overflow-hidden">
-            <p className="text-[12px] font-medium text-neutral-200 truncate">
-              {user?.name || "Admin"}
-            </p>
-            <p className="text-[11px] text-neutral-500 truncate">
-              {user?.email || ""}
-            </p>
-          </div>
-        </div>
+        </Link>
       </div>
     </aside>
   );
