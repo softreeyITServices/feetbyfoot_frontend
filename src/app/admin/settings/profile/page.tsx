@@ -18,10 +18,11 @@ export default function ProfileSettingsPage() {
 
   useEffect(() => {
     if (session?.user) {
+      const user = session.user as any;
       setFormData({
-        name: session.user.name || "",
-        email: session.user.email || "",
-        phone: session.user.phone || "",
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
       });
     }
   }, [session]);
@@ -73,9 +74,9 @@ export default function ProfileSettingsPage() {
           email: formData.email.trim(),
           phone: formData.phone.trim(),
         });
-        toast.success(response.message || "Profile updated successfully!");
+        toast.success(response.data?.message || "Profile updated successfully!");
       } else {
-        toast.error(response.message || "Failed to update profile");
+        toast.error(response.data?.message || "Failed to update profile");
       }
     } catch (error: any) {
       toast.error(error?.message || "Something went wrong. Please try again.");
