@@ -73,9 +73,9 @@ export default function ProfileSettingsPage() {
           email: formData.email.trim(),
           phone: formData.phone.trim(),
         });
-        toast.success(response.message || "Profile updated successfully!");
+        toast.success(response.data?.message || "Profile updated successfully!");
       } else {
-        toast.error(response.message || "Failed to update profile");
+        toast.error(response.data?.message || "Failed to update profile");
       }
     } catch (error: any) {
       toast.error(error?.message || "Something went wrong. Please try again.");
