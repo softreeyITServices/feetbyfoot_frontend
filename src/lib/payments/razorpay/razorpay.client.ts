@@ -156,7 +156,12 @@ export const startRazorpayCheckout = async ({
       },
     };
 
-    const rzp = new window.Razorpay(options);
+    if (typeof window.Razorpay !== "function") {
+        onFailure?.("Payment gateway is still loading. Please try again in a moment.");
+        return;
+      }
+
+      const rzp = new window.Razorpay(options);
 
     rzp.on("payment.failed", function (response: any) {
       console.error("Payment Failed:", response.error);

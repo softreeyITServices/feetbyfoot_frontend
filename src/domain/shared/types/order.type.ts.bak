@@ -263,10 +263,4 @@ export type ExchangeOrderResponse = {
 
 export type GenericMessageResponse = {
   message: string;
-  logisticsSummary?: {
-    total: number;
-    successfulShipments: number;
-    failedShipments: number;
-    errors?: { orderId: string; error: string }[];
-  };
 };

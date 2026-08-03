@@ -664,22 +664,10 @@ function OrderPage() {
         ],
       };
 
-      const response = await ordersService.updateOrderStatus(payload);
-
-      const failedCount = response?.logisticsSummary?.failedShipments ?? 0;
-      if (failedCount > 0) {
-        const firstError = response?.logisticsSummary?.errors?.[0]?.error;
-        toast.error(
-          `Shipment failed for ${failedCount} item(s)${firstError ? `: ${firstError}` : ""}`
-        );
-      } else if (status === OrderStatus.SHIPPED) {
-        toast.success("Order shipped successfully");
-      }
-
+      await ordersService.updateOrderStatus(payload);
       fetchOrders();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update order status");
     }
   };
 
