@@ -86,13 +86,25 @@ export default function LoginForm() {
 
       // 2. If it's phone, use Firebase to send SMS
       if (authType === 'phone') {
-        const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible',
-        });
+        let recaptchaVerifier = (window as any).recaptchaVerifier;
+        if (!recaptchaVerifier) {
+          recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            size: 'invisible',
+          });
+          (window as any).recaptchaVerifier = recaptchaVerifier;
+        }
 
-        const result = await signInWithPhoneNumber(auth, identifier, recaptchaVerifier);
-        setConfirmationResult(result);
-        setSuccess("OTP sent successfully to your phone!");
+        try {
+          const result = await signInWithPhoneNumber(auth, identifier, recaptchaVerifier);
+          setConfirmationResult(result);
+          setSuccess("OTP sent successfully to your phone!");
+        } catch (phoneErr) {
+          try {
+            recaptchaVerifier.clear();
+          } catch {}
+          (window as any).recaptchaVerifier = null;
+          throw phoneErr;
+        }
       } else {
         setSuccess("OTP sent successfully! Check your email.");
       }
