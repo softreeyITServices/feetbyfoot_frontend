@@ -14,6 +14,8 @@ import { wishlistService } from "@/domain/application/services/wishlist.service"
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
 
+import { formatImageUrl } from "@/lib/imageUrlFormatter";
+
 const COLOR_CSS_MAP: Record<string, string> = {
   Mint: "#98FF98",
   Peach: "#FFDAB9",
@@ -206,7 +208,7 @@ function ProductCard({
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={imageSrc}
+              src={formatImageUrl(imageSrc)}
               alt={altText}
               onError={() => setImgError(true)}
               className={`absolute inset-0 object-cover object-center w-full h-full transition-opacity duration-500 ease-out ${hoverImageSrc ? "group-hover:opacity-0" : ""}`}
@@ -215,7 +217,7 @@ function ProductCard({
             {hoverImageSrc && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={hoverImageSrc}
+                src={formatImageUrl(hoverImageSrc)}
                 alt={altText}
                 className="absolute inset-0 object-cover object-center w-full h-full opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
                 loading="lazy"

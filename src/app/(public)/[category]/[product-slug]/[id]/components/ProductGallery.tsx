@@ -2,25 +2,27 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { formatImageUrl } from "@/lib/imageUrlFormatter";
 
 export default function ProductGallery({
   images,
 }: {
   images: string[];
 }) {
-  const [mainImage, setMainImage] = useState(images[0] || "");
+  const formattedImages = images.map((img) => formatImageUrl(img));
+  const [mainImage, setMainImage] = useState(formattedImages[0] || "");
 
   useEffect(() => {
-    setMainImage(images[0] || "");
+    setMainImage(formattedImages[0] || "");
   }, [images]);
 
-  if (!images.length) return null;
+  if (!formattedImages.length) return null;
 
   return (
     <div className="flex gap-4">
       {/* Thumbnails */}
       <div className="flex flex-col gap-3">
-        {images.map((img) => (
+        {formattedImages.map((img) => (
           <div
             key={img}
             onClick={() => setMainImage(img)}
@@ -33,6 +35,7 @@ export default function ProductGallery({
               fill
               alt="Thumbnail"
               className="object-cover"
+              unoptimized
             />
           </div>
         ))}
@@ -46,6 +49,7 @@ export default function ProductGallery({
           alt="Product image"
           className="object-cover transition-transform duration-300 ease-out group-hover:scale-125"
           priority
+          unoptimized
         />
       </div>
     </div>

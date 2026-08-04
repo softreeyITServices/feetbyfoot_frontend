@@ -144,7 +144,7 @@ export default function AdminDeliveryPage() {
       render: (r) => `₹${Number(r.totalAmount).toFixed(2)}`,
     },
     {
-      key: "shippingCharge",
+      key: "shippingCharge" as any,
       label: "Shipping Charge",
       render: (r) => {
         const chargePaise = r.delhivery?.shippingChargePaise;
