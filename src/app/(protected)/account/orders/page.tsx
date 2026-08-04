@@ -284,9 +284,12 @@ export default function OrdersPage() {
                         const isExchanging = item.exchangeRequests && item.exchangeRequests.length > 0;
                         const isReturning = ["RETURN_REQUESTED", "RETURN_APPROVED", "RETURN_RECEIVED"].includes(item.status);
                         
-                        // Hide original waybill if it's an active exchange (not yet shipped) 
-                        // or if it's a return (as the waybill now refers to the PICKUP)
-                        const hideOriginalWaybill = (isExchanging && !["SHIPPED", "DELIVERED", "COMPLETED"].includes(item.status)) || status === "PACKED";
+                        // Hide original waybill if it's an active exchange (not yet shipped), 
+                        // if the order is only packed, or if a return is requested but not yet approved.
+                        const hideOriginalWaybill = 
+                          (isExchanging && !["SHIPPED", "DELIVERED", "COMPLETED"].includes(item.status)) || 
+                          status === "PACKED" || 
+                          item.status === "RETURN_REQUESTED";
 
                         if (item.waybill && !hideOriginalWaybill && !seenWaybills.has(item.waybill)) {
                           seenWaybills.add(item.waybill);

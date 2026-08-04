@@ -23,6 +23,9 @@ import {
   IndianRupee,
   ArrowUpRight,
   ArrowDownRight,
+  RefreshCw,
+  CreditCard,
+  XCircle,
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
@@ -317,6 +320,42 @@ export default function AdminDashboard() {
             summary?.productsListed.trend ?? "same"
           )}
           accent="bg-purple-500"
+        />
+        <StatCard
+          label="COD Refunded"
+          value={`₹${formatNumber(summary?.totalRefundedCod?.current ?? 0)}`}
+          sub={`Previous: ₹${formatNumber(summary?.totalRefundedCod?.previous ?? 0)}`}
+          icon={RefreshCw}
+          trend={summary?.totalRefundedCod?.trend ?? "same"}
+          trendVal={formatTrendVal(
+            summary?.totalRefundedCod?.changePercent ?? 0,
+            summary?.totalRefundedCod?.trend ?? "same"
+          )}
+          accent="bg-orange-500"
+        />
+        <StatCard
+          label="Online Refunded"
+          value={`₹${formatNumber(summary?.totalRefundedOnline?.current ?? 0)}`}
+          sub={`Previous: ₹${formatNumber(summary?.totalRefundedOnline?.previous ?? 0)}`}
+          icon={CreditCard}
+          trend={summary?.totalRefundedOnline?.trend ?? "same"}
+          trendVal={formatTrendVal(
+            summary?.totalRefundedOnline?.changePercent ?? 0,
+            summary?.totalRefundedOnline?.trend ?? "same"
+          )}
+          accent="bg-teal-500"
+        />
+        <StatCard
+          label="Cancelled Orders"
+          value={formatNumber(summary?.totalCancelledOrders?.current ?? 0)}
+          sub={`Previous: ${formatNumber(summary?.totalCancelledOrders?.previous ?? 0)}`}
+          icon={XCircle}
+          trend={summary?.totalCancelledOrders?.trend ?? "same"}
+          trendVal={formatTrendVal(
+            summary?.totalCancelledOrders?.changePercent ?? 0,
+            summary?.totalCancelledOrders?.trend ?? "same"
+          )}
+          accent="bg-rose-500"
         />
       </div>
 

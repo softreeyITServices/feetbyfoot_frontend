@@ -14,6 +14,9 @@ export interface AdminDashboardSummary {
   totalOrders: DashboardMetric;
   newCustomers: DashboardMetric;
   productsListed: DashboardMetric;
+  totalRefundedCod?: DashboardMetric;
+  totalRefundedOnline?: DashboardMetric;
+  totalCancelledOrders?: DashboardMetric;
 }
 
 export interface RevenueVsOrdersPoint {

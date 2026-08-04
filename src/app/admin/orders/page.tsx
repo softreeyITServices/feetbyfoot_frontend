@@ -664,6 +664,7 @@ function OrderPage() {
         ],
       };
 
+<<<<<<< HEAD
       const response = await ordersService.updateOrderStatus(payload);
 
       const failedCount = response?.logisticsSummary?.failedShipments ?? 0;
@@ -676,10 +677,27 @@ function OrderPage() {
         toast.success("Order shipped successfully");
       }
 
+=======
+      const res: any = await ordersService.updateOrderStatus(payload);
+      
+      // Check for Delhivery / logistics error details in response
+      if (res?.logisticsSummary?.failedShipments > 0 && res?.logisticsSummary?.errors?.length > 0) {
+        const errObj = res.logisticsSummary.errors[0];
+        const errorMsg = errObj?.error || "Failed to create shipment";
+        toast.error(`Shipment Error: ${errorMsg}`, { duration: 6000 });
+      } else {
+        toast.success(`Order status updated to ${status}`);
+      }
+      
+>>>>>>> b37ddc27b173060c63d31cb0f3b80267b1042c55
       fetchOrders();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+<<<<<<< HEAD
       toast.error("Failed to update order status");
+=======
+      toast.error(err?.message || "Failed to update order status");
+>>>>>>> b37ddc27b173060c63d31cb0f3b80267b1042c55
     }
   };
 
