@@ -25,9 +25,30 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://feetbyfoot.com";
+
 export const metadata: Metadata = {
-  title: "Feet by Foot - Joy in Every Step",
-  description: "2026 SEASON SALE",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Feet by Foot - Joy in Every Step",
+    template: "%s | Feet by Foot",
+  },
+  description: "Discover premium footwear at Feet by Foot. Joy in every step.",
+  alternates: {
+    canonical: "./",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: siteUrl,
+    siteName: "Feet by Foot",
+    title: "Feet by Foot - Joy in Every Step",
+    description: "Discover premium footwear at Feet by Foot. Joy in every step.",
+  },
 };
 
 export default function RootLayout({
@@ -35,8 +56,22 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const orgSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Feet by Foot",
+    "url": siteUrl,
+    "logo": `${siteUrl}/favicon.ico`,
+  };
+
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+        />
+      </head>
       <body className={`${inter.variable} antialiased`}>
 
         <AuthProvider>

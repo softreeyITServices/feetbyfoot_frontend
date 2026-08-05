@@ -7,8 +7,10 @@ import { Maximize2, X } from "lucide-react";
 
 export default function ProductGallery({
   images,
+  productName = "Product",
 }: {
   images: string[];
+  productName?: string;
 }) {
   const formattedImages = images.map((img) => formatImageUrl(img));
   const [mainImage, setMainImage] = useState(formattedImages[0] || "");
@@ -43,7 +45,7 @@ export default function ProductGallery({
                 <Image
                   src={img}
                   fill
-                  alt={`Thumbnail ${index + 1}`}
+                  alt={`${productName} thumbnail ${index + 1}`}
                   className="object-contain p-1.5"
                   unoptimized
                 />
@@ -75,7 +77,7 @@ export default function ProductGallery({
           <Image
             src={mainImage}
             fill
-            alt="Product image"
+            alt={`${productName} main view`}
             className="object-contain p-4 transition-transform duration-500 ease-out group-hover:scale-105 cursor-zoom-in"
             onClick={() => setIsZoomed(true)}
             priority
@@ -106,7 +108,7 @@ export default function ProductGallery({
             <Image
               src={mainImage}
               fill
-              alt="Zoomed product view"
+              alt={`${productName} zoomed preview`}
               className="object-contain"
               unoptimized
             />

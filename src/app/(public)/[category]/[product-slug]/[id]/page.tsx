@@ -1,10 +1,10 @@
-// [category]/[product-slug]/[id]/page.tsx
-
+import type { Metadata } from "next";
 import { productService } from "@/domain/application/services/product.service";
 import ProductDetailView from "./components/ProductDetailView";
 import ProductTabs from "./components/ProductTabs";
 import RelatedProducts from "./components/RelatedProducts";
 import { ratingService } from "@/domain/application/services/rating.service";
+import { formatImageUrl } from "@/lib/imageUrlFormatter";
 
 interface ProductPageProps {
   params: {
@@ -16,6 +16,44 @@ interface ProductPageProps {
 
 const isValidObjectId = (id: string) => /^[a-f\d]{24}$/i.test(id);
 
+export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+  const { id } = await params;
+  if (!isValidObjectId(id)) {
+    return { title: "Product Not Found | Feet by Foot" };
+  }
+
+  try {
+    const response = await productService.getProductById(id);
+    const product = response?.product;
+    if (!product) return { title: "Product | Feet by Foot" };
+
+    const title = `${product.name} | Feet by Foot`;
+    const description = product.description
+      ? product.description.slice(0, 155)
+      : `Shop ${product.name} online at Feet by Foot. Premium quality footwear.`;
+    const firstImage = product.imageUrls?.[0] ? formatImageUrl(product.imageUrls[0]) : "";
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "article",
+        images: firstImage ? [{ url: firstImage, alt: product.name }] : [],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: firstImage ? [firstImage] : [],
+      },
+    };
+  } catch (error) {
+    return { title: "Product | Feet by Foot" };
+  }
+}
+
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
 
@@ -24,7 +62,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   const response = await productService.getProductById(id);
-  console.log("response", response);
   const ratingResponse = await ratingService.getRatingsByProductId(id);
 
   const { product, categoriesProducts } = response;
@@ -64,8 +101,43 @@ export default async function ProductPage({ params }: ProductPageProps) {
     size: p.sizes || [],
   })) || [];
 
+  const formattedImages = imageUrls?.map((img: string) => formatImageUrl(img)) || [];
+
+  const jsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": name,
+    "image": formattedImages,
+    "description": description,
+    "brand": {
+      "@type": "Brand",
+      "name": brand || "Feet by Foot",
+    },
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "INR",
+      "price": salePrice || price,
+      "availability": "https://schema.org/InStock",
+      "itemCondition": "https://schema.org/NewCondition",
+    },
+    ...(ratingResponse?.totalRatings > 0
+      ? {
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": ratingResponse.averageRating,
+            "reviewCount": ratingResponse.totalRatings,
+          },
+        }
+      : {}),
+  };
+
   return (
     <main className="max-w-7xl mx-auto px-4 py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <ProductDetailView
         product={products}
         totalRatings={ratingResponse?.totalRatings ?? 0}
