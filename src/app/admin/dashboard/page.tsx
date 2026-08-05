@@ -429,19 +429,41 @@ export default function AdminDashboard() {
           </div>
         </div>
          <div className="xl:col-span-3 bg-white rounded-2xl border border-neutral-100 p-5">
-          <div className="mb-5">
-            <h2 className="text-sm font-semibold text-neutral-800">Top Products by Sales</h2>
-            <p className="text-xs text-neutral-400 mt-0.5">Units sold over last 6 months</p>
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-neutral-800">Top Products by Sales</h2>
+              <p className="text-xs text-neutral-400 mt-0.5">Units sold over last 6 months</p>
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={topProducts} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
-              <XAxis type="number" tick={{ fontSize: 11, fill: "#a3a3a3" }} axisLine={false} tickLine={false} />
-              <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} width={130} />
-              <Tooltip cursor={{ fill: "#fef9ec" }} formatter={(v) => [`${v} units`, "Sales"]} />
-              <Bar dataKey="sales" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={14} />
-            </BarChart>
-          </ResponsiveContainer>
+          {topProducts.length === 0 ? (
+            <div className="h-48 flex items-center justify-center text-xs text-neutral-400">
+              No product sales data available
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={Math.max(280, topProducts.length * 42)}>
+              <BarChart data={topProducts} layout="vertical" margin={{ top: 0, right: 20, left: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
+                <XAxis type="number" tick={{ fontSize: 11, fill: "#a3a3a3" }} axisLine={false} tickLine={false} />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tick={{ fontSize: 11, fill: "#6b7280" }}
+                  tickFormatter={(val: string) => (val && val.length > 24 ? `${val.slice(0, 24)}…` : val)}
+                  axisLine={false}
+                  tickLine={false}
+                  width={160}
+                />
+                <Tooltip
+                  cursor={{ fill: "#fef9ec" }}
+                  formatter={(v: any, _name: any, item: any) => [
+                    `${formatNumber(Number(v))} units (₹${formatNumber(item?.payload?.revenue || 0)})`,
+                    "Sales",
+                  ]}
+                />
+                <Bar dataKey="sales" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={16} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
     </div>
