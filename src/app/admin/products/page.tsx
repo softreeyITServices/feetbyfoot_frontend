@@ -166,6 +166,7 @@ function ProductPage() {
 
   const PRODUCT_FIELDS: FormField[] = [
     { key: "name", label: "Name", type: "text", required: true, cols: 1 },
+    { key: "sku", label: "SKU / Item Code", type: "text", required: false, cols: 1, placeholder: "e.g. SKU-1001" },
     { key: "slug", label: "Slug", type: "text", required: true, cols: 1 },
 
     { key: "brand", label: "Brand", type: "text", required: true, cols: 1 },
@@ -453,15 +454,28 @@ function ProductPage() {
       sortable: true,
       render: (row) => (
         <div className="space-y-1">
-          <div className="font-medium">{row.name}</div>
+          <div className="font-medium flex items-center gap-2">
+            <span>{row.name}</span>
+            {row.sku && (
+              <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded font-mono">
+                {row.sku}
+              </span>
+            )}
+          </div>
 
           <div className="flex flex-wrap gap-1">
-            {row.sizes?.map((size) => (
+            {row.sizes?.map((size, idx) => (
               <span
-                key={size.size}
-                className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700"
+                key={size._id || `${size.color}-${size.size}-${idx}`}
+                className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 flex items-center gap-1"
+                title={size.sku ? `Variant SKU: ${size.sku}` : undefined}
               >
-                {size.size} ({size.quantity})
+                <span>{size.color ? `${size.color} / ` : ""}{size.size} ({size.quantity})</span>
+                {size.sku && (
+                  <span className="text-[9px] font-mono bg-gray-200 text-gray-800 px-1 rounded">
+                    {size.sku}
+                  </span>
+                )}
               </span>
             ))}
           </div>
@@ -607,12 +621,13 @@ function ProductPage() {
         editing.sizes?.map((sizeEntry) => ({
           color: (sizeEntry as ProductSizeInput).color ?? "",
           size: sizeEntry.size ?? "",
+          sku: (sizeEntry as any).sku ?? "",
           quantity: sizeEntry.quantity ?? 0,
           isActive: sizeEntry.isActive ?? true,
           title: (sizeEntry as any).title ?? "",
           description: (sizeEntry as any).description ?? "",
           imageUrls: (sizeEntry as any).imageUrls ?? [],
-        })) ?? [{ color: "", size: "", quantity: 0, isActive: true }],
+        })) ?? [{ color: "", size: "", sku: "", quantity: 0, isActive: true }],
       gstRate: String(editing.gstRate ?? 18),
     }
     : {
@@ -626,7 +641,7 @@ function ProductPage() {
       categoryTypeIds: [],
       gstRate: "18",
       length: "",
-      sizes: [{ color: "", size: "", quantity: 0, isActive: true }],
+      sizes: [{ color: "", size: "", sku: "", quantity: 0, isActive: true }],
       gender: [],
       tags: [],
       imageUrls: [],
@@ -780,7 +795,7 @@ function ProductPage() {
         title="Products"
         columns={columns}
         loading={loading}
-        searchKeys={["name", "brand"]}
+        searchKeys={["name", "brand", "sku"]}
         onSearchChange={setSearchQuery}
         onAdd={() => {
           setEditing(null);

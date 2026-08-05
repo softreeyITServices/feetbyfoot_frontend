@@ -94,12 +94,19 @@ export function DataTable<T extends { id: string | number }>({
 
     const q = search.toLowerCase();
 
-    return data.filter((row) =>
-      searchKeys.some((k) =>
-        String(row[k] ?? "")
-          .toLowerCase()
-          .includes(q)
-      )
+    return data.filter((row: any) =>
+      searchKeys.some((k) => {
+        const val = row[k];
+        if (typeof val === "string" || typeof val === "number") {
+          return String(val).toLowerCase().includes(q);
+        }
+        return false;
+      }) ||
+      (Array.isArray(row.sizes) &&
+        row.sizes.some(
+          (size: any) =>
+            size.sku && String(size.sku).toLowerCase().includes(q)
+        ))
     );
   }, [data, search, searchKeys, isServerPagination]);
 

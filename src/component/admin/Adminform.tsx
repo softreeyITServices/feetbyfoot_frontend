@@ -582,6 +582,7 @@ const STANDARD_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "FREE"];
 
 type SizeRow = {
   size: string;
+  sku?: string;
   quantity: number;
   isActive: boolean;
   color: string;
@@ -604,6 +605,7 @@ function SizesFieldInput({
   const rows: SizeRow[] = Array.isArray(value)
     ? value.map((item) => ({
         size: String(item.size ?? ""),
+        sku: String(item.sku ?? ""),
         quantity: Number(item.quantity) || 0,
         isActive: item.isActive !== false,
         color: String(item.color ?? ""),
@@ -613,7 +615,7 @@ function SizesFieldInput({
       }))
     : [];
 
-  const emptyRow: SizeRow = { size: "", quantity: 0, isActive: true, color: "", title: "", description: "", imageUrls: [] };
+  const emptyRow: SizeRow = { size: "", sku: "", quantity: 0, isActive: true, color: "", title: "", description: "", imageUrls: [] };
   const nextRows = rows.length > 0 ? rows : [emptyRow];
 
   const updateRow = (index: number, patch: Partial<SizeRow>) => {
@@ -643,8 +645,8 @@ function SizesFieldInput({
           key={`size-row-${index}`}
           className="bg-white border border-neutral-200 rounded-xl p-3 relative space-y-4"
         >
-          <div className="flex flex-col md:flex-row gap-3 pr-8">
-            <div className="flex-1 min-w-[120px]">
+          <div className="flex flex-col md:flex-row gap-3 pr-8 items-start md:items-end">
+            <div className="flex-1 min-w-[100px]">
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
                 Color
               </label>
@@ -673,7 +675,7 @@ function SizesFieldInput({
               )}
             </div>
 
-            <div className="flex-1 min-w-[120px]">
+            <div className="flex-1 min-w-[80px]">
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
                 Size
               </label>
@@ -696,7 +698,20 @@ function SizesFieldInput({
               </div>
             </div>
 
-            <div className="w-24">
+            <div className="flex-1 min-w-[110px]">
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
+                Variant SKU
+              </label>
+              <input
+                type="text"
+                value={row.sku || ""}
+                onChange={(e) => updateRow(index, { sku: e.target.value })}
+                placeholder="e.g. FBF-001-RED-M"
+                className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400"
+              />
+            </div>
+
+            <div className="w-24 shrink-0 min-w-[80px]">
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
                 Qty
               </label>
@@ -705,11 +720,11 @@ function SizesFieldInput({
                 min="0"
                 value={row.quantity}
                 onChange={(e) => updateRow(index, { quantity: parseInt(e.target.value) || 0 })}
-                className="w-full h-9 px-3 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400"
+                className="w-full h-9 px-2.5 text-xs rounded-lg border border-neutral-200 bg-white focus:outline-none focus:border-amber-400"
               />
             </div>
 
-            <div className="w-24">
+            <div className="w-24 shrink-0 min-w-[80px]">
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
                 Active
               </label>

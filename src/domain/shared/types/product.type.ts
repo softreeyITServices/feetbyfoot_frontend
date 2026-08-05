@@ -3,6 +3,7 @@
 export interface ProductSize {
   _id?: string;
   size: string;
+  sku?: string;
   quantity: number;
   isActive: boolean;
   color?: string;
@@ -23,6 +24,7 @@ export interface Product {
   name: string;
   description: string;
   slug: string;
+  sku?: string;
   brand: string;
   color: string;
   colors?: string[];
