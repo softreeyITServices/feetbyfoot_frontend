@@ -69,8 +69,8 @@ function ProductCard({
 }) {
   const original = parseFloat(originalPrice);
   const discounted = parseFloat(discountedPrice);
-  const discountPercentage = original > 0 && original > discounted 
-    ? Math.round(((original - discounted) / original) * 100) 
+  const discountPercentage = original > 0 && original > discounted
+    ? Math.round(((original - discounted) / original) * 100)
     : 0;
 
   const colors = [...new Set(size.map((s) => s.color).filter((c) => c && c !== "Default"))] as string[];
@@ -192,8 +192,8 @@ function ProductCard({
       <Link
         href={productHref}
         className="group relative block aspect-[3/4] sm:aspect-[4/5] w-full shrink-0 overflow-hidden rounded-md sm:rounded-lg bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2"
-          title={title}
-        >
+        title={title}
+      >
         {(isBestseller || discountPercentage > 0) && (
           <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
             {isBestseller && (
@@ -272,11 +272,10 @@ function ProductCard({
                   type="button"
                   title={color}
                   onClick={() => handleColor(color)}
-                  className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border transition-all ${
-                    selectedColor === color
-                      ? "border-black scale-110"
-                      : "border-gray-200 hover:border-gray-400"
-                  }`}
+                  className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border transition-all ${selectedColor === color
+                    ? "border-black scale-110"
+                    : "border-gray-200 hover:border-gray-400"
+                    }`}
                   style={{ backgroundColor: colorToCss(color) }}
                 />
               ))}
@@ -300,11 +299,11 @@ function ProductCard({
             onClick={handleCart}
             disabled={loading}
           >
-            <CartBasketIcon 
-              width={12} 
-              height={14} 
-              className="sm:w-[13px] sm:h-[15px]" 
-              fill="#fff" 
+            <CartBasketIcon
+              width={12}
+              height={14}
+              className="sm:w-[13px] sm:h-[15px]"
+              fill="#fff"
             />
             <span>{loading ? "ADDING..." : "ADD TO CART"}</span>
           </button>

@@ -44,42 +44,42 @@ export default async function BestSelling() {
 
   return (
     // <Container>
-      <section className="flex flex-col gap-6 sm:gap-8 py-8 sm:py-10 md:py-12">
-        <FadeIn direction="up" className="text-center">
-          <h2 className="inline-block bg-yellow-400 px-4 sm:px-6 py-1.5 sm:py-2 text-2xl sm:text-3xl md:text-4xl font-bold">
-            BEST SELLERS
-          </h2>
-          <p className="mt-2 text-sm sm:text-base text-gray-600">
-            Preorder now to receive exclusive deals & gifts
-          </p>
-          <Link href="/shop?isBestseller=true" className="mt-3 inline-block border border-gray-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide hover:bg-gray-800 hover:text-white transition-colors">View All</Link>
-        </FadeIn>
+    <section className="flex flex-col gap-6 sm:gap-8 py-8 sm:py-10 md:py-12">
+      <FadeIn direction="up" className="text-center">
+        <h2 className="inline-block bg-yellow-400 px-4 sm:px-6 py-1.5 sm:py-2 text-2xl sm:text-3xl md:text-4xl font-bold">
+          BEST SELLERS
+        </h2>
+        <p className="mt-2 text-sm sm:text-base text-gray-600">
+          Preorder now to receive exclusive deals & gifts
+        </p>
+        <Link href="/shop?isBestseller=true" className="mt-3 inline-block border border-gray-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide hover:bg-gray-800 hover:text-white transition-colors">View All</Link>
+      </FadeIn>
 
-        <BestSellingSlider>
-          {products.map((product, index) => (
-            <FadeIn key={product._id} direction="up" delay={index * 100} className="w-[160px] sm:w-[200px] md:w-[240px] shrink-0 snap-start">
-              <ProductCard
-                id={product._id}
-                home
-                isBestseller={product.isBestseller}
-                wishlist
-                size={product.sizes}
-                imageSrc={product.imageUrls?.[0] ?? "/placeholder.png"}
-                hoverImageSrc={product.imageUrls?.[1]}
-                altText={product.name}
-                categories={
-                  product.tags?.length
-                    ? product.tags.join(", ")
-                    : product.brand || "Socks"
-                }
-                title={product.name}
-                originalPrice={product.price?.toFixed(2) ?? "0.00"}
-                discountedPrice={product.salePrice?.toFixed(2) ?? "0.00"}
-              />
-            </FadeIn>
-          ))}
-        </BestSellingSlider>
-      </section>
+      <BestSellingSlider>
+        {products.map((product, index) => (
+          <FadeIn key={product._id} direction="up" delay={index * 100} className="w-[160px] sm:w-[200px] md:w-[240px] shrink-0 snap-start">
+            <ProductCard
+              id={product._id}
+              home
+              isBestseller={product.isBestseller}
+              wishlist
+              size={product.sizes}
+              imageSrc={product.imageUrls?.[0] ?? "/placeholder.png"}
+              hoverImageSrc={product.imageUrls?.[1]}
+              altText={product.name}
+              categories={
+                product.tags?.length
+                  ? product.tags.join(", ")
+                  : product.brand || "Socks"
+              }
+              title={product.name}
+              originalPrice={product.price?.toFixed(2) ?? "0.00"}
+              discountedPrice={product.salePrice?.toFixed(2) ?? "0.00"}
+            />
+          </FadeIn>
+        ))}
+      </BestSellingSlider>
+    </section>
     // </Container>
   );
 }
