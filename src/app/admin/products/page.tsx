@@ -26,6 +26,7 @@ const ALLOWED_PRODUCT_LENGTHS = ["ANKLE", "CALF", "NO_SHOW", "CREW"] as const;
 type ProductSizeInput = {
   color: string;
   size: string;
+  sku: string;
   quantity: number;
   isActive: boolean;
 };
@@ -41,6 +42,7 @@ const normalizeProductSizes = (value: unknown): ProductSizeInput[] => {
     .map((item) => ({
       color: String(item.color ?? "").trim(),
       size: String(item.size ?? "").trim().toUpperCase(),
+      sku: String(item.sku ?? "").trim(),
       quantity: Math.max(0, Number(item.quantity ?? 0)),
       isActive: Boolean(item.isActive ?? true),
     }))
@@ -166,7 +168,7 @@ function ProductPage() {
 
   const PRODUCT_FIELDS: FormField[] = [
     { key: "name", label: "Name", type: "text", required: true, cols: 1 },
-    { key: "sku", label: "SKU / Item Code", type: "text", required: false, cols: 1, placeholder: "e.g. SKU-1001" },
+    { key: "sku", label: "SKU / Item Code", type: "text", required: true, cols: 1, placeholder: "e.g. SKU-1001" },
     { key: "slug", label: "Slug", type: "text", required: true, cols: 1 },
 
     { key: "brand", label: "Brand", type: "text", required: true, cols: 1 },
@@ -267,6 +269,18 @@ function ProductPage() {
         if (normalizedSizes.length === 0) {
           return "Add at least one valid size with color and quantity greater than 0";
         }
+        const seenSkus = new Set<string>();
+        for (const item of normalizedSizes) {
+          const skuVal = item.sku ? item.sku.trim() : "";
+          if (!skuVal) {
+            return "Variant SKU is required for every variant row";
+          }
+          const skuLower = skuVal.toLowerCase();
+          if (seenSkus.has(skuLower)) {
+            return `Duplicate Variant SKU found: "${skuVal}". Each variant SKU must be unique.`;
+          }
+          seenSkus.add(skuLower);
+        }
         return null;
       },
     },
@@ -363,6 +377,19 @@ function ProductPage() {
     );
     
     const colors = [...new Set(sizes.map((s) => s.color).filter(Boolean))];
+
+    const mainSku = String(values.sku ?? "").trim();
+    if (mainSku) {
+      const duplicateVariantSku = sizes.find(
+        (s) => String(s.sku ?? "").trim().toLowerCase() === mainSku.toLowerCase()
+      );
+      if (duplicateVariantSku) {
+        toast.error(
+          `Main Product SKU ("${mainSku}") and Variant SKU cannot be identical. Each SKU must be unique.`
+        );
+        return;
+      }
+    }
 
     const name = String(values.name ?? "").trim();
     const autoSlug = toSlug(name);
