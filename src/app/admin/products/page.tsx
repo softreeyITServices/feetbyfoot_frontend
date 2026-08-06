@@ -696,6 +696,7 @@ function ProductPage() {
         if (!product.sizes || product.sizes.length === 0) {
           rows.push({
             Handle: product.slug,
+            SKU: product.sku || "",
             Name: product.name,
             Description: product.description,
             Brand: product.brand,
@@ -712,6 +713,7 @@ function ProductPage() {
             IsActive: product.isActive,
             Color: "",
             Size: "",
+            VariantSKU: "",
             Quantity: 0,
             SpecificTitle: "",
             SpecificDescription: "",
@@ -723,6 +725,7 @@ function ProductPage() {
         product.sizes.forEach((size, index) => {
           rows.push({
             Handle: product.slug,
+            SKU: index === 0 ? (product.sku || "") : "",
             Name: index === 0 ? product.name : "",
             Description: index === 0 ? product.description : "",
             Brand: index === 0 ? product.brand : "",
@@ -739,6 +742,7 @@ function ProductPage() {
             IsActive: size.isActive,
             Color: size.color,
             Size: size.size,
+            VariantSKU: size.sku || "",
             Quantity: size.quantity,
             SpecificTitle: size.title || "",
             SpecificDescription: size.description || "",
