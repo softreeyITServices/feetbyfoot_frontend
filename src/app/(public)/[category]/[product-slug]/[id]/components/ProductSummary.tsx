@@ -24,6 +24,7 @@ interface ProductSummaryProps {
   product: {
     id: string;
     name: string;
+    sku?: string;
     price: number;
     mrp: number;
     description: string;
@@ -32,6 +33,7 @@ interface ProductSummaryProps {
       _id?: string;
       size: string;
       color?: string;
+      sku?: string;
       quantity: number;
       isActive: boolean;
     }[];
@@ -171,7 +173,12 @@ export default function ProductSummary({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-2">{product.name}</h1>
+      <h1 className="text-2xl font-semibold mb-1">{product.name}</h1>
+      {(selectedVariant?.sku || product.sku) && (
+        <p className="text-xs font-mono text-gray-500 mb-2">
+          Item Code / SKU: <span className="font-semibold text-gray-700">{selectedVariant?.sku || product.sku}</span>
+        </p>
+      )}
 
       <div className="flex items-center gap-3 mb-4">
         <div className="flex">

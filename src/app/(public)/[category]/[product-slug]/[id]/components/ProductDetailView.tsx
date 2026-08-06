@@ -38,16 +38,20 @@ export default function ProductDetailView({
   const activeDescription = activeColorDetail?.description || product.description;
 
   return (
-    <section className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-      <ProductGallery images={activeImages} />
-      <ProductSummary
-        product={{ ...product, name: activeTitle, description: activeDescription }}
-        totalRatings={totalRatings}
-        averageRating={averageRating}
-        reviews={reviews}
-        selectedColor={selectedColor}
-        onColorSelect={setSelectedColor}
-      />
+    <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+      <div className="lg:col-span-7">
+        <ProductGallery images={activeImages} productName={activeTitle} />
+      </div>
+      <div className="lg:col-span-5 lg:sticky lg:top-28">
+        <ProductSummary
+          product={{ ...product, name: activeTitle, description: activeDescription }}
+          totalRatings={totalRatings}
+          averageRating={averageRating}
+          reviews={reviews}
+          selectedColor={selectedColor}
+          onColorSelect={setSelectedColor}
+        />
+      </div>
     </section>
   );
 }

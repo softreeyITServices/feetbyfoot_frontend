@@ -378,7 +378,7 @@ function MobileMenuDrawer({
   );
 }
 
-const CATEGORY_PATHS = new Set(["/mens", "/womens", "/kids", "/gifts", "/outlet", "/brand", "/shop"]);
+const CATEGORY_PATHS = new Set(["/", "/mens", "/womens", "/kids", "/gifts", "/outlet", "/brand", "/shop"]);
 
 export default function Navbar() {
   const pathname = usePathname();
