@@ -187,7 +187,7 @@ export default async function ShopPage({
         </p>
       </div>
 
-      <section className="max-w-7xl mx-auto px-4 mt-6">
+      <section className="max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 mt-6">
         <div className="overflow-hidden rounded-xl">
           <Image
             src={outletBannerUrl ?? "/assets/images/mens-category-banner.png"}
@@ -200,7 +200,7 @@ export default async function ShopPage({
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 mt-10">
+      <section className="w-full max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 mt-10">
         <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-8">
           <aside className="hidden lg:block sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto">
             <FiltersSidebar />

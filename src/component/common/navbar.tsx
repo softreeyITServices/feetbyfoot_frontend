@@ -529,7 +529,7 @@ const DEFAULT_FALLBACK_GROUPS: MenuGroup[] = [
   return (
     <>
       <header className="bg-[#f4f4f4] sticky top-0 z-50">
-        <div className="max-w-[90rem] mx-auto px-3 sm:px-4 lg:px-8 h-[60px] sm:h-[72px] flex items-center justify-between gap-2 sm:gap-3">
+        <div className="max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 h-[60px] sm:h-[72px] flex items-center justify-between gap-2 sm:gap-3">
           {/* Mobile Menu Button - Left */}
           <button
             onClick={() => setMobileMenuOpen(true)}
