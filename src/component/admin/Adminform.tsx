@@ -700,7 +700,7 @@ function SizesFieldInput({
 
             <div className="flex-1 min-w-[110px]">
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
-                Variant SKU
+                Variant SKU <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
