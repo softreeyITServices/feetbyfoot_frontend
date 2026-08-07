@@ -101,11 +101,15 @@ export function handleAuthError(error: unknown, context?: string): never {
       throw error; // Rethrow the original error object
     }
 
-    const message = error.data?.message || error.message;
+    const rawMessage = error.data?.message || error.message;
+    const isNetworkErr = rawMessage.toLowerCase().includes("network error") || rawMessage.toLowerCase().includes("econnrefused");
+    const message = isNetworkErr
+      ? "Network connection issue. Please check your internet connection and try again."
+      : rawMessage;
     const code = getAuthErrorCode(error.status, error.data?.code);
     
     throw new AuthError(
-      context ? `${message} (${context})` : message,
+      isNetworkErr ? message : (context ? `${message} (${context})` : message),
       code,
       error.data
     );
