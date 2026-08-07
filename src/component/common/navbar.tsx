@@ -399,6 +399,15 @@ export default function Navbar() {
   const cartItems = useAppSelector((state) => state.cart.items);
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
+const DEFAULT_FALLBACK_GROUPS: MenuGroup[] = [
+  { id: "mens", name: "Men", storefrontPath: "/mens", categories: [] },
+  { id: "womens", name: "Women", storefrontPath: "/womens", categories: [] },
+  { id: "kids", name: "Kids", storefrontPath: "/kids", categories: [] },
+  { id: "gifts", name: "Gifts", storefrontPath: "/gifts", categories: [] },
+  { id: "outlet", name: "Outlet", storefrontPath: "/outlet", categories: [] },
+  { id: "brand", name: "Brand", storefrontPath: "/brand", categories: [] },
+];
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -406,12 +415,12 @@ export default function Navbar() {
         const doc = await productService.getMegaMenu();
         if (cancelled) return;
         if (doc.position === "footer") {
-          setMegaGroups([]);
+          setMegaGroups(DEFAULT_FALLBACK_GROUPS);
           return;
         }
-        setMegaGroups(doc.groups?.length ? doc.groups : []);
+        setMegaGroups(doc.groups?.length ? doc.groups : DEFAULT_FALLBACK_GROUPS);
       } catch {
-        if (!cancelled) setMegaGroups([]);
+        if (!cancelled) setMegaGroups(DEFAULT_FALLBACK_GROUPS);
       } finally {
         if (!cancelled) setMegaMenuReady(true);
       }
