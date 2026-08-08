@@ -17,6 +17,7 @@ const CATEGORY_CONFIG = {
     title: "Mens Socks",
     description: "Shop premium mens socks at Feet By Foot",
     gender: "MENS",
+    categoryId: "6a3b7fd8c82609c09f2b7290",
     sectionBannerKey: "MENS",
   },
   womens: {
@@ -24,6 +25,7 @@ const CATEGORY_CONFIG = {
     title: "Womens Socks",
     description: "Shop premium womens socks at Feet By Foot",
     gender: "WOMENS",
+    categoryId: "6a3b7fd8c82609c09f2b7293",
     sectionBannerKey: "WOMENS",
   },
   kids: {
@@ -31,7 +33,15 @@ const CATEGORY_CONFIG = {
     title: "Kids Socks",
     description: "Shop premium kids socks at Feet By Foot",
     gender: "KIDS",
+    categoryId: "6a3b7fd8c82609c09f2b728f",
     sectionBannerKey: "KIDS",
+  },
+  towels: {
+    label: "Towels",
+    title: "Towels",
+    description: "Shop premium towels at Feet By Foot",
+    categoryId: "6a3b7fd8c82609c09f2b7291",
+    sectionBannerKey: "TOWELS",
   },
   gifts: {
     label: "Gifts",
@@ -127,6 +137,7 @@ export default async function CategoryPage({
   const perpage = 20;
   const sortBy = resolvedSearchParams.sortBy ?? "default";
   const defaultGender = "gender" in config ? config.gender : undefined;
+  const defaultCategoryId = "categoryId" in config ? config.categoryId : undefined;
 
   // Helper: always return string[] from a searchParam value
   const toArray = (val: string | string[] | undefined): string[] => {
@@ -163,18 +174,17 @@ export default async function CategoryPage({
       gender:
         resolvedSearchParams.gender !== undefined
           ? toArray(resolvedSearchParams.gender)
-          : defaultGender
-            // All migrated products are currently tagged UNISEX only (no
-            // MENS/WOMENS/KIDS-specific data yet), so include UNISEX
-            // alongside the page's default gender or every filtered
-            // view (subcategory, age-range, etc.) returns zero results.
-            ? [defaultGender, "UNISEX"]
-            : [],
+          : [],
       page,
       limit: perpage,
       search: resolvedSearchParams.search?.trim(),
       sortBy,
-      categories: toArray(resolvedSearchParams.category),
+      categories:
+        resolvedSearchParams.category !== undefined
+          ? toArray(resolvedSearchParams.category)
+          : defaultCategoryId
+            ? [defaultCategoryId]
+            : [],
       subcategories: toArray(resolvedSearchParams.subcategory),
       sizes: toArray(resolvedSearchParams.size),
       colors: toArray(resolvedSearchParams.color),
@@ -198,11 +208,10 @@ export default async function CategoryPage({
       else if (v !== undefined) qs.set(k, v);
     }
 
-    // Preserve the default gender filter in pagination links,
+    // Preserve the default category filter in pagination links,
     // so clicking "page 2" doesn't drop the /mens:/womens:/kids filter.
-    if (resolvedSearchParams.gender === undefined && defaultGender) {
-      qs.append("gender", defaultGender);
-      qs.append("gender", "UNISEX");
+    if (resolvedSearchParams.category === undefined && defaultCategoryId) {
+      qs.append("category", defaultCategoryId);
     }
     if (
       resolvedSearchParams.packType === undefined &&
