@@ -97,7 +97,7 @@ export default function Footer() {
       {/* ---------------------------------------------------------------- */}
       <Image src="/assets/images/footer_bottom.png" alt="" width={1920} height={120} className="w-full h-auto" aria-hidden="true" />
       <div className="bg-neutral-700 text-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12">
           <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
             <div className="min-w-0 md:w-1/4">
               <div className="mb-4 flex items-center gap-3">
@@ -131,7 +131,7 @@ export default function Footer() {
       {/* DARK BAND: About / Customer Service / Newsletter (Image 1 style)  */}
       {/* ---------------------------------------------------------------- */}
       <div className="bg-neutral-700 text-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12">
           <div className="mb-10 grid grid-cols-2 gap-6 border-b border-neutral-600 pb-10 sm:grid-cols-4">
             <div className="flex items-center gap-3">
               <ShieldCheck className="h-7 w-7 text-yellow-400 shrink-0" />
@@ -256,7 +256,7 @@ export default function Footer() {
       {/* BOTTOM BAR: copyright + payment/ssl                               */}
       {/* ---------------------------------------------------------------- */}
       <div className="bg-neutral-800 text-neutral-300">
-        <div className="max-w-7xl mx-auto flex flex-col items-center justify-between gap-4 px-4 py-4 text-sm md:flex-row">
+        <div className="max-w-[1920px] mx-auto flex flex-col items-center justify-between gap-4 px-3 sm:px-4 md:px-6 lg:px-8 py-4 text-sm md:flex-row">
           <p>
             Copyright © {new Date().getFullYear()}{" "}
             <span className="font-semibold text-white">Feet By Foot</span> All

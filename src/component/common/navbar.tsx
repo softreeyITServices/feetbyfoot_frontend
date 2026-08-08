@@ -399,6 +399,15 @@ export default function Navbar() {
   const cartItems = useAppSelector((state) => state.cart.items);
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
+const DEFAULT_FALLBACK_GROUPS: MenuGroup[] = [
+  { id: "mens", name: "Men", storefrontPath: "/mens", categories: [] },
+  { id: "womens", name: "Women", storefrontPath: "/womens", categories: [] },
+  { id: "kids", name: "Kids", storefrontPath: "/kids", categories: [] },
+  { id: "gifts", name: "Gifts", storefrontPath: "/gifts", categories: [] },
+  { id: "outlet", name: "Outlet", storefrontPath: "/outlet", categories: [] },
+  { id: "brand", name: "Brand", storefrontPath: "/brand", categories: [] },
+];
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -406,12 +415,12 @@ export default function Navbar() {
         const doc = await productService.getMegaMenu();
         if (cancelled) return;
         if (doc.position === "footer") {
-          setMegaGroups([]);
+          setMegaGroups(DEFAULT_FALLBACK_GROUPS);
           return;
         }
-        setMegaGroups(doc.groups?.length ? doc.groups : []);
+        setMegaGroups(doc.groups?.length ? doc.groups : DEFAULT_FALLBACK_GROUPS);
       } catch {
-        if (!cancelled) setMegaGroups([]);
+        if (!cancelled) setMegaGroups(DEFAULT_FALLBACK_GROUPS);
       } finally {
         if (!cancelled) setMegaMenuReady(true);
       }
@@ -520,7 +529,7 @@ export default function Navbar() {
   return (
     <>
       <header className="bg-[#f4f4f4] sticky top-0 z-50">
-        <div className="max-w-[90rem] mx-auto px-3 sm:px-4 lg:px-8 h-[60px] sm:h-[72px] flex items-center justify-between gap-2 sm:gap-3">
+        <div className="max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 h-[60px] sm:h-[72px] flex items-center justify-between gap-2 sm:gap-3">
           {/* Mobile Menu Button - Left */}
           <button
             onClick={() => setMobileMenuOpen(true)}

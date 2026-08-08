@@ -251,7 +251,7 @@ export default async function CategoryPage({
       </div>
 
       {/* Banner: section banners from admin when present, else static fallback */}
-      <section className=" px-4 mt-6 mb-2">
+      <section className="max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 mt-6 mb-2">
         {sectionBanners.length > 0 ? (
           <div className="flex flex-col gap-4">
             {sectionBanners.map((b) => (
@@ -272,7 +272,7 @@ export default async function CategoryPage({
       </section>
 
       {/* Content */}
-      <section className="w-full px-4 mt-10 max-w-none">
+      <section className="w-full max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 mt-10">
         <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-x-8 px-0 w-full">
           {/* Filters */}
           <aside className="hidden lg:block sticky top-32 max-h-[calc(100vh-9rem)] overflow-y-auto">

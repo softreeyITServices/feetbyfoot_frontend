@@ -114,7 +114,11 @@ export default function LoginForm() {
     } catch (err: unknown) {
       console.error("Send OTP failed", err);
       if (err instanceof Error) {
-        setError(err.message);
+        let msg = err.message;
+        if (msg.toLowerCase().includes("user not registred") || msg.toLowerCase().includes("user not registered")) {
+          msg = "Account not found. Please register on the right first.";
+        }
+        setError(msg);
       } else {
         setError("Failed to send OTP. Please try again.");
       }
