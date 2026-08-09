@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 import { wishlistService } from "@/domain/application/services/wishlist.service";
 import { useSession } from "next-auth/react";
 import { useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
 
 import { formatImageUrl } from "@/lib/imageUrlFormatter";
 
@@ -206,21 +207,21 @@ function ProductCard({
         )}
         {!imgError && imageSrc ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={formatImageUrl(imageSrc)}
-              alt={altText}
+              alt={altText || title}
+              fill
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               onError={() => setImgError(true)}
-              className={`absolute inset-0 object-cover object-center w-full h-full transition-opacity duration-500 ease-out ${hoverImageSrc ? "group-hover:opacity-0" : ""}`}
-              loading="lazy"
+              className={`object-cover object-center transition-opacity duration-500 ease-out ${hoverImageSrc ? "group-hover:opacity-0" : ""}`}
             />
             {hoverImageSrc && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={formatImageUrl(hoverImageSrc)}
-                alt={altText}
-                className="absolute inset-0 object-cover object-center w-full h-full opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
-                loading="lazy"
+                alt={`${altText || title} hover`}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className="object-cover object-center opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100"
               />
             )}
           </>
