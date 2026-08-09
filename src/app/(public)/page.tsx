@@ -1,12 +1,7 @@
 
-import BestSelling from "@/component/home/BestSelling";
-import CategoryStrip from "@/component/home/CategoryStrip";
-import CustomerShowcase from "@/component/home/CustomerShowcase";
-import HelpCTA from "@/component/home/HelpCTA";
+
+import nextDynamic from "next/dynamic";
 import HeroBanner from "@/component/home/HeroBanner";
-import PromoSection from "@/component/home/PromoSection";
-import ShopByCategory from "@/component/home/ShopByCategory";
-import TrendingGallery from "@/component/home/TrendingGallery";
 import PopularSearches from "@/component/home/PopularSearches";
 import { Marquee } from "@/component/ui/Marquee";
 import ProductCard from "@/component/ui/ProductCard";
@@ -17,6 +12,14 @@ import { productService } from "@/domain/application/services/product.service";
 import { wishlistService } from "@/domain/application/services/wishlist.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/services/auth/[...nextauth]/route";
+
+const CategoryStrip = nextDynamic(() => import("@/component/home/CategoryStrip"));
+const BestSelling = nextDynamic(() => import("@/component/home/BestSelling"));
+const PromoSection = nextDynamic(() => import("@/component/home/PromoSection"));
+const ShopByCategory = nextDynamic(() => import("@/component/home/ShopByCategory"));
+const CustomerShowcase = nextDynamic(() => import("@/component/home/CustomerShowcase"));
+const HelpCTA = nextDynamic(() => import("@/component/home/HelpCTA"));
+const TrendingGallery = nextDynamic(() => import("@/component/home/TrendingGallery"));
 
 export const dynamic = "force-dynamic";
 
@@ -201,11 +204,10 @@ export default async function HomePage({
                       key={i}
                       href={buildPageHref(i + 1)}
                       scroll={false}
-                      className={`px-4 py-2 border text-sm rounded ${
-                        page === i + 1
+                      className={`px-4 py-2 border text-sm rounded ${page === i + 1
                           ? "bg-black text-white"
                           : "hover:bg-gray-100"
-                      }`}
+                        }`}
                     >
                       {i + 1}
                     </Link>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Bebas_Neue } from "next/font/google";
 
 const bebas = Bebas_Neue({
@@ -182,14 +183,15 @@ export default function BannerSlider({
           aria-hidden={i !== current}
         >
           {/* Image — Ken Burns zoom on active slide */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={slide.image}
-            alt={slide.title}
-            className={`absolute inset-0 w-full h-full object-cover will-change-transform ${
+            alt={slide.title || "Banner slide"}
+            fill
+            priority={i === 0}
+            sizes="100vw"
+            className={`object-cover will-change-transform ${
               i === current ? "animate-[kenburns_6s_ease-out_forwards]" : ""
             }`}
-            loading={i === 0 ? "eager" : "lazy"}
           />
 
           {/* Cinematic dual-layer overlay - lighter on mobile */}
