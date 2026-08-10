@@ -424,6 +424,31 @@ function ExchangePage() {
     },
   ];
 
+  const filteredData = data.filter((row) => {
+    if (!filters.status) return true;
+    const target = filters.status.toUpperCase();
+    const itemStatus = (row.newItem?.status || "").toUpperCase();
+    const detailStatus = (row.details?.status || "").toUpperCase();
+
+    if (target === "DELIVERED") {
+      return itemStatus === "DELIVERED" || detailStatus === "DELIVERED";
+    }
+    if (target === "EXCHANGED") {
+      return itemStatus === "EXCHANGED" || detailStatus === "COMPLETED" || detailStatus === "EXCHANGED";
+    }
+    if (target === "EXCHANGE_REQUESTED") {
+      return itemStatus === "EXCHANGE_REQUESTED" || detailStatus === "REQUESTED" || detailStatus === "EXCHANGE_REQUESTED";
+    }
+    if (target === "EXCHANGE_APPROVED") {
+      return itemStatus === "EXCHANGE_APPROVED" || detailStatus === "APPROVED" || detailStatus === "EXCHANGE_APPROVED";
+    }
+    if (target === "EXCHANGE_REJECTED") {
+      return itemStatus === "EXCHANGE_REJECTED" || detailStatus === "REJECTED" || detailStatus === "EXCHANGE_REJECTED";
+    }
+
+    return itemStatus === target || detailStatus === target;
+  });
+
   /* ================= UI ================= */
 
   return (
@@ -457,7 +482,7 @@ function ExchangePage() {
         title="All Exchanges"
         description="Manage exchange requests"
         columns={columns}
-        data={data}
+        data={filteredData}
         loading={loading}
         paginationMode="server"
         currentPage={filters.page}
