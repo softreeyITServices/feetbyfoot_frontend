@@ -15,6 +15,7 @@ import { authOptions } from "@/app/services/auth/[...nextauth]/route";
 
 const CategoryStrip = nextDynamic(() => import("@/component/home/CategoryStrip"));
 const BestSelling = nextDynamic(() => import("@/component/home/BestSelling"));
+const TowelSection = nextDynamic(() => import("@/component/home/TowelSection"));
 const PromoSection = nextDynamic(() => import("@/component/home/PromoSection"));
 const ShopByCategory = nextDynamic(() => import("@/component/home/ShopByCategory"));
 const CustomerShowcase = nextDynamic(() => import("@/component/home/CustomerShowcase"));
@@ -84,14 +85,7 @@ export default async function HomePage({
         const wishlistProducts = response?.data?.products ?? [];
         wishlistIds = new Set(wishlistProducts?.map((item) => item._id));
       } catch (error) {
-        const status =
-          typeof error === "object" && error !== null && "status" in error
-            ? Number((error as { status?: number }).status)
-            : undefined;
-
-        if (status !== 401 && status !== 403 && status !== 404) {
-          throw error;
-        }
+        console.warn("[HomePage] Failed to fetch wishlist:", error);
       }
     }
 
@@ -227,6 +221,7 @@ export default async function HomePage({
       <Marquee />
       <CategoryStrip />
       <BestSelling />
+      <TowelSection />
       <PromoSection />
       <ShopByCategory />
       <HelpCTA />

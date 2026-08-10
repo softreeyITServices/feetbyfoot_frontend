@@ -36,6 +36,13 @@ const CATEGORY_CONFIG = {
     categoryId: "6a3b7fd8c82609c09f2b728f",
     sectionBannerKey: "KIDS",
   },
+  unisex: {
+    label: "Unisex",
+    title: "Unisex Socks & Products",
+    description: "Shop premium unisex products at Feet By Foot",
+    gender: "UNISEX",
+    sectionBannerKey: "UNISEX",
+  },
   towels: {
     label: "Towels",
     title: "Towels",
@@ -148,7 +155,6 @@ export default async function CategoryPage({
   const session = await getServerSession(authOptions);
   const token = session?.accessToken ?? null;
 
-  // FIX 1: type as Set<string> and initialise as empty Set (not empty string)
   let wishlistIds = new Set<string>();
   if (token) {
     try {
@@ -156,35 +162,94 @@ export default async function CategoryPage({
       const wishlistProducts = response?.data?.products ?? [];
       wishlistIds = new Set(wishlistProducts.map((item) => item._id));
     } catch (error) {
-      const status =
-        typeof error === "object" && error !== null && "status" in error
-          ? Number((error as { status?: number }).status)
-          : undefined;
-
-      // Wishlist can be unavailable (e.g. admin role) or not created yet (404).
-      // In those cases render page with empty wishlist instead of throwing.
-      if (status !== 401 && status !== 403 && status !== 404) {
-        throw error;
-      }
+      console.warn("[CategoryPage] Failed to fetch wishlist:", error);
     }
   }
 
-  const { products, total, totalPages } =
-    await productService.getPublicProducts({
-      gender:
-        resolvedSearchParams.gender !== undefined
-          ? toArray(resolvedSearchParams.gender)
+  const hasUserCategoryFilter = resolvedSearchParams.category !== undefined;
+  const hasUserGenderFilter = resolvedSearchParams.gender !== undefined;
+
+  let products: any[] = [];
+  let total = 0;
+  let totalPages = 1;
+
+  if (
+    !hasUserCategoryFilter &&
+    !hasUserGenderFilter &&
+    defaultCategoryId &&
+    "gender" in config
+  ) {
+    const [resByCat, resByGender] = await Promise.all([
+      productService
+        .getPublicProducts({
+          categories: [defaultCategoryId],
+          page,
+          limit: perpage,
+          search: resolvedSearchParams.search?.trim(),
+          sortBy,
+          subcategories: toArray(resolvedSearchParams.subcategory),
+          sizes: toArray(resolvedSearchParams.size),
+          colors: toArray(resolvedSearchParams.color),
+          minDiscount: resolvedSearchParams.discount
+            ? Number(resolvedSearchParams.discount)
+            : undefined,
+          packTypes:
+            resolvedSearchParams.packType !== undefined
+              ? toArray(resolvedSearchParams.packType).map((v) => v === "true")
+              : [],
+        })
+        .catch(() => ({ products: [], total: 0, totalPages: 1 })),
+      productService
+        .getPublicProducts({
+          gender: toArray(config.gender as any),
+          page,
+          limit: perpage,
+          search: resolvedSearchParams.search?.trim(),
+          sortBy,
+          subcategories: toArray(resolvedSearchParams.subcategory),
+          sizes: toArray(resolvedSearchParams.size),
+          colors: toArray(resolvedSearchParams.color),
+          minDiscount: resolvedSearchParams.discount
+            ? Number(resolvedSearchParams.discount)
+            : undefined,
+          packTypes:
+            resolvedSearchParams.packType !== undefined
+              ? toArray(resolvedSearchParams.packType).map((v) => v === "true")
+              : [],
+        })
+        .catch(() => ({ products: [], total: 0, totalPages: 1 })),
+    ]);
+
+    const productMap = new Map<string, any>();
+    (resByCat.products ?? []).forEach((p) => productMap.set(p._id, p));
+    (resByGender.products ?? []).forEach((p) => productMap.set(p._id, p));
+    products = Array.from(productMap.values());
+    total = Math.max(
+      resByCat.total ?? 0,
+      resByGender.total ?? 0,
+      products.length,
+    );
+    totalPages = Math.max(
+      resByCat.totalPages ?? 1,
+      resByGender.totalPages ?? 1,
+      Math.ceil(products.length / perpage),
+    );
+  } else {
+    const rawResponse = await productService.getPublicProducts({
+      gender: hasUserGenderFilter
+        ? toArray(resolvedSearchParams.gender)
+        : "gender" in config
+          ? toArray(config.gender as any)
+          : [],
+      categories: hasUserCategoryFilter
+        ? toArray(resolvedSearchParams.category)
+        : defaultCategoryId
+          ? [defaultCategoryId]
           : [],
       page,
       limit: perpage,
       search: resolvedSearchParams.search?.trim(),
       sortBy,
-      categories:
-        resolvedSearchParams.category !== undefined
-          ? toArray(resolvedSearchParams.category)
-          : defaultCategoryId
-            ? [defaultCategoryId]
-            : [],
       subcategories: toArray(resolvedSearchParams.subcategory),
       sizes: toArray(resolvedSearchParams.size),
       colors: toArray(resolvedSearchParams.color),
@@ -198,6 +263,10 @@ export default async function CategoryPage({
             ? [true]
             : [],
     });
+    products = rawResponse.products ?? [];
+    total = rawResponse.total ?? 0;
+    totalPages = rawResponse.totalPages ?? 1;
+  }
 
   // FIX 2: build a base query string that preserves all current filters
   const buildPageHref = (pageNum: number) => {
@@ -324,9 +393,8 @@ export default async function CategoryPage({
                   key={i}
                   href={buildPageHref(i + 1)}
                   scroll={false}
-                  className={`px-4 py-2 border text-sm ${
-                    page === i + 1 ? "bg-black text-white" : "hover:bg-gray-100"
-                  }`}
+                  className={`px-4 py-2 border text-sm ${page === i + 1 ? "bg-black text-white" : "hover:bg-gray-100"
+                    }`}
                 >
                   {i + 1}
                 </Link>

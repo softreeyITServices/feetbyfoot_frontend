@@ -221,7 +221,9 @@ type DragItem =
 const NAV_SOURCE_GROUP_TEMPLATES: Omit<SourceGroup, "categories">[] = [
   { id: "grp-men", name: "Men", storefrontPath: "/mens" },
   { id: "grp-women", name: "Women", storefrontPath: "/womens" },
+  { id: "grp-unisex", name: "Unisex", storefrontPath: "/unisex" },
   { id: "grp-kids", name: "Kids", storefrontPath: "/kids" },
+  { id: "grp-towels", name: "Towels", storefrontPath: "/towels" },
   { id: "grp-gifts", name: "Gifts", storefrontPath: "/gifts" },
   { id: "grp-outlet", name: "Outlet", storefrontPath: "/shop" },
   { id: "grp-brand", name: "Brand", storefrontPath: "/brand" },

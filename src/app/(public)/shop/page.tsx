@@ -89,14 +89,7 @@ export default async function ShopPage({
       const wishlistProducts = response?.data?.products ?? [];
       wishlistIds = new Set(wishlistProducts?.map((item) => item._id));
     } catch (error) {
-      const status =
-        typeof error === "object" && error !== null && "status" in error
-          ? Number((error as { status?: number }).status)
-          : undefined;
-
-      if (status !== 401 && status !== 403 && status !== 404) {
-        throw error;
-      }
+      console.warn("[ShopPage] Failed to fetch wishlist:", error);
     }
   }
 

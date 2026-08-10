@@ -378,7 +378,7 @@ function MobileMenuDrawer({
   );
 }
 
-const CATEGORY_PATHS = new Set(["/", "/mens", "/womens", "/kids", "/gifts", "/outlet", "/brand", "/shop"]);
+const CATEGORY_PATHS = new Set(["/", "/mens", "/womens", "/unisex", "/kids", "/towels", "/gifts", "/outlet", "/brand", "/shop"]);
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -402,11 +402,44 @@ export default function Navbar() {
 const DEFAULT_FALLBACK_GROUPS: MenuGroup[] = [
   { id: "mens", name: "Men", storefrontPath: "/mens", categories: [] },
   { id: "womens", name: "Women", storefrontPath: "/womens", categories: [] },
+  { id: "unisex", name: "Unisex", storefrontPath: "/unisex", categories: [] },
   { id: "kids", name: "Kids", storefrontPath: "/kids", categories: [] },
+  { id: "towels", name: "Towels", storefrontPath: "/towels", categories: [] },
   { id: "gifts", name: "Gifts", storefrontPath: "/gifts", categories: [] },
   { id: "outlet", name: "Outlet", storefrontPath: "/outlet", categories: [] },
   { id: "brand", name: "Brand", storefrontPath: "/brand", categories: [] },
 ];
+
+const unisexGroup: MenuGroup = { id: "unisex", name: "Unisex", storefrontPath: "/unisex", categories: [] };
+const towelsGroup: MenuGroup = { id: "towels", name: "Towels", storefrontPath: "/towels", categories: [] };
+
+const ensureExtraGroups = (groups: MenuGroup[]): MenuGroup[] => {
+  let list = [...groups];
+
+  const hasUnisex = list.some(
+    (g) => g.id === "unisex" || g.storefrontPath === "/unisex" || g.name?.toLowerCase() === "unisex"
+  );
+  if (!hasUnisex) {
+    const womensIdx = list.findIndex(
+      (g) => g.id === "womens" || g.storefrontPath === "/womens" || g.name?.toLowerCase() === "women" || g.name?.toLowerCase() === "womens"
+    );
+    if (womensIdx !== -1) list.splice(womensIdx + 1, 0, unisexGroup);
+    else list.splice(2, 0, unisexGroup);
+  }
+
+  const hasTowels = list.some(
+    (g) => g.id === "towels" || g.storefrontPath === "/towels" || g.name?.toLowerCase() === "towels"
+  );
+  if (!hasTowels) {
+    const kidsIdx = list.findIndex(
+      (g) => g.id === "kids" || g.storefrontPath === "/kids" || g.name?.toLowerCase() === "kids"
+    );
+    if (kidsIdx !== -1) list.splice(kidsIdx + 1, 0, towelsGroup);
+    else list.splice(4, 0, towelsGroup);
+  }
+
+  return list;
+};
 
   useEffect(() => {
     let cancelled = false;
@@ -415,12 +448,13 @@ const DEFAULT_FALLBACK_GROUPS: MenuGroup[] = [
         const doc = await productService.getMegaMenu();
         if (cancelled) return;
         if (doc.position === "footer") {
-          setMegaGroups(DEFAULT_FALLBACK_GROUPS);
+          setMegaGroups(ensureExtraGroups(DEFAULT_FALLBACK_GROUPS));
           return;
         }
-        setMegaGroups(doc.groups?.length ? doc.groups : DEFAULT_FALLBACK_GROUPS);
+        const loadedGroups = doc.groups?.length ? doc.groups : DEFAULT_FALLBACK_GROUPS;
+        setMegaGroups(ensureExtraGroups(loadedGroups));
       } catch {
-        if (!cancelled) setMegaGroups(DEFAULT_FALLBACK_GROUPS);
+        if (!cancelled) setMegaGroups(ensureExtraGroups(DEFAULT_FALLBACK_GROUPS));
       } finally {
         if (!cancelled) setMegaMenuReady(true);
       }

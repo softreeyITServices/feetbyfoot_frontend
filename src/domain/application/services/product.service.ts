@@ -65,7 +65,7 @@ function mapRawMegaMenuGroups(doc: MegaMenuDocument): MegaMenuDocument {
     id: g.categoryId ?? g.id,
     name: g.name ?? g.label ?? "",
     href: g.href,
-    storefrontPath: g.storefrontPath ?? (g.slug ? (["mens","womens","kids","gifts","outlet","brand"].includes(g.slug === "gift-packs" ? "gifts" : g.slug) ? `/${g.slug === "gift-packs" ? "gifts" : g.slug}` : `/shop?categoryIds=${g.categoryId ?? ""}`) : undefined),
+    storefrontPath: g.storefrontPath ?? (g.slug ? (["mens","womens","unisex","kids","towels","gifts","outlet","brand"].includes(g.slug === "gift-packs" ? "gifts" : g.slug) ? `/${g.slug === "gift-packs" ? "gifts" : g.slug}` : `/shop?categoryIds=${g.categoryId ?? ""}`) : undefined),
     categories: (g.categories ?? g.items ?? []).map((it: Record<string, any>) => ({
       id: it.categoryTypeId ?? it.id,
       name: it.name ?? it.label ?? "",
