@@ -724,7 +724,7 @@ function SizesFieldInput({
               />
             </div>
 
-            <div className="w-24 shrink-0 min-w-[80px]">
+            <div className="w-28 shrink-0 min-w-[90px]">
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">
                 Active
               </label>
@@ -736,7 +736,7 @@ function SizesFieldInput({
                   className="w-3.5 h-3.5 text-amber-500 rounded border-neutral-300 focus:ring-amber-500 cursor-pointer"
                 />
                 <span className="ml-2 text-xs font-medium text-neutral-700">
-                  {row.isActive ? "Yes" : "No"}
+                  {row.isActive ? "Active" : "Inactive"}
                 </span>
               </label>
             </div>

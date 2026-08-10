@@ -420,6 +420,8 @@ function ProductPage() {
       return;
     }
 
+    const calculatedIsActive = sizes.length === 0 || sizes.some((s) => s.isActive !== false);
+
     const payload: CreateProductPayload & {
       categoryTypeIds?: string[];
       colors?: string[];
@@ -427,6 +429,7 @@ function ProductPage() {
       ...(values as CreateProductPayload),
       slug,
       length,
+      isActive: calculatedIsActive,
       categoryTypeId: categoryTypeIds[0] ?? "",
       categoryTypeIds,
       color: colors[0] ?? "",
@@ -614,16 +617,36 @@ function ProductPage() {
     {
       key: "isActive",
       label: "Status",
-      render: (row) => (
-        <span
-          className={`px-2 py-0.5 rounded text-xs ${row.isActive
-              ? "bg-green-100 text-green-700"
-              : "bg-gray-100 text-gray-500"
-            }`}
-        >
-          {row.isActive ? "Active" : "Inactive"}
-        </span>
-      ),
+      render: (row) => {
+        const hasSizes = Array.isArray(row.sizes) && row.sizes.length > 0;
+        const activeSizesCount = hasSizes
+          ? row.sizes.filter((s) => s.isActive !== false).length
+          : 0;
+        const isInactive = !row.isActive || (hasSizes && activeSizesCount === 0);
+        const isPartial = row.isActive && hasSizes && activeSizesCount > 0 && activeSizesCount < row.sizes.length;
+
+        if (isInactive) {
+          return (
+            <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500 font-medium">
+              Inactive
+            </span>
+          );
+        }
+
+        if (isPartial) {
+          return (
+            <span className="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-700 font-medium">
+              Active ({activeSizesCount}/{row.sizes.length})
+            </span>
+          );
+        }
+
+        return (
+          <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700 font-medium">
+            Active
+          </span>
+        );
+      },
     },
   ];
 
