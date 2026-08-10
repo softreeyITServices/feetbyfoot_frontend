@@ -45,6 +45,13 @@ function isShopRoute(pathname: string | null): boolean {
   return pathname === '/shop' || pathname.startsWith('/shop/')
 }
 
+const ROUTE_CATEGORY_MAP: Record<string, string> = {
+  '/mens': '6a3b7fd8c82609c09f2b7290',
+  '/womens': '6a3b7fd8c82609c09f2b7293',
+  '/kids': '6a3b7fd8c82609c09f2b728f',
+  '/towels': '6a3b7fd8c82609c09f2b7291',
+}
+
 export default function FiltersSidebar() {
   const router = useRouter()
   const pathname = usePathname()
@@ -65,6 +72,15 @@ export default function FiltersSidebar() {
 
   // Get all selected values for a given key as an array
   const getSelected = (key: string): string[] => searchParams.getAll(key)
+
+  const selectedCategoryIds = getSelected('category')
+  const routeCategoryId = pathname ? ROUTE_CATEGORY_MAP[pathname] : undefined
+  const activeCategoryIds =
+    selectedCategoryIds.length > 0
+      ? selectedCategoryIds
+      : routeCategoryId
+        ? [routeCategoryId]
+        : []
 
   const isSelected = (key: string, value: string): boolean =>
     getSelected(key).includes(value)
@@ -130,7 +146,12 @@ export default function FiltersSidebar() {
       </FilterSection>
 
       <FilterSection title="Subcategory">
-        {filters.subcategories.map((sub) => (
+        {(activeCategoryIds.length > 0
+          ? filters.subcategories.filter(
+              (sub) => sub.categoryId && activeCategoryIds.includes(String(sub.categoryId))
+            )
+          : filters.subcategories
+        ).map((sub) => (
           <label key={sub._id} className="flex items-center gap-2">
             <input
               type="checkbox"

@@ -173,7 +173,62 @@ export default async function CategoryPage({
   let total = 0;
   let totalPages = 1;
 
-  if (
+  if (key === "towels" && !hasUserCategoryFilter && !hasUserGenderFilter) {
+    const [resByCat, resBySearch] = await Promise.all([
+      productService
+        .getPublicProducts({
+          categories: defaultCategoryId ? [defaultCategoryId] : [],
+          page,
+          limit: perpage,
+          search: resolvedSearchParams.search?.trim(),
+          sortBy,
+          subcategories: toArray(resolvedSearchParams.subcategory),
+          sizes: toArray(resolvedSearchParams.size),
+          colors: toArray(resolvedSearchParams.color),
+          minDiscount: resolvedSearchParams.discount
+            ? Number(resolvedSearchParams.discount)
+            : undefined,
+          packTypes:
+            resolvedSearchParams.packType !== undefined
+              ? toArray(resolvedSearchParams.packType).map((v) => v === "true")
+              : [],
+        })
+        .catch(() => ({ products: [], total: 0, totalPages: 1 })),
+      productService
+        .getPublicProducts({
+          search: resolvedSearchParams.search?.trim() || "towel",
+          page,
+          limit: perpage,
+          sortBy,
+          subcategories: toArray(resolvedSearchParams.subcategory),
+          sizes: toArray(resolvedSearchParams.size),
+          colors: toArray(resolvedSearchParams.color),
+          minDiscount: resolvedSearchParams.discount
+            ? Number(resolvedSearchParams.discount)
+            : undefined,
+          packTypes:
+            resolvedSearchParams.packType !== undefined
+              ? toArray(resolvedSearchParams.packType).map((v) => v === "true")
+              : [],
+        })
+        .catch(() => ({ products: [], total: 0, totalPages: 1 })),
+    ]);
+
+    const productMap = new Map<string, any>();
+    (resByCat.products ?? []).forEach((p) => productMap.set(p._id, p));
+    (resBySearch.products ?? []).forEach((p) => productMap.set(p._id, p));
+    products = Array.from(productMap.values());
+    total = Math.max(
+      resByCat.total ?? 0,
+      resBySearch.total ?? 0,
+      products.length,
+    );
+    totalPages = Math.max(
+      resByCat.totalPages ?? 1,
+      resBySearch.totalPages ?? 1,
+      Math.ceil(products.length / perpage),
+    );
+  } else if (
     !hasUserCategoryFilter &&
     !hasUserGenderFilter &&
     defaultCategoryId &&
@@ -238,9 +293,11 @@ export default async function CategoryPage({
     const rawResponse = await productService.getPublicProducts({
       gender: hasUserGenderFilter
         ? toArray(resolvedSearchParams.gender)
-        : "gender" in config
-          ? toArray(config.gender as any)
-          : [],
+        : hasUserCategoryFilter || toArray(resolvedSearchParams.subcategory).length > 0
+          ? []
+          : "gender" in config
+            ? toArray(config.gender as any)
+            : [],
       categories: hasUserCategoryFilter
         ? toArray(resolvedSearchParams.category)
         : defaultCategoryId
