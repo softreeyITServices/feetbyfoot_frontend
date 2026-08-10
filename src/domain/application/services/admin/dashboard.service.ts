@@ -10,15 +10,23 @@ type InternalApiResponse<T> = {
 };
 
 export class DashboardService {
-  static async getOverview(): Promise<AdminDashboardOverviewResponse> {
+  static async getOverview(
+    startDate?: string,
+    endDate?: string,
+  ): Promise<AdminDashboardOverviewResponse> {
     try {
-      const response :any= await httpClient.request<
+      const params = new URLSearchParams();
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
+      const queryString = params.toString() ? `?${params.toString()}` : "";
+
+      const response: any = await httpClient.request<
         InternalApiResponse<AdminDashboardOverviewResponse>
       >({
-        url: ADMIN_DASHBOARD_OVERVIEW_URL,
+        url: `${ADMIN_DASHBOARD_OVERVIEW_URL}${queryString}`,
         method: "GET",
         requiresAuth: true,
-    });
+      });
       return response;
     } catch (error) {
       throw handleApiError(error, "getDashboardOverview");

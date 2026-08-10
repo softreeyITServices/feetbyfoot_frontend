@@ -507,25 +507,26 @@ function StatusDropdown({
   row: OrderRow;
   onChange: (status: OrderStatus) => void;
 }) {
-  // Define the next logical step for each status
   const NEXT_STEP: Partial<Record<OrderStatus, { status: OrderStatus; label: string; style: string }>> = {
+    [OrderStatus.CREATED]:             { status: OrderStatus.CONFIRMED, label: "✓ Mark as Confirmed", style: "text-blue-700 hover:bg-blue-50 border-blue-200" },
     [OrderStatus.CONFIRMED]:           { status: OrderStatus.PACKED,    label: "📦 Mark as Packed",    style: "text-purple-700 hover:bg-purple-50 border-purple-200" },
     [OrderStatus.PACKED]:              { status: OrderStatus.SHIPPED,   label: "🚚 Mark as Shipped",   style: "text-indigo-700 hover:bg-indigo-50 border-indigo-200" },
     [OrderStatus.SHIPPED]:             { status: OrderStatus.DELIVERED, label: "📬 Mark as Delivered", style: "text-emerald-700 hover:bg-emerald-50 border-emerald-200" },
     [OrderStatus.PARTIALLY_DELIVERED]: { status: OrderStatus.DELIVERED, label: "📬 Mark as Delivered", style: "text-emerald-700 hover:bg-emerald-50 border-emerald-200" },
+    [OrderStatus.CANCEL_REQUESTED]:    { status: OrderStatus.CANCELLED, label: "✕ Approve Cancel",   style: "text-red-700 hover:bg-red-50 border-red-200" },
   };
 
-  // Statuses that can be cancelled (before delivery)
   const canCancel = [
+    OrderStatus.CREATED,
     OrderStatus.CONFIRMED,
     OrderStatus.PACKED,
     OrderStatus.SHIPPED,
     OrderStatus.PARTIALLY_DELIVERED,
+    OrderStatus.CANCEL_REQUESTED,
   ].includes(row.orderStatus as OrderStatus);
 
   const next = NEXT_STEP[row.orderStatus as OrderStatus];
 
-  // Terminal states — no action button
   if (!next && !canCancel) {
     return (
       <span className="text-xs text-neutral-400 italic">
@@ -539,7 +540,6 @@ function StatusDropdown({
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
-      {/* Next step action */}
       {next && (
         <button
           onClick={() => onChange(next.status)}
@@ -549,7 +549,6 @@ function StatusDropdown({
         </button>
       )}
 
-      {/* Cancel button — always visible for pre-delivery orders */}
       {canCancel && (
         <button
           onClick={() => onChange(OrderStatus.CANCELLED)}
