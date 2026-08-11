@@ -148,8 +148,8 @@ export default function FiltersSidebar() {
       <FilterSection title="Subcategory">
         {(activeCategoryIds.length > 0
           ? filters.subcategories.filter(
-              (sub) => sub.categoryId && activeCategoryIds.includes(String(sub.categoryId))
-            )
+            (sub) => sub.categoryId && activeCategoryIds.includes(String(sub.categoryId))
+          )
           : filters.subcategories
         ).map((sub) => (
           <label key={sub._id} className="flex items-center gap-2">
