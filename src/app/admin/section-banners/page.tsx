@@ -48,6 +48,8 @@ const SECTION_OPTIONS = [
   "GIFTS",
   "OUTLET",
   "BRAND",
+  "TOWELS",
+  "UNISEX",
 ];
 
 /* ================= ACTION DROPDOWN ================= */
