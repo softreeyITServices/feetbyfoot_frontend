@@ -1,20 +1,18 @@
 import Image from "next/image";
-import Container from "../ui/Container";
 import FadeIn from "../ui/FadeIn";
 import Link from "next/link";
 import HomeBlogSection from "./HomeBlogSection";
 
 export default function TrendingGallery() {
   const images = [
-    { src: "/assets/images/product-1.png", alt: "Trending 1", large: true },
-    { src: "/assets/images/product-2.png", alt: "Trending 2", large: false },
-    { src: "/assets/images/product-3.png", alt: "Trending 3", large: false },
-    { src: "/assets/images/product-4.png", alt: "Trending 4", large: true },
+    { src: "/assets/images/product-1.png", alt: "Trending 1" },
+    { src: "/assets/images/product-2.png", alt: "Trending 2" },
+    { src: "/assets/images/product-3.png", alt: "Trending 3" },
+    { src: "/assets/images/product-4.png", alt: "Trending 4" },
   ];
 
   return (
-    <Container>
-      <section className="flex flex-col pt-6 sm:pt-8 md:pt-10">
+    <section className="flex flex-col pt-6 sm:pt-8 md:pt-10 w-full px-1 sm:px-2">
         <FadeIn
           direction="up"
           className="text-center pb-6 sm:pb-8 md:pb-10 px-4"
@@ -27,20 +25,15 @@ export default function TrendingGallery() {
           </p>
         </FadeIn>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-6 px-2 sm:px-0">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-6 px-1 sm:px-0">
           {images.map((img, index) => (
             <FadeIn
               key={img.src}
               direction="up"
               delay={index * 100}
-              className={img.large ? "row-span-2" : ""}
             >
               <div
-                className={`relative w-full overflow-hidden rounded-lg sm:rounded-xl ${
-                  img.large
-                    ? "aspect-[3/4] sm:aspect-[2/3]"
-                    : "aspect-square sm:aspect-[3/4]"
-                }`}
+                className="relative w-full aspect-[3/4] overflow-hidden rounded-lg sm:rounded-xl"
               >
                 <Image
                   src={img.src}
@@ -72,6 +65,5 @@ export default function TrendingGallery() {
 
         <HomeBlogSection />
       </section>
-    </Container>
   );
 }

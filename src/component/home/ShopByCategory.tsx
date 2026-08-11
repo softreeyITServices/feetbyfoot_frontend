@@ -1,12 +1,11 @@
 import Image from "next/image";
-import Container from "../ui/Container";
 import Link from "next/link";
 import FadeIn from "../ui/FadeIn";
 
 export default function ShopByCategory() {
   return (
-    <section className="py-8 sm:py-12 md:py-16 overflow-hidden">
-      <Container>
+    <section className="py-8 sm:py-12 md:py-16 overflow-hidden w-full">
+      <div className="w-full px-1 sm:px-2">
         {/* Title */}
         <FadeIn direction="up" className="mb-6 sm:mb-8 lg:hidden text-center">
           <h2 className="text-2xl sm:text-3xl font-semibold text-green-900 leading-tight">
@@ -107,7 +106,7 @@ export default function ShopByCategory() {
           </FadeIn>
 
         </div>
-      </Container>
+      </div>
     </section>
   );
 }

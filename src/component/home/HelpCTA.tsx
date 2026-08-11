@@ -1,14 +1,12 @@
 import Image from "next/image";
-import Container from "../ui/Container";
 import { OpenEnvelopeIcon } from "@/icons/OpenEnvelopeIcon";
 import { ChatPhoneIcon } from "@/icons/ChatPhoneIcon";
 import FadeIn from "../ui/FadeIn";
 
 export default function HelpCTA() {
   return (
-    <Container>
-      <section className="w-full px-0 sm:px-4 py-6 sm:py-8 md:py-10">
-        <div className="mx-auto w-full bg-[#F8D317] rounded-2xl sm:rounded-3xl px-4 sm:px-6 md:px-10 py-8 sm:py-10 md:py-14 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 md:gap-10 lg:gap-16">
+    <section className="w-full py-6 sm:py-8 md:py-10 px-1 sm:px-2">
+      <div className="w-full bg-[#F8D317] rounded-xl sm:rounded-2xl px-4 sm:px-6 md:px-10 py-8 sm:py-10 md:py-14 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8 md:gap-10 lg:gap-16">
 
           {/* LEFT CONTENT */}
           <FadeIn direction="left" className="w-full md:flex-1 text-center md:text-left">
@@ -83,7 +81,6 @@ export default function HelpCTA() {
           </FadeIn>
 
         </div>
-      </section>
-    </Container>
+    </section>
   );
 }

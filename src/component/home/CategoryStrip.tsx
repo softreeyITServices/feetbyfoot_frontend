@@ -1,13 +1,12 @@
 import { categories } from "@/constants/categories";
 import CategoryCard from "../ui/CategoryCard";
-import Container from "../ui/Container";
 import FadeIn from "../ui/FadeIn";
 
 export default function CategoryStrip() {
   return (
-    <section className="py-8 sm:py-10 md:py-12 overflow-hidden">
-      <Container>
-        <div className="flex flex-col md:flex-row gap-4 sm:gap-5 md:gap-6">
+    <section className="py-6 sm:py-8 md:py-10 overflow-hidden w-full">
+      <div className="w-full px-1 sm:px-2">
+        <div className="flex flex-col md:flex-row gap-3 sm:gap-4 md:gap-5">
 
           {/* LEFT BIG IMAGE */}
           <FadeIn direction="left" className="w-full md:flex-1">
@@ -18,15 +17,15 @@ export default function CategoryStrip() {
 
           {/* RIGHT SIDE 2x2 GRID */}
           <FadeIn direction="right" delay={100} className="w-full md:flex-1">
-            <div className="flex flex-col gap-4 sm:gap-5 md:gap-6">
+            <div className="flex flex-col gap-3 sm:gap-4 md:gap-5">
               {/* First Row */}
-              <div className="flex gap-4 sm:gap-5 md:gap-6">
+              <div className="flex gap-3 sm:gap-4 md:gap-5">
                 <CategoryCard {...categories.right[0]} />
                 <CategoryCard {...categories.right[1]} />
               </div>
 
               {/* Second Row */}
-              <div className="flex gap-4 sm:gap-5 md:gap-6">
+              <div className="flex gap-3 sm:gap-4 md:gap-5">
                 <CategoryCard {...categories.right[2]} />
                 <CategoryCard {...categories.right[3]} />
               </div>
@@ -34,7 +33,7 @@ export default function CategoryStrip() {
           </FadeIn>
 
         </div>
-      </Container>
+      </div>
     </section>
   );
 }

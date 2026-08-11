@@ -2,14 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import Container from "../ui/Container";
 import FadeIn from "../ui/FadeIn";
 
 export default function PromoCarousel() {
   return (
-    <Container>
-      <section className="w-full overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+    <section className="w-full overflow-hidden px-1 sm:px-2 py-4 sm:py-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
 
           {/* ================= LEFT BANNER ================= */}
           <FadeIn direction="left" className="relative h-[300px] sm:h-[400px] md:h-[500px] overflow-hidden group">
@@ -100,6 +98,5 @@ export default function PromoCarousel() {
 
         </div>
       </section>
-    </Container>
   );
 }
