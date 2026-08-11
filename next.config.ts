@@ -39,12 +39,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "feetbyfoot.com",
+        hostname: "laviors.com",
         pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "www.feetbyfoot.com",
+        hostname: "www.laviors.com",
         pathname: "/**",
       },
     ],
