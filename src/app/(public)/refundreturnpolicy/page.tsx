@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { cache } from "react";
 
 /** Must match the CMS page name in Admin → CMS (underscores). */
+export const dynamic = "force-dynamic";
+
 const REFUND_RETURNS_POLICY_CMS_NAME = "refund_returns_policy";
 
 const getRefundReturnsPolicyCms = cache(() =>

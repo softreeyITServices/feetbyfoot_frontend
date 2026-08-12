@@ -2,6 +2,8 @@ import { CmsService } from "@/domain/application/services/admin/cms.service";
 import type { Metadata } from "next";
 import { cache } from "react";
 
+export const dynamic = "force-dynamic";
+
 /** Must match the CMS page name in Admin → CMS (underscores). */
 const TERMS_AND_CONDITIONS_CMS_NAME = "terms_conditions";
 

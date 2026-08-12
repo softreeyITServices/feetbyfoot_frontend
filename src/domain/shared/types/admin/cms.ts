@@ -25,6 +25,7 @@ export type CmsPayload = {
   name: string;
   title: string;
   content: string;
+  isActive?: boolean;
   faq?: CmsFAQ[];
 };
 

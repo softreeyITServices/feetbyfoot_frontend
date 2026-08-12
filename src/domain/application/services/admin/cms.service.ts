@@ -41,10 +41,10 @@ export class CmsService {
   }
 
   /* ---------------- GET ALL ---------------- */
-  static async getAll(): Promise<CmsItem[]> {
+  static async getAll(includeAll = true): Promise<CmsItem[]> {
     try {
       const res = await httpClient.request<unknown>({
-        url: CMS_URL,
+        url: includeAll ? `${CMS_URL}?all=true` : CMS_URL,
         method: "GET",
       });
 

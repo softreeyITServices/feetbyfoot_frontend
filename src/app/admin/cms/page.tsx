@@ -37,17 +37,19 @@ export default function CmsListPage() {
     }
   };
 
-  /* ================= DELETE ================= */
-  const handleDelete = async (id: string) => {
+  /* ================= TOGGLE ACTIVE/INACTIVE ================= */
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      if (!confirm("Delete this page?")) return;
-
-      await CmsService.delete(id);
-
-      toast.success("Deleted successfully");
-      fetchCms();
+      const newStatus = !currentStatus;
+      await CmsService.update(id, { isActive: newStatus });
+      toast.success(`Status changed to ${newStatus ? "Active" : "Inactive"}`);
+      setCmsList((prev) =>
+        prev.map((item) =>
+          item._id === id ? { ...item, isActive: newStatus } : item
+        )
+      );
     } catch {
-      toast.error("Failed to delete");
+      toast.error("Failed to update status");
     }
   };
 
@@ -115,17 +117,24 @@ export default function CmsListPage() {
                   {/* TITLE */}
                   <td className="p-4">{cms.title}</td>
 
-                  {/* STATUS */}
+                  {/* STATUS TOGGLE */}
                   <td className="p-4 text-center">
-                    <span
-                      className={`px-3 py-1 text-xs rounded-full ${
+                    <button
+                      onClick={() => handleToggleStatus(cms._id, cms.isActive)}
+                      title={`Click to set ${cms.isActive ? "Inactive" : "Active"}`}
+                      className={`px-3 py-1 text-xs rounded-full font-medium transition-colors duration-150 cursor-pointer flex items-center justify-center gap-1.5 mx-auto border ${
                         cms.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-200 text-gray-600"
+                          ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200"
+                          : "bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
                       }`}
                     >
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          cms.isActive ? "bg-green-600" : "bg-gray-400"
+                        }`}
+                      />
                       {cms.isActive ? "Active" : "Inactive"}
-                    </span>
+                    </button>
                   </td>
 
                   {/* CREATED */}
@@ -135,25 +144,28 @@ export default function CmsListPage() {
 
                   {/* ACTIONS */}
                   <td className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-4">
-                      {/* ✅ EDIT LINK (IMPORTANT FIX) */}
+                    <div className="flex items-center justify-center gap-3">
+                      {/* EDIT LINK */}
                       <Link
                         href={`/admin/cms/create?name=${encodeURIComponent(
                           cms.name
                         )}`}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Edit"
+                        className="text-blue-600 hover:text-blue-800 p-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                        title="Edit Page"
                       >
                         <Pencil size={18} />
                       </Link>
 
-                      {/* DELETE */}
+                      {/* ACTIVE / INACTIVE BUTTON */}
                       <button
-                        onClick={() => handleDelete(cms._id)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Delete"
+                        onClick={() => handleToggleStatus(cms._id, cms.isActive)}
+                        className={`text-xs px-2.5 py-1 rounded-md font-medium border transition-colors ${
+                          cms.isActive
+                            ? "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+                            : "bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                        }`}
                       >
-                        <Trash2 size={18} />
+                        Set {cms.isActive ? "Inactive" : "Active"}
                       </button>
                     </div>
                   </td>
