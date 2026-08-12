@@ -49,6 +49,9 @@ export const metadata: Metadata = {
     title: "Feet by Foot - Joy in Every Step",
     description: "Discover premium footwear at Feet by Foot. Joy in every step.",
   },
+  verification: {
+    google: "7da33c9fbdb31fe6",
+  },
 };
 
 export default function RootLayout({
