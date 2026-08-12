@@ -95,7 +95,7 @@ export default function Footer() {
       {/* ---------------------------------------------------------------- */}
       {/* TOP: category columns on white (keeps your shopping links)        */}
       {/* ---------------------------------------------------------------- */}
-      <Image src="/assets/images/footer_bottom.png" alt="" width={1920} height={120} className="w-full h-auto" aria-hidden="true" />
+      <img src="/assets/images/footer_bottom.png" alt="" className="w-full h-auto" aria-hidden="true" />
       <div className="bg-neutral-700 text-neutral-200">
         <div className="max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12">
           <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-12">
