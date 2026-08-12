@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     description: "Discover premium footwear at Feet by Foot. Joy in every step.",
   },
   verification: {
-    google: "7da33c9fbdb31fe6",
+    google: "RYh0vSVgD6y7O5A3cSc1xpUa_6_UFjkM3g35601pSW0",
   },
 };
 
@@ -70,6 +70,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="google-site-verification" content="RYh0vSVgD6y7O5A3cSc1xpUa_6_UFjkM3g35601pSW0" />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <script
