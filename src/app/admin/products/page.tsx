@@ -26,7 +26,7 @@ const ALLOWED_PRODUCT_LENGTHS = ["ANKLE", "CALF", "NO_SHOW", "CREW"] as const;
 type ProductSizeInput = {
   color: string;
   size: string;
-  sku: string;
+  sku?: string;
   quantity: number;
   isActive: boolean;
 };
@@ -168,7 +168,7 @@ function ProductPage() {
 
   const PRODUCT_FIELDS: FormField[] = [
     { key: "name", label: "Name", type: "text", required: true, cols: 1 },
-    { key: "sku", label: "SKU / Item Code", type: "text", required: true, cols: 1, placeholder: "e.g. SKU-1001" },
+    { key: "sku", label: "SKU / Item Code", type: "text", required: false, cols: 1, placeholder: "e.g. SKU-1001 (optional)" },
     { key: "slug", label: "Slug", type: "text", required: true, cols: 1 },
 
     { key: "brand", label: "Brand", type: "text", required: true, cols: 1 },
@@ -272,9 +272,6 @@ function ProductPage() {
         const seenSkus = new Set<string>();
         for (const item of normalizedSizes) {
           const skuVal = item.sku ? item.sku.trim() : "";
-          if (!skuVal) {
-            return "Variant SKU is required for every variant row";
-          }
           const skuLower = skuVal.toLowerCase();
           if (seenSkus.has(skuLower)) {
             return `Duplicate Variant SKU found: "${skuVal}". Each variant SKU must be unique.`;
