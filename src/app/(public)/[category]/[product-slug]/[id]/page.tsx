@@ -36,6 +36,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     return {
       title,
       description,
+      keywords: product.tags?.length ? product.tags : ["feet by foot", "footwear", product.name],
       openGraph: {
         title,
         description,

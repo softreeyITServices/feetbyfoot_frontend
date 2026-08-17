@@ -55,7 +55,7 @@ export default function ProductGallery({
         </div>
 
         {/* Main Image Frame */}
-        <div className="group flex-1 rounded-2xl overflow-hidden bg-gradient-to-b from-neutral-50 to-neutral-100 border border-gray-100 shadow-sm aspect-[4/5] min-h-[420px] sm:min-h-[540px] md:min-h-[600px] relative flex items-center justify-center">
+        <div className="group flex-1 rounded-2xl overflow-hidden bg-gradient-to-b from-neutral-50 to-neutral-100 border border-gray-100 shadow-sm aspect-square min-h-[300px] sm:min-h-[400px] md:min-h-[450px] max-w-[500px] mx-auto relative flex items-center justify-center">
           {/* Image Counter Badge */}
           {formattedImages.length > 1 && (
             <div className="absolute top-3 left-3 z-10 bg-black/60 backdrop-blur-md text-white text-[11px] font-medium px-2.5 py-1 rounded-full tracking-wide">

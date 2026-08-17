@@ -249,12 +249,9 @@ function ProductPage() {
       key: "tags",
       label: "Tags",
       type: "multiselect",
-      options: [
-        { label: "Socks", value: "socks" },
-        { label: "Crew", value: "crew" },
-        { label: "Ankle", value: "ankle" },
-      ],
-      placeholder: "Select one or more tags",
+      allowCustom: true,
+      options: [],
+      placeholder: "Add tags",
     },
 
     {
