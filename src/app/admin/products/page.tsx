@@ -868,6 +868,7 @@ function ProductPage() {
         }}
         title={editing ? "Edit Product" : "Create Product"}
         size="lg"
+        closeOnOutsideClick={false}
       >
         <AdminForm
           key={editing?._id ?? "create-product"}
